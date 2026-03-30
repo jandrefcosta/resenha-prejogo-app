@@ -1,26 +1,56 @@
 @import "tailwindcss";
 
+/* ─── Base tokens ─────────────────────────────── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #09090b;
+  --foreground: #f4f4f5;
+
+  /* Club theme — defaults (Flamengo) until JS runs */
+  --club-primary: #E8212B;
+  --club-secondary: #000000;
+  --club-accent: #FF3A3A;
+  --club-text-on-primary: #ffffff;
+  --club-on-dark: #E8212B;
+  --club-on-dark-text: #ffffff;
+  --club-gradient-end: #000000;
 }
 
+/* ─── Tailwind theme registration ────────────── */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-club-primary: var(--club-primary);
+  --color-club-secondary: var(--club-secondary);
+  --color-club-accent: var(--club-accent);
+  /* Sports typography */
+  --font-sans: var(--font-barlow, ui-sans-serif, system-ui, sans-serif);
+  --font-display: var(--font-barlow-condensed, ui-sans-serif, system-ui, sans-serif);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* ─── Base styles ─────────────────────────────── */
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: var(--font-sans);
+  font-size: 1rem;      /* 16px minimum for mobile readability */
+  line-height: 1.6;
+}
+
+/* ─── Reduced motion ──────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ─── Scrollbar ───────────────────────────────── */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
 }
