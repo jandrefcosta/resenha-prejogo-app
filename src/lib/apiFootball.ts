@@ -43,30 +43,6 @@ interface ApiResponse<T> {
   errors: Record<string, string> | string[];
 }
 
-// ─── Broadcaster inference ────────────────────────────────────────────────────
-/**
- * Infers likely broadcasters from kick-off time (BRT).
- * Based on Brasileirão 2025/2026 TV rights:
- *   - Premiere (PPV): all matches
- *   - Globo (open TV) + SporTV: Sunday prime-time slots (16h / 18h30 BRT)
- *   - SporTV: Saturday matches
- */
-function inferBroadcasters(dateISO: string): string[] {
-  const brt = new Date(
-    new Date(dateISO).toLocaleString('en-US', { timeZone: 'America/Sao_Paulo' }),
-  );
-  const day = brt.getDay();   // 0 = Sunday … 6 = Saturday
-  const hour = brt.getHours();
-
-  if (day === 0 && (hour === 16 || hour === 18)) {
-    return ['Globo', 'SporTV', 'Premiere'];
-  }
-  if (day === 6) {
-    return ['SporTV', 'Premiere'];
-  }
-  return ['Premiere'];
-}
-
 // ─── Mapping ──────────────────────────────────────────────────────────────────
 
 function toMatchTeam(t: ApiTeam): MatchTeam {
@@ -103,7 +79,6 @@ function mapFixture(f: ApiFixtureItem): Match {
     city,
     competition: f.league.name,
     round: normaliseRound(f.league.round),
-    broadcasters: inferBroadcasters(f.fixture.date),
     // Referee is assigned by CBF ~48h before kick-off; null until then
     referee: f.fixture.referee ?? undefined,
     status: f.fixture.status.short === 'PST' ? 'postponed' : 'scheduled',

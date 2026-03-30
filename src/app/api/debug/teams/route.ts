@@ -4,7 +4,11 @@ import type { ClubTheme } from '@/lib/types';
 
 const clubs = clubsData as ClubTheme[];
 
-export async function GET() {
+export async function GET(req: import('next/server').NextRequest) {
+  const secret = process.env.DEBUG_SECRET;
+  if (!secret || req.nextUrl.searchParams.get('secret') !== secret) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const key = process.env.API_FOOTBALL_KEY;
   if (!key) return NextResponse.json({ error: 'API_FOOTBALL_KEY not set' }, { status: 500 });
 

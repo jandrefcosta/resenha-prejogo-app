@@ -2,11 +2,18 @@ import Anthropic from '@anthropic-ai/sdk';
 import { NextRequest } from 'next/server';
 import { SYSTEM_PROMPT } from '@/lib/systemPrompt';
 import { getCache, setCache, TTL_24H } from '@/lib/redisCache';
+import { analysisLimiter, getClientIp } from '@/lib/rateLimiter';
 import type { Match } from '@/lib/types';
 
 const client = new Anthropic();
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const { success } = await analysisLimiter.limit(ip);
+  if (!success) {
+    return new Response('Muitas requisições. Tente novamente em alguns minutos.', { status: 429 });
+  }
+
   let match: Match;
   try {
     const body = await request.json();

@@ -6,11 +6,6 @@ import { getCache, setCache, TTL_24H } from '@/lib/redisCache';
 const anthropic = new Anthropic();
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-const KNOWN_BROADCASTERS = new Set([
-  'Globo', 'SporTV', 'SporTV 2', 'SporTV 3', 'Premiere',
-  'CazéTV', 'Amazon Prime Video', 'TNT Sports', 'Max', 'ESPN', 'Band', 'Record',
-]);
-
 const SYSTEM_PROMPT = `Você é um assistente especializado em transmissões de futebol brasileiro.
 Sua tarefa: buscar na web onde uma partida ESPECÍFICA do Brasileirão Série A será transmitida.
 

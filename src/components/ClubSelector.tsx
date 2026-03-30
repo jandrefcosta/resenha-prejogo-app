@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import type { ClubTheme } from '@/lib/types';
 
 export function ClubSelector() {
@@ -58,6 +59,9 @@ function ClubModal({
   onSelect: (c: ClubTheme) => void;
   onClose: () => void;
 }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, onClose);
+
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
@@ -73,7 +77,7 @@ function ClubModal({
       />
 
       {/* Panel */}
-      <div className="relative w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden">
+      <div ref={panelRef} className="relative w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
           <p className="text-sm font-semibold text-white font-sans">Escolha seu clube</p>
           <button

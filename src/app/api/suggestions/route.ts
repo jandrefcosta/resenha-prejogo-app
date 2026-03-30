@@ -1,5 +1,6 @@
 import { Redis } from '@upstash/redis';
 import { NextRequest, NextResponse } from 'next/server';
+import { suggestionsLimiter, getClientIp } from '@/lib/rateLimiter';
 
 const redis = new Redis({
   url: process.env.UPSTASH_REDIS_REST_URL!,
@@ -9,6 +10,12 @@ const redis = new Redis({
 const MAX_LENGTH = 500;
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const { success } = await suggestionsLimiter.limit(ip);
+  if (!success) {
+    return NextResponse.json({ error: 'Muitas requisições. Tente novamente mais tarde.' }, { status: 429 });
+  }
+
   let text: string;
   try {
     const body = await request.json();

@@ -16,7 +16,16 @@ const SYSTEM_PROMPT =
   'Busque onde a partida será transmitida e retorne SOMENTE um array JSON com os nomes dos canais. Ex: ["Globo","Premiere"]. ' +
   'Canais: Globo, SporTV, SporTV 2, Premiere, CazéTV, Amazon Prime Video, TNT Sports, Max, ESPN, Band.';
 
+function isAuthorized(req: NextRequest): boolean {
+  const secret = process.env.DEBUG_SECRET;
+  if (!secret) return false;
+  return req.nextUrl.searchParams.get('secret') === secret;
+}
+
 export async function GET(req: NextRequest) {
+  if (!isAuthorized(req)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   const { searchParams } = req.nextUrl;
   const rawEngine = searchParams.get('engine');
   const engine: BroadcasterEngine =

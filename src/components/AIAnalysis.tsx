@@ -57,7 +57,7 @@ export function AIAnalysis({ match }: { match: Match }) {
   if (status === 'error') {
     return (
       <p className="mt-4 text-xs text-red-400">
-        Não foi possível carregar a análise. Verifique sua chave de API.
+        Não foi possível carregar a análise. Tente novamente mais tarde.
       </p>
     );
   }
