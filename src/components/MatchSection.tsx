@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 import { MatchCard } from '@/components/MatchCard';
-import type { Match } from '@/lib/types';
+import type { Match, MatchPreview } from '@/lib/types';
 
 function MatchCardSkeleton() {
   return (
@@ -41,6 +41,10 @@ export function MatchSection() {
   const [error, setError] = useState(false);
   const fetchedRef = useRef(false);
 
+  const [previews, setPreviews] = useState<Record<string, MatchPreview> | null>(null);
+  const [previewsLoading, setPreviewsLoading] = useState(false);
+
+  // Load all fixtures once
   useEffect(() => {
     if (fetchedRef.current) return;
     fetchedRef.current = true;
@@ -60,7 +64,22 @@ export function MatchSection() {
       });
   }, []);
 
+  // Fetch previews (form + broadcasters) for current club's matches in one batch request
   const matches: Match[] = club && allFixtures ? (allFixtures[club.id] ?? []) : [];
+  const idsKey = matches.map((m) => m.id).join(',');
+
+  useEffect(() => {
+    if (!idsKey) return;
+
+    setPreviewsLoading(true);
+    setPreviews(null);
+
+    fetch(`/api/previews?ids=${idsKey}`)
+      .then((r) => (r.ok ? (r.json() as Promise<Record<string, MatchPreview>>) : null))
+      .then((data) => { if (data) setPreviews(data); })
+      .catch(() => {})
+      .finally(() => setPreviewsLoading(false));
+  }, [idsKey]);
 
   if (!club) return null;
 
@@ -96,7 +115,13 @@ export function MatchSection() {
       {!loading && !error && matches.length > 0 && (
         <div className="space-y-4">
           {matches.map((match) => (
-            <MatchCard key={match.id} match={match} highlightClubId={club.id} />
+            <MatchCard
+              key={match.id}
+              match={match}
+              highlightClubId={club.id}
+              preview={previews?.[match.id]}
+              previewLoading={previewsLoading}
+            />
           ))}
         </div>
       )}

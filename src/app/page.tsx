@@ -2,6 +2,8 @@ import { ClubSelector } from '@/components/ClubSelector';
 import { MatchSection } from '@/components/MatchSection';
 import { HeroClubName } from '@/components/HeroClubName';
 import { FooterSuggestion, FloatingSuggestion } from '@/components/SuggestionModal';
+import { OnboardingModal } from '@/components/OnboardingModal';
+import { StandingsButton } from '@/components/StandingsModal';
 
 export default function HomePage() {
   return (
@@ -23,14 +25,15 @@ export default function HomePage() {
 
         <div className="relative max-w-2xl mx-auto">
           <p className="text-xs font-semibold uppercase tracking-widest text-white/60 mb-2 font-sans">
-            Campeonato Brasileiro Série A
+            Resenha Pré-Jogo
           </p>
           <HeroClubName />
           <p className="mt-3 text-base text-white/70 font-sans leading-relaxed">
-            Próximos jogos, onde assistir &amp; análise pré-jogo com IA
+            Próximos jogos, onde assistir &amp; análise pré-jogo do seu clube
           </p>
-          <div className="mt-6">
+          <div className="mt-6 flex items-center gap-3">
             <ClubSelector />
+            <StandingsButton />
           </div>
         </div>
       </header>
@@ -47,6 +50,7 @@ export default function HomePage() {
       </footer>
 
       <FloatingSuggestion />
+      <OnboardingModal />
     </div>
   );
 }

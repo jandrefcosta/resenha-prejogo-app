@@ -56,6 +56,7 @@ function toMatchTeam(t: ApiTeam): MatchTeam {
         .replace(/^(Clube |Esporte Clube |Sport Club |Sociedade Esportiva )/i, '')
         .substring(0, 3)
         .toUpperCase(),
+    logo: `https://media.api-sports.io/football/teams/${t.id}.png`,
   };
 }
 
@@ -90,7 +91,7 @@ function mapFixture(f: ApiFixtureItem): Match {
 /**
  * Layer 1 — unstable_cache (in-memory, 6 h)
  *   Deduplicates concurrent requests within the same server process.
- * Layer 2 — file cache (.cache/serie-a-fixtures.json, 6 h)
+ * Layer 2 — Redis cache (key: fixtures:serie-a, 6 h)
  *   Persists across server restarts and cold starts.
  * Layer 3 — API-Football (fallback when both caches are cold/stale)
  */

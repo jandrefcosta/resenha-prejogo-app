@@ -9,6 +9,7 @@ import {
 } from 'react';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme } from '@/lib/types';
+import { recordClub } from '@/lib/freeLimit';
 
 const clubs = clubsData as ClubTheme[];
 
@@ -16,12 +17,14 @@ interface ThemeContextValue {
   club: ClubTheme | null;
   clubs: ClubTheme[];
   setClub: (club: ClubTheme) => void;
+  ready: boolean;
 }
 
 const ThemeContext = createContext<ThemeContextValue>({
   club: null,
   clubs,
   setClub: () => {},
+  ready: false,
 });
 
 export function useTheme() {
@@ -86,6 +89,7 @@ const STORAGE_KEY = 'resenha-prejogo:club';
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [club, setClubState] = useState<ClubTheme | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     const savedId =
@@ -94,6 +98,9 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const initial = saved ?? clubs[0];
     setClubState(initial);
     applyClubTheme(initial);
+    // Record the initial club so it counts as one of the week's slots.
+    recordClub(initial.id);
+    setReady(true);
   }, []);
 
   function setClub(newClub: ClubTheme) {
@@ -103,7 +110,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ThemeContext.Provider value={{ club, clubs, setClub }}>
+    <ThemeContext.Provider value={{ club, clubs, setClub, ready }}>
       {children}
     </ThemeContext.Provider>
   );

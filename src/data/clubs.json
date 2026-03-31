@@ -1,24 +1,13 @@
 [
   {
-    "id": "flamengo",
-    "name": "Flamengo",
-    "shortName": "FLA",
-    "city": "Rio de Janeiro",
-    "state": "RJ",
-    "stadium": "Maracanã",
-    "apiFootballId": 127,
-    "colors": { "primary": "#E8212B", "secondary": "#000000", "accent": "#FF3A3A" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "palmeiras",
-    "name": "Palmeiras",
-    "shortName": "PAL",
-    "city": "São Paulo",
-    "state": "SP",
-    "stadium": "Allianz Parque",
-    "apiFootballId": 121,
-    "colors": { "primary": "#006437", "secondary": "#FFFFFF", "accent": "#00A551" },
+    "id": "athletico-pr",
+    "name": "Athletico Paranaense",
+    "shortName": "CAP",
+    "city": "Curitiba",
+    "state": "PR",
+    "stadium": "Ligga Arena",
+    "apiFootballId": 134,
+    "colors": { "primary": "#CC0000", "secondary": "#1A1A1A", "accent": "#E60000" },
     "textOnPrimary": "white"
   },
   {
@@ -33,94 +22,6 @@
     "textOnPrimary": "white"
   },
   {
-    "id": "botafogo",
-    "name": "Botafogo",
-    "shortName": "BOT",
-    "city": "Rio de Janeiro",
-    "state": "RJ",
-    "stadium": "Nilton Santos",
-    "apiFootballId": 120,
-    "colors": { "primary": "#1A1A1A", "secondary": "#FFFFFF", "accent": "#888888" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "sao-paulo",
-    "name": "São Paulo",
-    "shortName": "SPF",
-    "city": "São Paulo",
-    "state": "SP",
-    "stadium": "MorumBIS",
-    "apiFootballId": 126,
-    "colors": { "primary": "#CC0000", "secondary": "#000000", "accent": "#FFFFFF" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "internacional",
-    "name": "Internacional",
-    "shortName": "INT",
-    "city": "Porto Alegre",
-    "state": "RS",
-    "stadium": "Beira-Rio",
-    "apiFootballId": 119,
-    "colors": { "primary": "#CC0000", "secondary": "#FFFFFF", "accent": "#E60000" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "corinthians",
-    "name": "Corinthians",
-    "shortName": "COR",
-    "city": "São Paulo",
-    "state": "SP",
-    "stadium": "Neo Química Arena",
-    "apiFootballId": 131,
-    "colors": { "primary": "#1C1C1C", "secondary": "#FFFFFF", "accent": "#444444" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "gremio",
-    "name": "Grêmio",
-    "shortName": "GRE",
-    "city": "Porto Alegre",
-    "state": "RS",
-    "stadium": "Arena do Grêmio",
-    "apiFootballId": 130,
-    "colors": { "primary": "#1B63AB", "secondary": "#000000", "accent": "#4D8FD1" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "cruzeiro",
-    "name": "Cruzeiro",
-    "shortName": "CRU",
-    "city": "Belo Horizonte",
-    "state": "MG",
-    "stadium": "Mineirão",
-    "apiFootballId": 135,
-    "colors": { "primary": "#003D99", "secondary": "#FFFFFF", "accent": "#0057E7" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "vasco",
-    "name": "Vasco da Gama",
-    "shortName": "VAS",
-    "city": "Rio de Janeiro",
-    "state": "RJ",
-    "stadium": "São Januário",
-    "apiFootballId": 133,
-    "colors": { "primary": "#2C2C2C", "secondary": "#FFFFFF", "accent": "#737373" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "fluminense",
-    "name": "Fluminense",
-    "shortName": "FLU",
-    "city": "Rio de Janeiro",
-    "state": "RJ",
-    "stadium": "Maracanã",
-    "apiFootballId": 124,
-    "colors": { "primary": "#7B1C28", "secondary": "#228B22", "accent": "#FFFFFF" },
-    "textOnPrimary": "white"
-  },
-  {
     "id": "bahia",
     "name": "Bahia",
     "shortName": "BAH",
@@ -132,47 +33,14 @@
     "textOnPrimary": "white"
   },
   {
-    "id": "athletico-pr",
-    "name": "Athletico Paranaense",
-    "shortName": "CAP",
-    "city": "Curitiba",
-    "state": "PR",
-    "stadium": "Ligga Arena",
-    "apiFootballId": 134,
-    "colors": { "primary": "#CC0000", "secondary": "#1A1A1A", "accent": "#E60000" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "bragantino",
-    "name": "Red Bull Bragantino",
-    "shortName": "RBB",
-    "city": "Bragança Paulista",
-    "state": "SP",
-    "stadium": "Nabi Abi Chedid",
-    "apiFootballId": 794,
-    "colors": { "primary": "#CC0000", "secondary": "#FFFFFF", "accent": "#B20000" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "santos",
-    "name": "Santos",
-    "shortName": "SAN",
-    "city": "Santos",
-    "state": "SP",
-    "stadium": "Vila Belmiro",
-    "apiFootballId": 128,
-    "colors": { "primary": "#1A1A1A", "secondary": "#FFFFFF", "accent": "#C0C0C0" },
-    "textOnPrimary": "white"
-  },
-  {
-    "id": "vitoria",
-    "name": "Vitória",
-    "shortName": "VIT",
-    "city": "Salvador",
-    "state": "BA",
-    "stadium": "Barradão",
-    "apiFootballId": 136,
-    "colors": { "primary": "#CC0000", "secondary": "#1A1A1A", "accent": "#E60000" },
+    "id": "botafogo",
+    "name": "Botafogo",
+    "shortName": "BOT",
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "stadium": "Nilton Santos",
+    "apiFootballId": 120,
+    "colors": { "primary": "#1A1A1A", "secondary": "#FFFFFF", "accent": "#888888" },
     "textOnPrimary": "white"
   },
   {
@@ -187,6 +55,17 @@
     "textOnPrimary": "white"
   },
   {
+    "id": "corinthians",
+    "name": "Corinthians",
+    "shortName": "COR",
+    "city": "São Paulo",
+    "state": "SP",
+    "stadium": "Neo Química Arena",
+    "apiFootballId": 131,
+    "colors": { "primary": "#1C1C1C", "secondary": "#FFFFFF", "accent": "#444444" },
+    "textOnPrimary": "white"
+  },
+  {
     "id": "coritiba",
     "name": "Coritiba",
     "shortName": "CFC",
@@ -195,6 +74,94 @@
     "stadium": "Couto Pereira",
     "apiFootballId": 147,
     "colors": { "primary": "#1E7A34", "secondary": "#FFFFFF", "accent": "#25993F" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "cruzeiro",
+    "name": "Cruzeiro",
+    "shortName": "CRU",
+    "city": "Belo Horizonte",
+    "state": "MG",
+    "stadium": "Mineirão",
+    "apiFootballId": 135,
+    "colors": { "primary": "#003D99", "secondary": "#FFFFFF", "accent": "#0057E7" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "flamengo",
+    "name": "Flamengo",
+    "shortName": "FLA",
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "stadium": "Maracanã",
+    "apiFootballId": 127,
+    "colors": { "primary": "#E8212B", "secondary": "#000000", "accent": "#FF3A3A" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "fluminense",
+    "name": "Fluminense",
+    "shortName": "FLU",
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "stadium": "Maracanã",
+    "apiFootballId": 124,
+    "colors": { "primary": "#7B1C28", "secondary": "#228B22", "accent": "#FFFFFF" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "gremio",
+    "name": "Grêmio",
+    "shortName": "GRE",
+    "city": "Porto Alegre",
+    "state": "RS",
+    "stadium": "Arena do Grêmio",
+    "apiFootballId": 130,
+    "colors": { "primary": "#1B63AB", "secondary": "#000000", "accent": "#4D8FD1" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "internacional",
+    "name": "Internacional",
+    "shortName": "INT",
+    "city": "Porto Alegre",
+    "state": "RS",
+    "stadium": "Beira-Rio",
+    "apiFootballId": 119,
+    "colors": { "primary": "#CC0000", "secondary": "#FFFFFF", "accent": "#E60000" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "mirassol",
+    "name": "Mirassol",
+    "shortName": "MIR",
+    "city": "Mirassol",
+    "state": "SP",
+    "stadium": "José Maria de Campos Maia",
+    "apiFootballId": 7848,
+    "colors": { "primary": "#F5C518", "secondary": "#1249AA", "accent": "#E6B800" },
+    "textOnPrimary": "dark"
+  },
+  {
+    "id": "palmeiras",
+    "name": "Palmeiras",
+    "shortName": "PAL",
+    "city": "São Paulo",
+    "state": "SP",
+    "stadium": "Allianz Parque",
+    "apiFootballId": 121,
+    "colors": { "primary": "#006437", "secondary": "#FFFFFF", "accent": "#00A551" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "bragantino",
+    "name": "Red Bull Bragantino",
+    "shortName": "RBB",
+    "city": "Bragança Paulista",
+    "state": "SP",
+    "stadium": "Nabi Abi Chedid",
+    "apiFootballId": 794,
+    "colors": { "primary": "#CC0000", "secondary": "#FFFFFF", "accent": "#B20000" },
     "textOnPrimary": "white"
   },
   {
@@ -209,14 +176,47 @@
     "textOnPrimary": "white"
   },
   {
-    "id": "mirassol",
-    "name": "Mirassol",
-    "shortName": "MIR",
-    "city": "Mirassol",
+    "id": "santos",
+    "name": "Santos",
+    "shortName": "SAN",
+    "city": "Santos",
     "state": "SP",
-    "stadium": "José Maria de Campos Maia",
-    "apiFootballId": 7848,
-    "colors": { "primary": "#F5C518", "secondary": "#1249AA", "accent": "#E6B800" },
-    "textOnPrimary": "dark"
+    "stadium": "Vila Belmiro",
+    "apiFootballId": 128,
+    "colors": { "primary": "#1A1A1A", "secondary": "#FFFFFF", "accent": "#C0C0C0" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "sao-paulo",
+    "name": "São Paulo",
+    "shortName": "SPF",
+    "city": "São Paulo",
+    "state": "SP",
+    "stadium": "MorumBIS",
+    "apiFootballId": 126,
+    "colors": { "primary": "#CC0000", "secondary": "#000000", "accent": "#FFFFFF" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "vasco",
+    "name": "Vasco da Gama",
+    "shortName": "VAS",
+    "city": "Rio de Janeiro",
+    "state": "RJ",
+    "stadium": "São Januário",
+    "apiFootballId": 133,
+    "colors": { "primary": "#2C2C2C", "secondary": "#FFFFFF", "accent": "#737373" },
+    "textOnPrimary": "white"
+  },
+  {
+    "id": "vitoria",
+    "name": "Vitória",
+    "shortName": "VIT",
+    "city": "Salvador",
+    "state": "BA",
+    "stadium": "Barradão",
+    "apiFootballId": 136,
+    "colors": { "primary": "#CC0000", "secondary": "#1A1A1A", "accent": "#E60000" },
+    "textOnPrimary": "white"
   }
 ]

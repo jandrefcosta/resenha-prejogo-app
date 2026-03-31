@@ -44,7 +44,7 @@ export default function OgImage() {
             marginBottom: 20,
           }}
         >
-          Campeonato Brasileiro Série A
+          Resenha Pré-Jogo
         </div>
 
         {/* Title */}

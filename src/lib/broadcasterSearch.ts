@@ -1,9 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
-import type { TextBlock } from '@anthropic-ai/sdk/resources/messages/messages';
 import { GoogleGenAI } from '@google/genai';
 import { getCache, setCache, TTL_24H } from '@/lib/redisCache';
 
-const anthropic = new Anthropic();
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 const SYSTEM_PROMPT = `Você é um assistente especializado em transmissões de futebol brasileiro.
@@ -33,53 +30,14 @@ function parseBroadcasters(text: string): string[] {
   return parsed.filter((v): v is string => typeof v === 'string');
 }
 
-async function getBroadcastersViaAnthropic(userMessage: string): Promise<string[]> {
-  const response = await anthropic.messages.create({
-    model: 'claude-haiku-4-5-20251001',
-    max_tokens: 300,
-    tools: [{ type: 'web_search_20260209', name: 'web_search', allowed_callers: ['direct'] }],
-    system: SYSTEM_PROMPT,
-    messages: [{ role: 'user', content: userMessage }],
-  });
-
-  const text = response.content
-    .filter((b): b is TextBlock => b.type === 'text')
-    .map((b) => b.text)
-    .join('')
-    .trim();
-
-  return parseBroadcasters(text);
-}
-
-async function getBroadcastersViaGemini(userMessage: string): Promise<string[]> {
-  const response = await gemini.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: userMessage,
-    config: {
-      tools: [{ googleSearch: {} }],
-      systemInstruction: SYSTEM_PROMPT,
-    },
-  });
-
-  const text = response.text ?? '';
-  return parseBroadcasters(text);
-}
-
-export type BroadcasterEngine = 'anthropic' | 'gemini';
-
-export function getActiveEngine(): BroadcasterEngine {
-  return process.env.BROADCASTER_ENGINE === 'gemini' ? 'gemini' : 'anthropic';
-}
-
 export async function getBroadcastersForFixture(
   fixtureId: string,
   homeTeam: string,
   awayTeam: string,
   round: string,
   date: string,
-  engine: BroadcasterEngine = getActiveEngine(),
 ): Promise<string[]> {
-  const cacheKey = `broadcasters:${engine}:${fixtureId}`;
+  const cacheKey = `broadcasters:${fixtureId}`;
 
   const cached = await getCache<string[]>(cacheKey);
   if (cached !== null) return cached;
@@ -98,12 +56,16 @@ export async function getBroadcastersForFixture(
     `${round} — Campeonato Brasileiro Série A\n` +
     `Data: ${formattedDate} (Horário de Brasília)`;
 
-  const broadcasters =
-    engine === 'gemini'
-      ? await getBroadcastersViaGemini(userMessage)
-      : await getBroadcastersViaAnthropic(userMessage);
+  const response = await gemini.models.generateContent({
+    model: 'gemini-2.5-flash',
+    contents: userMessage,
+    config: {
+      tools: [{ googleSearch: {} }],
+      systemInstruction: SYSTEM_PROMPT,
+    },
+  });
 
+  const broadcasters = parseBroadcasters(response.text ?? '');
   await setCache(cacheKey, broadcasters, TTL_24H);
-
   return broadcasters;
 }
