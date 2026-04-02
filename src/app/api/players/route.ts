@@ -30,7 +30,16 @@ async function fetchTeamPlayers(teamId: number, season: number): Promise<PlayerS
   const data = await res.json();
   const entries = (data.response ?? []) as RawPlayerEntry[];
 
-  return entries
+  // Deduplicate by player ID — the API can return the same player across
+  // multiple entries (e.g. different seasons/leagues in the same response).
+  const seen = new Set<number>();
+  const unique = entries.filter((e) => {
+    if (seen.has(e.player.id)) return false;
+    seen.add(e.player.id);
+    return true;
+  });
+
+  return unique
     .map((e) => {
       const stats = e.statistics.find((s) => s.league.id === LEAGUE_ID) ?? e.statistics[0];
       if (!stats) return null;
@@ -63,8 +72,8 @@ export async function GET(req: NextRequest) {
   }
 
   const season = new Date().getFullYear();
-  const homeKey = `players:${homeId}:${season}`;
-  const awayKey = `players:${awayId}:${season}`;
+  const homeKey = `players:v2:${homeId}:${season}`;
+  const awayKey = `players:v2:${awayId}:${season}`;
 
   const [cachedHome, cachedAway] = await Promise.all([
     getCache<PlayerStat[]>(homeKey),

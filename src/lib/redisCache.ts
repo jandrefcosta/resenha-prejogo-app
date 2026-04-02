@@ -5,8 +5,11 @@ export const redis = new Redis({
   token: process.env.UPSTASH_REDIS_REST_TOKEN!,
 });
 
-export const TTL_6H = 60 * 60 * 6;
-export const TTL_24H = 60 * 60 * 24;
+export const TTL_30MIN = 60 * 30;
+export const TTL_1H   = 60 * 60;
+export const TTL_3H   = 60 * 60 * 3;
+export const TTL_6H   = 60 * 60 * 6;
+export const TTL_24H  = 60 * 60 * 24;
 
 export async function getCache<T>(key: string): Promise<T | null> {
   try {

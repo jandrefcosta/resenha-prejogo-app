@@ -7,6 +7,8 @@ export interface ClubTheme {
   stadium: string;
   /** API-Football team ID (league 71 — Brasileirão Série A). Verify at api-sports.io. */
   apiFootballId: number | null;
+  /** CBF internal club ID (gweb.cbf.com.br). Used to correlate with official match data. */
+  cbfId?: number;
   colors: {
     primary: string;
     secondary: string;
@@ -119,4 +121,104 @@ export interface MatchPreview {
   homeForm: string[];
   awayForm: string[];
   broadcasters: string[];
+}
+
+// ─── CBF API types ────────────────────────────────────────────────────────────
+
+export interface CbfGoal {
+  /** CBF athlete ID */
+  atletaId: string;
+  atletaNome: string;
+  atletaApelido: string;
+  atletaCamisa: string;
+  /** CBF club ID */
+  clubeId: string;
+  clube: string;
+  /** 1 or 2 (first/second half), 'AC1', 'AC2', etc. */
+  tempoJogo: string;
+  minutos: string;
+  /** 'CT' = contra-ataque/regular, 'NR' = normal */
+  resultado: string;
+}
+
+export interface CbfCard {
+  atletaId: string;
+  atletaNome: string;
+  atletaApelido: string;
+  atletaCamisa: string;
+  clubeId: string;
+  clube: string;
+  tempoJogo: string;
+  minutos: string;
+  /** 'AMARELO' | 'VERMELHO' | 'VERMELHO2AMARELO' */
+  resultado: string;
+}
+
+export interface CbfReferee {
+  id: number;
+  nome: string;
+  /** 'Arbitro' | 'Arbitro Assistente 1' | 'VAR' | 'AVAR' | … */
+  funcao: string;
+  uf: string;
+  categoria: string;
+}
+
+export interface CbfAthlete {
+  id: number;
+  numeroCamisa: number;
+  reserva: boolean;
+  goleiro: boolean;
+  entrouJogando: boolean;
+  nome: string;
+  apelido: string;
+  foto: string;
+}
+
+export interface CbfSubstitution {
+  codigoJogadorSaiu: number;
+  codigoJogadorEntrou: number;
+  tempoJogo: string;
+  tempoSubs: string;
+}
+
+export interface CbfTeamDetail {
+  /** CBF club ID */
+  id: string;
+  nome: string;
+  urlEscudo: string;
+  gols: string;
+  panaltis: string;
+  atletas: CbfAthlete[];
+  alteracoes: CbfSubstitution[];
+}
+
+export interface CbfMatchDetail {
+  /** CBF match ID */
+  idJogo: string;
+  numJogo: string;
+  rodada: string;
+  grupo: string;
+  local: string;
+  campeonato: string;
+  data: string;
+  hora: string;
+  mandante: CbfTeamDetail;
+  visitante: CbfTeamDetail;
+  arbitros: CbfReferee[];
+  gols: CbfGoal[];
+  cartoes: CbfCard[];
+  documentos: Array<{ url: string; title: string }>;
+}
+
+/** State used to compute cache TTL */
+export type CbfRoundStatus = 'finished' | 'live' | 'upcoming';
+
+export interface CbfRoundData {
+  round: number;
+  status: CbfRoundStatus;
+  /** ISO timestamp of when this data was fetched */
+  fetchedAt: string;
+  /** Seconds until stale — caller should re-fetch after this */
+  ttlSeconds: number;
+  matches: CbfMatchDetail[];
 }

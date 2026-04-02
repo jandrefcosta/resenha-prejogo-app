@@ -1,5 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
-import { getCache, setCache, TTL_24H } from '@/lib/redisCache';
+import { getCache, setCache, TTL_1H, TTL_24H } from '@/lib/redisCache';
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
@@ -66,6 +66,8 @@ export async function getBroadcastersForFixture(
   });
 
   const broadcasters = parseBroadcasters(response.text ?? '');
-  await setCache(cacheKey, broadcasters, TTL_24H);
+  // Empty result = schedule not yet published. Cache briefly so we retry soon.
+  const ttl = broadcasters.length > 0 ? TTL_24H : TTL_1H;
+  await setCache(cacheKey, broadcasters, ttl);
   return broadcasters;
 }

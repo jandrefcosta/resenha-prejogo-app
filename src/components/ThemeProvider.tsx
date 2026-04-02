@@ -9,7 +9,6 @@ import {
 } from 'react';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme } from '@/lib/types';
-import { recordClub } from '@/lib/freeLimit';
 
 const clubs = clubsData as ClubTheme[];
 
@@ -98,8 +97,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     const initial = saved ?? clubs[0];
     setClubState(initial);
     applyClubTheme(initial);
-    // Record the initial club so it counts as one of the week's slots.
-    recordClub(initial.id);
     setReady(true);
   }, []);
 

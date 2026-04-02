@@ -4,6 +4,8 @@ import { HeroClubName } from '@/components/HeroClubName';
 import { FooterSuggestion, FloatingSuggestion } from '@/components/SuggestionModal';
 import { OnboardingModal } from '@/components/OnboardingModal';
 import { StandingsButton } from '@/components/StandingsModal';
+import { RoundButton } from '@/components/RoundModal';
+import { EmailSubscribeButton, EmailJourneyBanner } from '@/components/EmailCaptureModal';
 
 export default function HomePage() {
   return (
@@ -31,9 +33,11 @@ export default function HomePage() {
           <p className="mt-3 text-base text-white/70 font-sans leading-relaxed">
             Próximos jogos, onde assistir &amp; análise pré-jogo do seu clube
           </p>
-          <div className="mt-6 flex items-center gap-3">
+          <div className="mt-6 flex items-center gap-3 flex-wrap">
             <ClubSelector />
             <StandingsButton />
+            <RoundButton />
+            <EmailSubscribeButton />
           </div>
         </div>
       </header>
@@ -50,6 +54,7 @@ export default function HomePage() {
       </footer>
 
       <FloatingSuggestion />
+      <EmailJourneyBanner />
       <OnboardingModal />
     </div>
   );

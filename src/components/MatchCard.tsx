@@ -1,15 +1,9 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import type { Match, H2HData, MatchPreview, TeamPlayersData } from '@/lib/types';
+import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail } from '@/lib/types';
 import { useFocusTrap } from '@/lib/useFocusTrap';
-import {
-  canViewDetail,
-  recordDetail,
-  readDetails,
-  FREE_DETAIL_LIMIT,
-} from '@/lib/freeLimit';
-import { PaywallModal } from '@/components/PaywallModal';
+import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -77,24 +71,6 @@ function CloseIcon() {
   );
 }
 
-function SmallLockIcon() {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 16 16"
-      fill="currentColor"
-      className="w-3.5 h-3.5 shrink-0"
-      aria-hidden="true"
-    >
-      <path
-        fillRule="evenodd"
-        d="M8 1a3.5 3.5 0 0 0-3.5 3.5V7A1.5 1.5 0 0 0 3 8.5v4A1.5 1.5 0 0 0 4.5 14h7a1.5 1.5 0 0 0 1.5-1.5v-4A1.5 1.5 0 0 0 11 7V4.5A3.5 3.5 0 0 0 8 1Zm2.5 6V4.5a2.5 2.5 0 0 0-5 0V7h5Z"
-        clipRule="evenodd"
-      />
-    </svg>
-  );
-}
-
 function HistoryIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
@@ -107,6 +83,14 @@ function PlayersIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
       <path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 17a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.818.818 0 0 1-.36.98A7.465 7.465 0 0 1 14.5 16Z" />
+    </svg>
+  );
+}
+
+function FichaIcon() {
+  return (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
+      <path fillRule="evenodd" d="M6 2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7.414A2 2 0 0 0 15.414 6L12 2.586A2 2 0 0 0 10.586 2H6Zm2 7a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm0 3a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Z" clipRule="evenodd" />
     </svg>
   );
 }
@@ -229,7 +213,7 @@ function ModalShell({
   }, []);
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+    <div className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center p-4"
       role="dialog" aria-modal="true" aria-label={title}>
       <div className="absolute inset-0 bg-black/75 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
       <div ref={panelRef}
@@ -339,7 +323,7 @@ function H2HModalContent({ data, match }: { data: H2HData; match: Match }) {
       {hasInjuries && (
         <section>
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">
-            Desfalques confirmados
+            Principais desfalques
           </p>
           <div className="space-y-2">
             {injuries.map((p, i) => (
@@ -401,6 +385,175 @@ function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Ma
   );
 }
 
+// ─── CBF match sheet modal content ───────────────────────────────────────────
+
+const CARD_COLORS: Record<string, string> = {
+  AMARELO: 'bg-yellow-400',
+  VERMELHO: 'bg-red-600',
+  VERMELHO2AMARELO: 'bg-red-600',
+};
+
+const CARD_LABELS: Record<string, string> = {
+  AMARELO: 'Amarelo',
+  VERMELHO: 'Vermelho',
+  VERMELHO2AMARELO: '2º Amarelo',
+};
+
+const REFEREE_ROLES: Record<string, string> = {
+  Arbitro: 'Principal',
+  'Arbitro Assistente 1': 'Assistente 1',
+  'Arbitro Assistente 2': 'Assistente 2',
+  'Quarto Arbitro': '4º Árbitro',
+  VAR: 'VAR',
+  AVAR: 'AVAR',
+  AVAR2: 'AVAR2',
+};
+
+function CbfMatchModalContent({ data, match }: { data: CbfMatchDetail; match: Match }) {
+  const mainRef = data.arbitros.find((a) => a.funcao === 'Arbitro');
+  const varRef = data.arbitros.find((a) => a.funcao === 'VAR');
+  const otherRefs = data.arbitros.filter(
+    (a) => a.funcao !== 'Arbitro' && a.funcao !== 'VAR' && a.funcao !== 'Inspetor' && a.funcao !== 'Assessor' && a.funcao !== 'Quality manager' && a.funcao !== 'Observador de VAR',
+  );
+
+  const hasScore = data.mandante.gols !== '' && data.visitante.gols !== '';
+  const homeGoals = data.gols.filter((g) => g.clubeId === data.mandante.id);
+  const awayGoals = data.gols.filter((g) => g.clubeId === data.visitante.id);
+  const homeCards = data.cartoes.filter((c) => c.clubeId === data.mandante.id);
+  const awayCards = data.cartoes.filter((c) => c.clubeId === data.visitante.id);
+
+  const homeStarters = data.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando);
+  const awayStarters = data.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando);
+
+  return (
+    <>
+      {/* Score */}
+      {hasScore && (
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Resultado</p>
+          <div className="flex items-center justify-center gap-6 rounded-xl bg-zinc-800 py-4 px-4">
+            <div className="flex-1 text-right">
+              <p className="text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-4xl font-black font-display text-white tabular-nums">{data.mandante.gols}</span>
+              <span className="text-xl font-black font-display text-zinc-600">–</span>
+              <span className="text-4xl font-black font-display text-white tabular-nums">{data.visitante.gols}</span>
+            </div>
+            <div className="flex-1 text-left">
+              <p className="text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* Goals */}
+      {data.gols.length > 0 && (
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Gols</p>
+          <div className="space-y-1">
+            {homeGoals.map((g, i) => (
+              <div key={`hg-${i}`} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="text-base leading-none">⚽</span>
+                <span className="font-medium text-zinc-200 flex-1">{g.atletaApelido || g.atletaNome}</span>
+                <span className="text-zinc-500">{match.homeTeam.shortName}</span>
+                <span className="text-zinc-600 tabular-nums">{g.minutos}&apos;</span>
+              </div>
+            ))}
+            {awayGoals.map((g, i) => (
+              <div key={`ag-${i}`} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="text-base leading-none">⚽</span>
+                <span className="font-medium text-zinc-200 flex-1">{g.atletaApelido || g.atletaNome}</span>
+                <span className="text-zinc-500">{match.awayTeam.shortName}</span>
+                <span className="text-zinc-600 tabular-nums">{g.minutos}&apos;</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Cards */}
+      {data.cartoes.length > 0 && (
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Cartões</p>
+          <div className="space-y-1">
+            {[...homeCards, ...awayCards].map((c, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className={`inline-block w-2.5 h-3.5 rounded-sm shrink-0 ${CARD_COLORS[c.resultado] ?? 'bg-zinc-500'}`} aria-hidden="true" />
+                <span className="font-medium text-zinc-200 flex-1">{c.atletaApelido || c.atletaNome}</span>
+                <span className="text-zinc-500 shrink-0">
+                  {c.clubeId === data.mandante.id ? match.homeTeam.shortName : match.awayTeam.shortName}
+                </span>
+                <span className="text-zinc-600 shrink-0">{CARD_LABELS[c.resultado] ?? c.resultado}</span>
+                <span className="text-zinc-600 tabular-nums shrink-0">{c.minutos}&apos;</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Lineups */}
+      {(homeStarters.length > 0 || awayStarters.length > 0) && (
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Escalação</p>
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: match.homeTeam.shortName, players: homeStarters },
+              { label: match.awayTeam.shortName, players: awayStarters },
+            ].map(({ label, players }) => (
+              <div key={label}>
+                <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}</p>
+                <div className="space-y-0.5">
+                  {players.map((p) => (
+                    <div key={p.id} className="flex items-center gap-1.5 text-xs font-sans">
+                      <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.numeroCamisa}</span>
+                      <span className="text-zinc-300 truncate">{p.apelido.replace(/^\d+\s+-\s+/, '')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {/* Referee panel */}
+      {data.arbitros.length > 0 && (
+        <section>
+          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Arbitragem</p>
+          <div className="space-y-1">
+            {mainRef && (
+              <div className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="text-zinc-400 font-medium w-20 shrink-0">Principal</span>
+                <span className="text-zinc-200 flex-1">{mainRef.nome}</span>
+                <span className="text-zinc-600 shrink-0">{mainRef.uf}</span>
+              </div>
+            )}
+            {varRef && (
+              <div className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="text-zinc-400 font-medium w-20 shrink-0">VAR</span>
+                <span className="text-zinc-200 flex-1">{varRef.nome}</span>
+                <span className="text-zinc-600 shrink-0">{varRef.uf}</span>
+              </div>
+            )}
+            {otherRefs.map((r, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="text-zinc-500 w-20 shrink-0">{REFEREE_ROLES[r.funcao] ?? r.funcao}</span>
+                <span className="text-zinc-400 flex-1">{r.nome}</span>
+                <span className="text-zinc-600 shrink-0">{r.uf}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      {!hasScore && data.gols.length === 0 && data.arbitros.length === 0 && (
+        <p className="text-sm text-zinc-500 font-sans text-center py-4">Ficha ainda não disponível.</p>
+      )}
+    </>
+  );
+}
+
 // ─── Inline form strip ────────────────────────────────────────────────────────
 
 function FormStrip({ homeForm, awayForm, loading }: { homeForm: string[]; awayForm: string[]; loading: boolean }) {
@@ -451,7 +604,7 @@ function formatTime(iso: string): string {
 
 // ─── MatchCard ────────────────────────────────────────────────────────────────
 
-type ActiveModal = 'h2h' | 'players' | null;
+type ActiveModal = 'h2h' | 'players' | 'ficha' | null;
 type FetchStatus = 'idle' | 'loading' | 'done' | 'error';
 
 export function MatchCard({
@@ -470,24 +623,10 @@ export function MatchCard({
   const [h2hStatus, setH2hStatus] = useState<FetchStatus>('idle');
   const [playersData, setPlayersData] = useState<TeamPlayersData | null>(null);
   const [playersStatus, setPlayersStatus] = useState<FetchStatus>('idle');
-  const [paywallOpen, setPaywallOpen] = useState(false);
-
-  // Compute whether this match's detail view is locked for the highlighted club.
-  // Initialised from localStorage; updated locally when this card records a detail.
-  const [matchIsLocked, setMatchIsLocked] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    const { data } = readDetails();
-    const matchIds = data[highlightClubId] ?? [];
-    return matchIds.length >= FREE_DETAIL_LIMIT && !matchIds.includes(match.id);
-  });
+  const [fichaData, setFichaData] = useState<CbfMatchDetail | null>(null);
+  const [fichaStatus, setFichaStatus] = useState<FetchStatus>('idle');
 
   function openH2HModal() {
-    if (!canViewDetail(highlightClubId, match.id)) {
-      setPaywallOpen(true);
-      return;
-    }
-    recordDetail(highlightClubId, match.id);
-    setMatchIsLocked(false);
     setActiveModal('h2h');
     if (h2hStatus !== 'idle') return;
     setH2hStatus('loading');
@@ -499,12 +638,6 @@ export function MatchCard({
   }
 
   function openPlayersModal() {
-    if (!canViewDetail(highlightClubId, match.id)) {
-      setPaywallOpen(true);
-      return;
-    }
-    recordDetail(highlightClubId, match.id);
-    setMatchIsLocked(false);
     setActiveModal('players');
     if (playersStatus !== 'idle') return;
     setPlayersStatus('loading');
@@ -514,12 +647,27 @@ export function MatchCard({
       .catch(() => setPlayersStatus('error'));
   }
 
+  function openFichaModal() {
+    setActiveModal('ficha');
+    if (fichaStatus !== 'idle') return;
+    setFichaStatus('loading');
+    const round = match.round.match(/(\d+)/)?.[1] ?? '';
+    const params = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, round });
+    fetch(`/api/cbf/match?${params}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<CbfMatchDetail>; })
+      .then((d) => { setFichaData(d); setFichaStatus('done'); })
+      .catch(() => setFichaStatus('error'));
+  }
+
   const homeIsHighlighted = match.homeTeam.id === highlightClubId;
   const awayIsHighlighted = match.awayTeam.id === highlightClubId;
   const hasVenue = match.stadium !== null || match.city !== null;
   const broadcasters = preview?.broadcasters ?? [];
-  const daysUntilRender = (new Date(match.date).getTime() - Date.now()) / 86_400_000;
-  const outsideSearchWindow = daysUntilRender < 0 || daysUntilRender > DAYS_AHEAD_FOR_BROADCAST_SEARCH;
+  const kickoffMs = new Date(match.date).getTime();
+  const nowMs = Date.now();
+  const live = match.status !== 'postponed' && nowMs >= kickoffMs && nowMs <= kickoffMs + LIVE_WINDOW_MS;
+  const daysUntilRender = (kickoffMs - nowMs) / 86_400_000;
+  const outsideSearchWindow = !live && (daysUntilRender < 0 || daysUntilRender > DAYS_AHEAD_FOR_BROADCAST_SEARCH);
 
   return (
     <>
@@ -527,10 +675,18 @@ export function MatchCard({
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/60">
           <span className="text-xs font-medium text-zinc-400 truncate font-sans">{match.competition}</span>
-          <span className="ml-2 flex-none rounded-full px-3 py-0.5 text-xs font-bold font-display tracking-wide"
-            style={{ backgroundColor: 'var(--club-primary)', color: 'var(--club-text-on-primary)' }}>
-            {match.round}
-          </span>
+          <div className="ml-2 flex-none flex items-center gap-2">
+            {live && (
+              <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-green-400 border border-green-400/30 bg-green-400/10 font-sans">
+                <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" aria-hidden="true" />
+                Ao Vivo
+              </span>
+            )}
+            <span className="rounded-full px-3 py-0.5 text-xs font-bold font-display tracking-wide"
+              style={{ backgroundColor: 'var(--club-primary)', color: 'var(--club-text-on-primary)' }}>
+              {match.round}
+            </span>
+          </div>
         </div>
 
         <div className="p-4">
@@ -562,7 +718,14 @@ export function MatchCard({
             <div className="rounded-lg bg-zinc-800 px-3 py-2.5">
               <p className="text-xs text-zinc-500 mb-0.5 font-sans">Data &amp; Hora</p>
               <p className="font-semibold text-white capitalize font-display tracking-wide">{formatDate(match.date)}</p>
-              <p className="text-zinc-300 text-sm font-sans">{formatTime(match.date)} · Brasília</p>
+              {live ? (
+                <p className="flex items-center gap-1.5 text-green-400 text-sm font-bold font-sans">
+                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" aria-hidden="true" />
+                  Em andamento
+                </p>
+              ) : (
+                <p className="text-zinc-300 text-sm font-sans">{formatTime(match.date)} · Brasília</p>
+              )}
             </div>
             {hasVenue && (
               <div className="rounded-lg bg-zinc-800 px-3 py-2.5">
@@ -595,38 +758,36 @@ export function MatchCard({
           />
 
           {/* Action buttons */}
-          <div className="mt-4 pt-4 border-t border-zinc-800 grid grid-cols-3 gap-2">
+          <div className="mt-4 pt-4 border-t border-zinc-800 grid grid-cols-4 gap-2">
             <button
               onClick={openH2HModal}
-              aria-label={matchIsLocked ? 'Confronto — recurso premium' : 'Ver confronto direto'}
-              className={[
-                'flex items-center justify-center gap-2 rounded-xl border px-3 min-h-[44px] text-xs font-medium font-sans transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2',
-                matchIsLocked
-                  ? 'bg-zinc-800/30 border-amber-900/40 text-amber-600/70 hover:text-amber-500 hover:border-amber-800/60 focus-visible:outline-amber-800'
-                  : 'bg-zinc-800/60 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 focus-visible:outline-zinc-500',
-              ].join(' ')}
+              aria-label="Ver confronto direto"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
-              {matchIsLocked ? <SmallLockIcon /> : <HistoryIcon />}
+              <HistoryIcon />
               Confronto
             </button>
             <button
               onClick={openPlayersModal}
-              aria-label={matchIsLocked ? 'Jogadores — recurso premium' : 'Ver jogadores'}
-              className={[
-                'flex items-center justify-center gap-2 rounded-xl border px-3 min-h-[44px] text-xs font-medium font-sans transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2',
-                matchIsLocked
-                  ? 'bg-zinc-800/30 border-amber-900/40 text-amber-600/70 hover:text-amber-500 hover:border-amber-800/60 focus-visible:outline-amber-800'
-                  : 'bg-zinc-800/60 border-zinc-700/50 text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 focus-visible:outline-zinc-500',
-              ].join(' ')}
+              aria-label="Ver jogadores"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
-              {matchIsLocked ? <SmallLockIcon /> : <PlayersIcon />}
+              <PlayersIcon />
               Jogadores
+            </button>
+            <button
+              onClick={openFichaModal}
+              aria-label="Ver ficha do jogo"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
+            >
+              <FichaIcon />
+              Ficha
             </button>
             <a
               href={`https://wa.me/?text=${encodeURIComponent(buildWhatsAppMessage(match, broadcasters))}`}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center justify-center gap-2 rounded-xl bg-zinc-800/60 border border-zinc-700/50 px-3 min-h-[44px] text-xs font-medium font-sans text-zinc-400 hover:text-[#25D366] hover:bg-zinc-800 hover:border-[#25D366]/40 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
+              className="flex flex-col items-center justify-center gap-1 rounded-xl bg-zinc-800/60 border border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-[#25D366] hover:bg-zinc-800 hover:border-[#25D366]/40 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
               aria-label="Compartilhar no WhatsApp"
             >
               <WhatsAppIcon />
@@ -636,10 +797,12 @@ export function MatchCard({
 
           {/* Referee */}
           <div className="mt-3 flex items-center gap-2 text-xs font-sans">
-            <span className="text-zinc-500">Árbitro:</span>
-            {match.referee
-              ? <span className="text-zinc-300">{match.referee}</span>
-              : <span className="text-zinc-600 italic">a confirmar</span>
+            <span className="text-zinc-500">Arbitragem:</span>
+            {fichaData?.arbitros?.find((a) => a.funcao === 'Arbitro')?.nome
+              ? <span className="text-zinc-300">{fichaData.arbitros.find((a) => a.funcao === 'Arbitro')!.nome}</span>
+              : match.referee
+                ? <span className="text-zinc-300">{match.referee}</span>
+                : <span className="text-zinc-600 italic">a confirmar</span>
             }
           </div>
         </div>
@@ -685,10 +848,25 @@ export function MatchCard({
         </ModalShell>
       )}
 
-      {/* Paywall */}
-      {paywallOpen && (
-        <PaywallModal context="detail" onClose={() => setPaywallOpen(false)} />
+      {/* Ficha Modal */}
+      {activeModal === 'ficha' && (
+        <ModalShell
+          title="Ficha do Jogo"
+          subtitle={`${match.homeTeam.shortName} × ${match.awayTeam.shortName} · ${match.round}`}
+          onClose={() => setActiveModal(null)}
+        >
+          {fichaStatus === 'loading' && (
+            <div className="space-y-4 animate-pulse">
+              <div className="h-16 bg-zinc-800 rounded-xl" />
+              <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-8 bg-zinc-800 rounded-lg" />)}</div>
+              <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-8 bg-zinc-800 rounded-lg" />)}</div>
+            </div>
+          )}
+          {fichaStatus === 'error' && <p className="text-sm text-zinc-500 font-sans text-center py-4">Não foi possível carregar a ficha do jogo.</p>}
+          {fichaStatus === 'done' && fichaData && <CbfMatchModalContent data={fichaData} match={match} />}
+        </ModalShell>
       )}
+
     </>
   );
 }

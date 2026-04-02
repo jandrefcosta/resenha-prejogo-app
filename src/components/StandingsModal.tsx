@@ -42,6 +42,20 @@ function TableIcon() {
   );
 }
 
+function RefreshIcon({ spinning }: { spinning: boolean }) {
+  return (
+    <svg
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 20 20"
+      fill="currentColor"
+      className={`w-4 h-4 shrink-0 transition-transform ${spinning ? 'animate-spin' : ''}`}
+      aria-hidden="true"
+    >
+      <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clipRule="evenodd" />
+    </svg>
+  );
+}
+
 // ─── Zone colour coding ───────────────────────────────────────────────────────
 const ZONE_HIGHLIGHTED = { bg: 'rgba(251,191,36,0.13)', border: '#fbbf24' };   // amber
 const ZONES: { match: string[]; bg: string; border: string }[] = [
@@ -78,20 +92,38 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
   useFocusTrap(panelRef, onClose);
 
   const [standings, setStandings] = useState<StandingEntry[] | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'done' | 'error'>('loading');
+  const [refreshing, setRefreshing] = useState(false);
 
-  useEffect(() => {
-    fetch('/api/standings')
+  function fetchStandings(force = false) {
+    if (force) setRefreshing(true);
+    else setStatus('loading');
+
+    fetch(force ? '/api/standings?force=1' : '/api/standings')
       .then((r) => {
         if (!r.ok) throw new Error();
-        return r.json() as Promise<StandingEntry[]>;
+        return r.json() as Promise<{ data: StandingEntry[]; updatedAt: string }>;
       })
-      .then((data) => {
+      .then(({ data, updatedAt: ua }) => {
         setStandings(data);
+        setUpdatedAt(ua);
         setStatus('done');
       })
-      .catch(() => setStatus('error'));
-  }, []);
+      .catch(() => setStatus('error'))
+      .finally(() => setRefreshing(false));
+  }
+
+  useEffect(() => { fetchStandings(); }, []);
+
+  // Auto-refresh silencioso se o cache estiver com mais de 30min ao abrir
+  useEffect(() => {
+    if (status !== 'done' || !updatedAt) return;
+    const ageMs = Date.now() - new Date(updatedAt).getTime();
+    if (ageMs > 30 * 60 * 1000) {
+      fetchStandings(true);
+    }
+  }, [status]);
 
   // Scroll highlighted row into view once data is ready
   useEffect(() => {
@@ -100,9 +132,17 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
     }
   }, [status]);
 
+  function formatAge(iso: string): string {
+    const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
+    if (diff < 60) return 'agora mesmo';
+    if (diff < 3600) return `há ${Math.floor(diff / 60)}min`;
+    const h = Math.floor(diff / 3600);
+    return `há ${h}h${Math.floor((diff % 3600) / 60).toString().padStart(2, '0')}`;
+  }
+
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Tabela de classificação"
@@ -125,15 +165,32 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
             <p className="text-sm font-bold text-white font-display uppercase tracking-wide">
               Tabela de Classificação
             </p>
-            <p className="text-xs text-zinc-500 font-sans mt-0.5">Temporada 2026</p>
+            <p className="text-xs text-zinc-500 font-sans mt-0.5">
+              Temporada 2026
+              {updatedAt && (
+                <span className="ml-1.5 text-zinc-600">· Atualizada {formatAge(updatedAt)}</span>
+              )}
+            </p>
           </div>
-          <button
-            onClick={onClose}
-            className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer text-lg leading-none"
-            aria-label="Fechar"
-          >
-            ×
-          </button>
+          <div className="flex items-center gap-1">
+            {status === 'done' && (
+              <button
+                onClick={() => fetchStandings(true)}
+                disabled={refreshing}
+                className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
+                aria-label="Atualizar tabela"
+              >
+                <RefreshIcon spinning={refreshing} />
+              </button>
+            )}
+            <button
+              onClick={onClose}
+              className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer text-lg leading-none"
+              aria-label="Fechar"
+            >
+              ×
+            </button>
+          </div>
         </div>
 
         {/* Loading */}
@@ -176,9 +233,9 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
 
             {/* Column headers */}
             <div className="sticky top-0 bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 z-10">
-              <div className="grid grid-cols-[28px_1fr_36px_28px_28px_28px_28px_36px_36px_36px_52px] gap-0 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 font-sans">
+              <div className="grid grid-cols-[24px_22px_32px_26px_26px_26px_26px_32px_32px_32px_44px] sm:grid-cols-[28px_1fr_36px_28px_28px_28px_28px_36px_36px_36px_52px] gap-0 px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 font-sans">
                 <span className="text-center">#</span>
-                <span>Time</span>
+                <span></span>
                 <span className="text-center">Pts</span>
                 <span className="text-center">J</span>
                 <span className="text-center">V</span>
@@ -213,7 +270,7 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
                       ref={isHighlighted ? highlightRef : undefined}
                       style={rowStyle}
                       className={[
-                        'grid grid-cols-[28px_1fr_36px_28px_28px_28px_28px_36px_36px_36px_52px] gap-0 px-3 py-2 items-center',
+                      'grid grid-cols-[24px_22px_32px_26px_26px_26px_26px_32px_32px_32px_44px] sm:grid-cols-[28px_1fr_36px_28px_28px_28px_28px_36px_36px_36px_52px] gap-0 px-3 py-2 items-center',
                         'border-b border-zinc-800/50 transition-colors',
                         !isHighlighted && !zone.border ? 'hover:bg-zinc-800/40' : '',
                       ].join(' ')}
@@ -240,7 +297,7 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
                           onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                         />
                         <span
-                          className={`text-xs font-medium truncate font-sans ${isHighlighted ? 'text-white font-bold' : 'text-zinc-300'}`}
+                          className={`hidden sm:block text-xs font-medium truncate font-sans ${isHighlighted ? 'text-white font-bold' : 'text-zinc-300'}`}
                         >
                           {entry.team.name}
                         </span>

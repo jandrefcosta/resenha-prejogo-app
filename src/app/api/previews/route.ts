@@ -12,7 +12,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Missing ids' }, { status: 400 });
   }
 
-  const requestedIds = new Set(idsParam.split(',').filter(Boolean));
+  const requestedIds = new Set(idsParam.split(',').filter(Boolean).slice(0, 10));
   if (requestedIds.size === 0) {
     return NextResponse.json({});
   }
@@ -37,7 +37,7 @@ export async function GET(req: NextRequest) {
       const homeId = Number(m.homeTeam.id);
       const awayId = Number(m.awayTeam.id);
       const daysUntil = (new Date(m.date).getTime() - now) / 86_400_000;
-      const searchBroadcasters = daysUntil >= 0 && daysUntil <= DAYS_AHEAD_FOR_BROADCAST_SEARCH;
+      const searchBroadcasters = daysUntil >= -0.08 && daysUntil <= DAYS_AHEAD_FOR_BROADCAST_SEARCH;
 
       const [homeFormRaw, awayFormRaw, broadcasters] = await Promise.all([
         getTeamForm(homeId, season),

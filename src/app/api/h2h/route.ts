@@ -99,7 +99,7 @@ export async function GET(req: NextRequest) {
   const season = new Date().getFullYear();
 
   const h2hKey = `h2h:${Math.min(homeId, awayId)}-${Math.max(homeId, awayId)}`;
-  const injuriesKey = fixtureId ? `injuries:${fixtureId}` : null;
+  const injuriesKey = fixtureId ? `injuries:v2:${fixtureId}` : null;
 
   const [cachedH2H, cachedInjuries] = await Promise.all([
     getCache<RawH2HFixture[]>(h2hKey),
@@ -132,7 +132,14 @@ export async function GET(req: NextRequest) {
     season: f.league.season,
   }));
 
-  const injuries: InjuredPlayer[] = rawInjuries.map((i: RawInjury) => ({
+  const seenInjuries = new Set<number>();
+  const uniqueInjuries = rawInjuries.filter((i: RawInjury) => {
+    if (seenInjuries.has(i.player.id)) return false;
+    seenInjuries.add(i.player.id);
+    return true;
+  });
+
+  const injuries: InjuredPlayer[] = uniqueInjuries.map((i: RawInjury) => ({
     name: i.player.name,
     type: i.player.type,
     reason: i.player.reason,

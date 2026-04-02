@@ -59,7 +59,7 @@ export function SuggestionModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-4"
+      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center p-4"
       role="dialog"
       aria-modal="true"
       aria-label="Enviar sugestão"
