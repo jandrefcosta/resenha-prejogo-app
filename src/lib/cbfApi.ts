@@ -2,16 +2,21 @@
  * CBF API client with TTL-aware caching.
  *
  * Cache strategy (Redis key: `cbf:round:{N}`):
- *  - Round finished   → 7 days   (immutable results)
- *  - Round live       → 5 min    (goals/cards change)
- *  - Round future     → tiered:
- *      > 48 h before first match → 12 h
- *      > 24 h                    → 6 h
- *      > 12 h                    → 2 h
- *      ≤ 12 h                    → 1 h  (lineup may appear)
+ *  - Round finished          → 30 days  (immutable results — never changes)
+ *  - Round live              → 5 min    (goals/cards updating)
+ *  - Round post-match        → 10 min   (ended, waiting for CBF to publish scores)
+ *  - Round future (tiered):
+ *      > 48 h before match   → 12 h
+ *      > 24 h                → 6 h
+ *      > 12 h                → 2 h
+ *      ≤ 12 h                → 1 h  (lineups may appear)
+ *
+ * Live window uses LIVE_WINDOW_MS from matchConstants to stay aligned with
+ * the client-side filter in MatchSection.tsx.
  */
 
-import { getCache, setCache } from '@/lib/redisCache';
+import { getCache, setCache, setCachePermanent } from '@/lib/redisCache';
+import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import type {
   CbfAthlete,
   CbfCard,
@@ -30,12 +35,13 @@ const CBF_BASE = 'https://gweb.cbf.com.br/api/site/v1';
 const CHAMPIONSHIP_ID = 1260611;
 
 const TTL = {
-  FINISHED: 60 * 60 * 24 * 7, // 7 days
-  LIVE: 60 * 5,                // 5 min
-  FUTURE_48H: 60 * 60 * 12,   // 12 h
-  FUTURE_24H: 60 * 60 * 6,    // 6 h
-  FUTURE_12H: 60 * 60 * 2,    // 2 h
-  FUTURE_NOW: 60 * 60,         // 1 h
+  FINISHED:   60 * 60 * 24 * 30, // 30 days — results are immutable
+  LIVE:       60 * 5,             // 5 min — goals/cards updating
+  POST_MATCH: 60 * 10,            // 10 min — match ended, waiting for CBF to publish scores
+  FUTURE_48H: 60 * 60 * 12,      // 12 h
+  FUTURE_24H: 60 * 60 * 6,       // 6 h
+  FUTURE_12H: 60 * 60 * 2,       // 2 h
+  FUTURE_NOW: 60 * 60,            // 1 h
 } as const;
 
 const CBF_HEADERS = {
@@ -263,7 +269,7 @@ function inferRoundStatus(matches: CbfMatchDetail[]): CbfRoundStatus {
     const hasScore = m.mandante.gols !== null && m.mandante.gols !== '' &&
                      m.visitante.gols !== null && m.visitante.gols !== '';
     const kickoff = parseCbfDatetime(m.data, m.hora).getTime();
-    const estimatedEnd = kickoff + 2 * 60 * 60 * 1000; // +2h
+    const estimatedEnd = kickoff + LIVE_WINDOW_MS; // aligned with client-side LIVE_WINDOW_MS
 
     if (!hasScore) {
       allFinished = false;
@@ -290,7 +296,9 @@ function computeTtl(matches: CbfMatchDetail[], status: CbfRoundStatus): number {
     .filter((t) => t > now)
     .sort((a, b) => a - b);
 
-  if (unplayed.length === 0) return TTL.LIVE; // edge case
+  // All unplayed matches have kickoffs in the past: round just ended,
+  // CBF hasn't published scores yet. Poll frequently until they appear.
+  if (unplayed.length === 0) return TTL.POST_MATCH;
 
   const hoursUntil = (unplayed[0] - now) / (1000 * 60 * 60);
 
@@ -306,9 +314,19 @@ function cacheKey(round: number): string {
   return `cbf:round:${round}`;
 }
 
+/** Long-lived backup key — survives primary TTL expiry so we can serve stale data on CBF errors. */
+function staleKey(round: number): string {
+  return `cbf:round:${round}:stale`;
+}
+
 /**
  * Fetch (or return cached) CBF data for a given round.
  * Automatically determines TTL based on round status.
+ *
+ * Stale-while-error: if the CBF API fails and we have a previously-fetched
+ * snapshot (backup key, 30-day TTL), we return that rather than throwing.
+ * This prevents recently-finished rounds from disappearing when CBF has a
+ * transient error or when scores haven't been published yet.
  */
 export async function getCbfRound(round: number, force = false): Promise<CbfRoundData> {
   const key = cacheKey(round);
@@ -319,9 +337,19 @@ export async function getCbfRound(round: number, force = false): Promise<CbfRoun
   }
 
   const url = `${CBF_BASE}/jogos/campeonato/${CHAMPIONSHIP_ID}/rodada/${round}/fase`;
-  const res = await fetch(url, { headers: CBF_HEADERS, cache: 'no-store' });
+
+  let res: Response;
+  try {
+    res = await fetch(url, { headers: CBF_HEADERS, cache: 'no-store' });
+  } catch (networkErr) {
+    const stale = await getCache<CbfRoundData>(staleKey(round));
+    if (stale) return stale;
+    throw networkErr;
+  }
 
   if (!res.ok) {
+    const stale = await getCache<CbfRoundData>(staleKey(round));
+    if (stale) return stale;
     throw new Error(`CBF API error: ${res.status} ${res.statusText}`);
   }
 
@@ -345,7 +373,17 @@ export async function getCbfRound(round: number, force = false): Promise<CbfRoun
     matches,
   };
 
-  await setCache(key, data, ttlSeconds);
+  // Write primary key (TTL-aware) and backup key.
+  // Finished rounds: backup is permanent (data is immutable).
+  // Other states: backup uses 30-day TTL (partial data may change).
+  // Both writes are fire-and-forget; a failure here is non-critical.
+  void setCache(key, data, ttlSeconds);
+  if (status === 'finished') {
+    void setCachePermanent(staleKey(round), data);
+  } else {
+    void setCache(staleKey(round), data, TTL.FINISHED);
+  }
+
   return data;
 }
 

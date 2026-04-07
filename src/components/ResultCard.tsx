@@ -168,13 +168,18 @@ export function ResultCard({
           {/* Score or pending */}
           <div className="flex-none px-1 text-center">
             {hasResult ? (
-              <div className="flex items-center gap-1.5">
-                <span className="text-2xl font-black font-display text-white tabular-nums">
-                  {data.mandante.gols}
-                </span>
-                <span className="text-base font-black font-display text-zinc-600">–</span>
-                <span className="text-2xl font-black font-display text-white tabular-nums">
-                  {data.visitante.gols}
+              <div className="flex flex-col items-center gap-0.5">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-2xl font-black font-display text-white tabular-nums">
+                    {data.mandante.gols}
+                  </span>
+                  <span className="text-base font-black font-display text-zinc-600">–</span>
+                  <span className="text-2xl font-black font-display text-white tabular-nums">
+                    {data.visitante.gols}
+                  </span>
+                </div>
+                <span className="flex items-center gap-0.5 text-[9px] font-semibold text-zinc-600 font-sans uppercase tracking-wide whitespace-nowrap">
+                  ⚽ Gols
                 </span>
               </div>
             ) : (

@@ -21,6 +21,34 @@ interface PastEntry {
   match: CbfMatchDetail;
 }
 
+/**
+ * Shared round header — identical visual in both tabs.
+ * Uses white/dark fixed colors so it's always legible regardless of club palette.
+ */
+function CurrentRoundHeader({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 mb-3">
+      <span className="text-sm font-bold font-sans text-white">{label}</span>
+      <span className="px-2.5 py-0.5 text-xs font-black font-sans rounded-full bg-white text-zinc-900 uppercase tracking-wide">
+        Rodada Atual
+      </span>
+    </div>
+  );
+}
+
+/** Divider used for non-current rounds in both tabs */
+function RoundDivider({ label }: { label: string }) {
+  return (
+    <div className="flex items-center gap-2 mt-6 mb-3">
+      <div className="flex-1 h-px bg-zinc-800" />
+      <span className="text-xs font-semibold font-sans text-zinc-500 uppercase tracking-wider px-2">
+        {label}
+      </span>
+      <div className="flex-1 h-px bg-zinc-800" />
+    </div>
+  );
+}
+
 function MatchCardSkeleton() {
   return (
     <div
@@ -65,6 +93,14 @@ export function MatchSection() {
   const [pastLoading, setPastLoading] = useState(false);
   const pastFetchedRef = useRef(false);
 
+  // Fallback round number persisted across cache misses (API-Football returns only NS fixtures,
+  // so when all matches of a round finish and the cache refreshes rawMatches can be empty).
+  const [lastKnownRound, setLastKnownRound] = useState(0);
+  useEffect(() => {
+    const stored = Number(localStorage.getItem('lastKnownRound') ?? 0);
+    if (stored > 0) setLastKnownRound(stored);
+  }, []);
+
   // Load all fixtures once
   useEffect(() => {
     if (fetchedRef.current) return;
@@ -90,10 +126,19 @@ export function MatchSection() {
   const allMatches = rawMatches.filter(
     (m) => m.status === 'postponed' || Date.now() <= new Date(m.date).getTime() + LIVE_WINDOW_MS,
   );
-  // Use raw (unfiltered) list to always know the real current round number,
-  // even when all matches of the round have already been filtered out as finished.
+  // Use raw (unfiltered) list to know the real current round, with localStorage fallback
+  // for when all NS fixtures have been filtered out (between rounds or post-round cache miss).
   const firstRound = rawMatches[0]?.round ?? '';
-  const currentRoundNum = Number(firstRound.match(/(\d+)/)?.[1] ?? 0);
+  const derivedRoundNum = Number(firstRound.match(/(\d+)/)?.[1] ?? 0);
+  const currentRoundNum = derivedRoundNum || lastKnownRound;
+
+  // Persist the latest known round so it survives cache misses
+  useEffect(() => {
+    if (derivedRoundNum > 0 && derivedRoundNum !== lastKnownRound) {
+      localStorage.setItem('lastKnownRound', String(derivedRoundNum));
+      setLastKnownRound(derivedRoundNum);
+    }
+  }, [derivedRoundNum, lastKnownRound]);
 
   // Build schedule groups: current round + upcoming rounds
   const scheduleGroups: RoundGroup[] = [];
@@ -160,7 +205,7 @@ export function MatchSection() {
 
   const tabs = [
     showPastTab && { id: 'past' as TabId, label: 'Resultados' },
-    { id: 'schedule' as TabId, label: firstRound || 'Próximos' },
+    { id: 'schedule' as TabId, label: 'Próximos Jogos' },
   ].filter(Boolean) as { id: TabId; label: string }[];
 
   return (
@@ -233,21 +278,27 @@ export function MatchSection() {
             </p>
           )}
           {!pastLoading && pastMatches && pastMatches.length > 0 && (
-            <div className="space-y-4">
+            <div className="space-y-1">
               {pastMatches.map((entry) => (
-                <ResultCard
-                  key={entry.round}
-                  roundN={entry.round}
-                  data={entry.match}
-                  highlightCbfId={String(club.cbfId ?? '')}
-                />
+                <div key={entry.round}>
+                  {entry.round === currentRoundNum ? (
+                    <CurrentRoundHeader label={`Rodada ${entry.round}`} />
+                  ) : (
+                    <RoundDivider label={`Rodada ${entry.round}`} />
+                  )}
+                  <ResultCard
+                    roundN={entry.round}
+                    data={entry.match}
+                    highlightCbfId={String(club.cbfId ?? '')}
+                  />
+                </div>
               ))}
             </div>
           )}
         </>
       )}
 
-      {/* ── Calendário (rodada atual + próximas) ── */}
+      {/* ── Próximos Jogos (rodada atual + próximas) ── */}
       {!loading && !error && activeTab === 'schedule' && (
         <>
           {scheduleGroups.length === 0 && (
@@ -256,37 +307,13 @@ export function MatchSection() {
             </p>
           )}
           {scheduleGroups.length > 0 && (
-            <div className="space-y-2">
-              {scheduleGroups.map((group, gi) => (
+            <div>
+              {scheduleGroups.map((group) => (
                 <div key={group.roundLabel}>
-                  {/* Round header — only shown when there are multiple groups */}
-                  {scheduleGroups.length > 1 && (
-                    <div className={`flex items-center gap-2 ${gi === 0 ? 'mb-3' : 'mt-6 mb-3'}`}>
-                      {group.isCurrent ? (
-                        <>
-                          <span className="text-sm font-semibold font-sans text-white">
-                            {group.roundLabel}
-                          </span>
-                          <span
-                            className="px-2 py-0.5 text-xs font-bold font-sans rounded-full"
-                            style={{
-                              backgroundColor: 'var(--club-primary)',
-                              color: 'var(--club-text-on-primary)',
-                            }}
-                          >
-                            Atual
-                          </span>
-                        </>
-                      ) : (
-                        <>
-                          <div className="flex-1 h-px bg-zinc-800" />
-                          <span className="text-xs font-semibold font-sans text-zinc-500 uppercase tracking-wider px-2">
-                            {group.roundLabel}
-                          </span>
-                          <div className="flex-1 h-px bg-zinc-800" />
-                        </>
-                      )}
-                    </div>
+                  {group.roundNum === currentRoundNum ? (
+                    <CurrentRoundHeader label={group.roundLabel} />
+                  ) : (
+                    <RoundDivider label={group.roundLabel} />
                   )}
                   <div className="space-y-4">
                     {group.matches.map((match) => (

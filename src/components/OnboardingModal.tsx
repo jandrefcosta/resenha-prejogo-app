@@ -107,8 +107,8 @@ function WelcomeStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
         </p>
       </div>
 
-      {/* Feature list */}
-      <ul className="space-y-2.5 flex-1" role="list">
+      {/* Feature list — min-h-0 allows flex to shrink it on short screens */}
+      <ul className="space-y-2.5 flex-1 min-h-0 overflow-y-auto" role="list">
         {FEATURES.map((f) => (
           <li key={f.title} className="flex items-start gap-3 rounded-xl bg-zinc-800/60 px-4 py-3">
             <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-lg bg-zinc-700 text-zinc-200">
@@ -250,7 +250,8 @@ export function OnboardingModal() {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center p-4"
+      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center px-4 py-[max(1rem,env(safe-area-inset-top))]"
+      style={{ paddingBottom: 'max(1rem, env(safe-area-inset-bottom))' }}
       role="dialog"
       aria-modal="true"
       aria-label="Bem-vindo ao Resenha Pré-Jogo"
@@ -262,10 +263,11 @@ export function OnboardingModal() {
         aria-hidden="true"
       />
 
-      {/* Panel — fixed height so both steps occupy the same space */}
+      {/* Panel — height capped at viewport so buttons never get cut off on short screens */}
       <div
         ref={panelRef}
-        className="relative w-full max-w-md h-[480px] rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden"
+        className="relative w-full max-w-md rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden"
+        style={{ height: 'min(640px, calc(100dvh - 2rem))' }}
       >
         {step === 'welcome' ? (
           <WelcomeStep onNext={() => setStep('clubs')} onSkip={handleClose} />

@@ -35,8 +35,12 @@ export async function GET(req: NextRequest) {
 
   const cbfId = String(club.cbfId);
 
-  // Rounds to fetch: [beforeRound-1, beforeRound-2, …] clipped to ≥1
-  const rounds = Array.from({ length: limit }, (_, i) => beforeRound - 1 - i).filter(
+  // Fetch one extra round as buffer: when currentRound just advanced (e.g. API-Football
+  // refreshed and round N is now FT), the caller sends beforeRound = N+1. We fetch
+  // [N, N-1, N-2, N-3] so that if round N has no club match yet (or CBF skips it),
+  // we still surface the correct `limit` results.
+  const fetchLimit = limit + 1;
+  const rounds = Array.from({ length: fetchLimit }, (_, i) => beforeRound - 1 - i).filter(
     (r) => r >= 1,
   );
 
@@ -50,6 +54,8 @@ export async function GET(req: NextRequest) {
   const pastFixtures: PastFixtureEntry[] = [];
 
   for (let i = 0; i < rounds.length; i++) {
+    if (pastFixtures.length >= limit) break; // stop once we have enough results
+
     const result = results[i];
     if (result.status !== 'fulfilled') continue;
 

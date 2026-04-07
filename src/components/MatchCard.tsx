@@ -1,9 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail } from '@/lib/types';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
+import { EmailCaptureModal, EMAIL_REGISTERED_KEY } from '@/components/EmailCaptureModal';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -95,17 +96,36 @@ function FichaIcon() {
   );
 }
 
-function WhatsAppIcon() {
+function ShareIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 0 1-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 0 1-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 0 1 2.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0 0 12.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 0 0 5.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 0 0-3.48-8.413Z"/>
+      <path fillRule="evenodd" d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z" clipRule="evenodd" />
     </svg>
   );
 }
 
-// ─── WhatsApp share ───────────────────────────────────────────────────────────
+// ─── Share ────────────────────────────────────────────────────────────────────
 
-function buildWhatsAppMessage(match: Match, broadcasters: string[]): string {
+async function handleShare(text: string): Promise<void> {
+  if (!text) return;
+
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({ text });
+      return;
+    } catch (err) {
+      if ((err as DOMException).name === 'AbortError') return;
+    }
+  }
+
+  window.open(
+    `https://wa.me/?text=${encodeURIComponent(text)}`,
+    '_blank',
+    'noopener,noreferrer',
+  );
+}
+
+function buildShareText(match: Match, broadcasters: string[]): string {
   const date = new Intl.DateTimeFormat('pt-BR', {
     weekday: 'short', day: '2-digit', month: 'short',
     timeZone: 'America/Sao_Paulo',
@@ -130,7 +150,7 @@ function buildWhatsAppMessage(match: Match, broadcasters: string[]): string {
     lines.push(`Onde assistir: ${broadcasters.join(', ')}`);
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : '');
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.resenhaprejogo.app';
   if (siteUrl) lines.push('', siteUrl);
 
   return lines.join('\n');
@@ -304,7 +324,8 @@ function H2HModalContent({ data, match }: { data: H2HData; match: Match }) {
             {h2h.map((m) => (
               <div key={m.id} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
                 <span className="flex-1 text-right text-zinc-300 truncate">{m.homeTeam}</span>
-                <span className="font-bold font-display text-white tabular-nums shrink-0 px-2">
+                <span className="flex items-center gap-1 font-bold font-display text-white tabular-nums shrink-0 px-2">
+                  <span className="text-[10px] leading-none" aria-label="Gols">⚽</span>
                   {m.homeScore ?? '–'}&thinsp;–&thinsp;{m.awayScore ?? '–'}
                 </span>
                 <span className="flex-1 text-zinc-300 truncate">{m.awayTeam}</span>
@@ -363,7 +384,7 @@ function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Ma
               {/* Column headers */}
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-3 pb-1">
                 <span className="text-xs text-zinc-600 font-sans">Jogador</span>
-                <span className="text-xs text-zinc-600 font-sans text-center w-7">G</span>
+                <span className="text-xs text-zinc-600 font-sans text-center w-7" title="Gols">⚽</span>
                 <span className="text-xs text-zinc-600 font-sans text-center w-7">A</span>
                 <span className="text-xs text-zinc-600 font-sans text-center w-7">J</span>
               </div>
@@ -376,7 +397,7 @@ function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Ma
                   <span className="text-xs text-zinc-600 font-sans tabular-nums text-center w-7">{p.appearances}</span>
                 </div>
               ))}
-              <p className="text-xs text-zinc-700 pt-1 px-1 font-sans">G = Gols · A = Assistências · J = Jogos</p>
+              <p className="text-xs text-zinc-700 pt-1 px-1 font-sans">⚽ = Gols · A = Assistências · J = Jogos</p>
             </div>
           )}
         </section>
@@ -409,93 +430,155 @@ const REFEREE_ROLES: Record<string, string> = {
   AVAR2: 'AVAR2',
 };
 
-function CbfMatchModalContent({ data, match }: { data: CbfMatchDetail; match: Match }) {
-  const mainRef = data.arbitros.find((a) => a.funcao === 'Arbitro');
-  const varRef = data.arbitros.find((a) => a.funcao === 'VAR');
-  const otherRefs = data.arbitros.filter(
-    (a) => a.funcao !== 'Arbitro' && a.funcao !== 'VAR' && a.funcao !== 'Inspetor' && a.funcao !== 'Assessor' && a.funcao !== 'Quality manager' && a.funcao !== 'Observador de VAR',
+/** Pill showing that a section's data isn't published yet */
+function Pending({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-dashed border-zinc-700 px-3 py-2.5 text-xs font-sans text-zinc-500">
+      <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" aria-hidden="true" />
+      {children}
+    </div>
   );
+}
 
-  const hasScore = data.mandante.gols !== '' && data.visitante.gols !== '';
-  const homeGoals = data.gols.filter((g) => g.clubeId === data.mandante.id);
-  const awayGoals = data.gols.filter((g) => g.clubeId === data.visitante.id);
-  const homeCards = data.cartoes.filter((c) => c.clubeId === data.mandante.id);
-  const awayCards = data.cartoes.filter((c) => c.clubeId === data.visitante.id);
+function SectionHeader({ label }: { label: string }) {
+  return (
+    <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2 font-sans">
+      {label}
+    </p>
+  );
+}
 
-  const homeStarters = data.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando);
-  const awayStarters = data.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando);
+/**
+ * Ficha modal content with explicit availability stages.
+ *
+ * Phases (derived from kickoff time):
+ *  - future   : kickoff > 48 h away — referee not yet confirmed, no game data
+ *  - upcoming  : kickoff ≤ 48 h away — referee likely confirmed
+ *  - live      : currently being played — referee confirmed, score updating
+ *  - post_match: kickoff + LIVE_WINDOW_MS passed — full data expected
+ */
+function CbfMatchModalContent({
+  data,
+  match,
+  isLive,
+  hoursUntilKickoff,
+}: {
+  data: CbfMatchDetail | null;
+  match: Match;
+  isLive: boolean;
+  hoursUntilKickoff: number; // negative = kickoff already passed
+}) {
+  const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
+  const refereeLikelyConfirmed = hoursUntilKickoff <= 48;
+
+  // ── Derived data ──────────────────────────────────────────────────────────
+  const hasScore = !!(data && data.mandante.gols !== '' && data.mandante.gols !== null &&
+                      data.visitante.gols !== '' && data.visitante.gols !== null);
+  const homeGoals  = data?.gols.filter((g) => g.clubeId === data.mandante.id) ?? [];
+  const awayGoals  = data?.gols.filter((g) => g.clubeId === data.visitante.id) ?? [];
+  const homeCards  = data?.cartoes.filter((c) => c.clubeId === data.mandante.id) ?? [];
+  const awayCards  = data?.cartoes.filter((c) => c.clubeId === data.visitante.id) ?? [];
+  const homeStarters = data?.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando) ?? [];
+  const awayStarters = data?.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando) ?? [];
+
+  const mainRef  = data?.arbitros.find((a) => a.funcao === 'Arbitro');
+  const varRef   = data?.arbitros.find((a) => a.funcao === 'VAR');
+  const otherRefs = data?.arbitros.filter(
+    (a) => a.funcao !== 'Arbitro' && a.funcao !== 'VAR' &&
+           !['Inspetor','Assessor','Quality manager','Observador de VAR'].includes(a.funcao),
+  ) ?? [];
+
+  // Fallback: referee from API-Football when CBF hasn't published yet
+  const refName = mainRef?.nome ?? match.referee;
+
+  // ── Phase banner ──────────────────────────────────────────────────────────
+  const phaseBanner = isLive
+    ? { label: 'Ao Vivo', cls: 'text-green-400 border-green-400/30 bg-green-400/10' }
+    : isPostMatch
+    ? { label: 'Encerrado', cls: 'text-zinc-400 border-zinc-700 bg-zinc-800' }
+    : hoursUntilKickoff <= 48
+    ? { label: `Pré-jogo · ${Math.round(hoursUntilKickoff)}h`, cls: 'text-amber-400 border-amber-400/30 bg-amber-400/10' }
+    : { label: `Pré-jogo · ${Math.ceil(hoursUntilKickoff / 24)}d`, cls: 'text-zinc-400 border-zinc-700 bg-zinc-800' };
 
   return (
     <>
-      {/* Score */}
-      {hasScore && (
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Resultado</p>
+      {/* Phase banner */}
+      <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold font-sans mb-1 ${phaseBanner.cls}`}>
+        {isLive && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" aria-hidden="true" />}
+        {phaseBanner.label}
+      </div>
+
+      {/* ── Resultado ─────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader label="Resultado" />
+        {hasScore ? (
           <div className="flex items-center justify-center gap-6 rounded-xl bg-zinc-800 py-4 px-4">
-            <div className="flex-1 text-right">
-              <p className="text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
+            <p className="flex-1 text-right text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
+            <div className="flex flex-col items-center gap-0.5 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl font-black font-display text-white tabular-nums">{data!.mandante.gols}</span>
+                <span className="text-xl font-black font-display text-zinc-600">–</span>
+                <span className="text-4xl font-black font-display text-white tabular-nums">{data!.visitante.gols}</span>
+              </div>
+              <span className="flex items-center gap-0.5 text-[9px] font-semibold text-zinc-600 font-sans uppercase tracking-wide">
+                ⚽ Gols
+              </span>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="text-4xl font-black font-display text-white tabular-nums">{data.mandante.gols}</span>
-              <span className="text-xl font-black font-display text-zinc-600">–</span>
-              <span className="text-4xl font-black font-display text-white tabular-nums">{data.visitante.gols}</span>
-            </div>
-            <div className="flex-1 text-left">
-              <p className="text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
-            </div>
+            <p className="flex-1 text-left text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
           </div>
-        </section>
-      )}
+        ) : (
+          <Pending>
+            {isLive ? 'Jogo em andamento — placar não disponível aqui' : 'Disponível após o apito final'}
+          </Pending>
+        )}
+      </section>
 
-      {/* Goals */}
-      {data.gols.length > 0 && (
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Gols</p>
+      {/* ── Gols ──────────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader label="Gols" />
+        {(homeGoals.length > 0 || awayGoals.length > 0) ? (
           <div className="space-y-1">
-            {homeGoals.map((g, i) => (
-              <div key={`hg-${i}`} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+            {[...homeGoals.map(g => ({ ...g, short: match.homeTeam.shortName })),
+               ...awayGoals.map(g => ({ ...g, short: match.awayTeam.shortName }))].map((g, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
                 <span className="text-base leading-none">⚽</span>
                 <span className="font-medium text-zinc-200 flex-1">{g.atletaApelido || g.atletaNome}</span>
-                <span className="text-zinc-500">{match.homeTeam.shortName}</span>
-                <span className="text-zinc-600 tabular-nums">{g.minutos}&apos;</span>
-              </div>
-            ))}
-            {awayGoals.map((g, i) => (
-              <div key={`ag-${i}`} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
-                <span className="text-base leading-none">⚽</span>
-                <span className="font-medium text-zinc-200 flex-1">{g.atletaApelido || g.atletaNome}</span>
-                <span className="text-zinc-500">{match.awayTeam.shortName}</span>
+                <span className="text-zinc-500">{g.short}</span>
                 <span className="text-zinc-600 tabular-nums">{g.minutos}&apos;</span>
               </div>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <Pending>{isPostMatch ? 'Sem gols registrados' : 'Disponível após o apito final'}</Pending>
+        )}
+      </section>
 
-      {/* Cards */}
-      {data.cartoes.length > 0 && (
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Cartões</p>
+      {/* ── Cartões ───────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader label="Cartões" />
+        {(homeCards.length > 0 || awayCards.length > 0) ? (
           <div className="space-y-1">
             {[...homeCards, ...awayCards].map((c, i) => (
               <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
                 <span className={`inline-block w-2.5 h-3.5 rounded-sm shrink-0 ${CARD_COLORS[c.resultado] ?? 'bg-zinc-500'}`} aria-hidden="true" />
                 <span className="font-medium text-zinc-200 flex-1">{c.atletaApelido || c.atletaNome}</span>
                 <span className="text-zinc-500 shrink-0">
-                  {c.clubeId === data.mandante.id ? match.homeTeam.shortName : match.awayTeam.shortName}
+                  {c.clubeId === data!.mandante.id ? match.homeTeam.shortName : match.awayTeam.shortName}
                 </span>
                 <span className="text-zinc-600 shrink-0">{CARD_LABELS[c.resultado] ?? c.resultado}</span>
                 <span className="text-zinc-600 tabular-nums shrink-0">{c.minutos}&apos;</span>
               </div>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <Pending>{isPostMatch ? 'Sem cartões registrados' : 'Disponível após o apito final'}</Pending>
+        )}
+      </section>
 
-      {/* Lineups */}
-      {(homeStarters.length > 0 || awayStarters.length > 0) && (
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Escalação</p>
+      {/* ── Escalação ─────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader label="Escalação" />
+        {(homeStarters.length > 0 || awayStarters.length > 0) ? (
           <div className="grid grid-cols-2 gap-3">
             {[
               { label: match.homeTeam.shortName, players: homeStarters },
@@ -514,19 +597,27 @@ function CbfMatchModalContent({ data, match }: { data: CbfMatchDetail; match: Ma
               </div>
             ))}
           </div>
-        </section>
-      )}
+        ) : (
+          <Pending>
+            {isPostMatch
+              ? 'Escalação não publicada'
+              : isLive
+              ? 'Sendo confirmada'
+              : 'Publicada próximo ao jogo'}
+          </Pending>
+        )}
+      </section>
 
-      {/* Referee panel */}
-      {data.arbitros.length > 0 && (
-        <section>
-          <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">Arbitragem</p>
+      {/* ── Arbitragem ────────────────────────────────────────────────────── */}
+      <section>
+        <SectionHeader label="Arbitragem" />
+        {refName || mainRef ? (
           <div className="space-y-1">
-            {mainRef && (
+            {(mainRef || refName) && (
               <div className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
                 <span className="text-zinc-400 font-medium w-20 shrink-0">Principal</span>
-                <span className="text-zinc-200 flex-1">{mainRef.nome}</span>
-                <span className="text-zinc-600 shrink-0">{mainRef.uf}</span>
+                <span className="text-zinc-200 flex-1">{mainRef?.nome ?? refName}</span>
+                {mainRef?.uf && <span className="text-zinc-600 shrink-0">{mainRef.uf}</span>}
               </div>
             )}
             {varRef && (
@@ -544,12 +635,12 @@ function CbfMatchModalContent({ data, match }: { data: CbfMatchDetail; match: Ma
               </div>
             ))}
           </div>
-        </section>
-      )}
-
-      {!hasScore && data.gols.length === 0 && data.arbitros.length === 0 && (
-        <p className="text-sm text-zinc-500 font-sans text-center py-4">Ficha ainda não disponível.</p>
-      )}
+        ) : (
+          <Pending>
+            {refereeLikelyConfirmed ? 'Não publicada pelo CBF' : 'Confirmada ~48h antes do jogo'}
+          </Pending>
+        )}
+      </section>
     </>
   );
 }
@@ -605,7 +696,7 @@ function formatTime(iso: string): string {
 // ─── MatchCard ────────────────────────────────────────────────────────────────
 
 type ActiveModal = 'h2h' | 'players' | 'ficha' | null;
-type FetchStatus = 'idle' | 'loading' | 'done' | 'error';
+type FetchStatus = 'idle' | 'loading' | 'done' | 'not_found' | 'error';
 
 export function MatchCard({
   match,
@@ -625,6 +716,33 @@ export function MatchCard({
   const [playersStatus, setPlayersStatus] = useState<FetchStatus>('idle');
   const [fichaData, setFichaData] = useState<CbfMatchDetail | null>(null);
   const [fichaStatus, setFichaStatus] = useState<FetchStatus>('idle');
+
+  const [emailRegistered, setEmailRegistered] = useState(false);
+  const [emailGateOpen, setEmailGateOpen] = useState(false);
+  const pendingActionRef = useRef<(() => void) | null>(null);
+
+  useEffect(() => {
+    setEmailRegistered(localStorage.getItem(EMAIL_REGISTERED_KEY) === '1');
+  }, []);
+
+  function withEmailGate(action: () => void) {
+    if (emailRegistered) {
+      action();
+    } else {
+      pendingActionRef.current = action;
+      setEmailGateOpen(true);
+    }
+  }
+
+  function handleEmailGateClose() {
+    const nowRegistered = localStorage.getItem(EMAIL_REGISTERED_KEY) === '1';
+    if (nowRegistered) {
+      setEmailRegistered(true);
+      pendingActionRef.current?.();
+    }
+    pendingActionRef.current = null;
+    setEmailGateOpen(false);
+  }
 
   function openH2HModal() {
     setActiveModal('h2h');
@@ -654,8 +772,13 @@ export function MatchCard({
     const round = match.round.match(/(\d+)/)?.[1] ?? '';
     const params = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, round });
     fetch(`/api/cbf/match?${params}`)
-      .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<CbfMatchDetail>; })
-      .then((d) => { setFichaData(d); setFichaStatus('done'); })
+      .then((r) => {
+        // 4xx = CBF doesn't have the data yet (round not published) — not an error
+        if (r.status >= 400 && r.status < 500) { setFichaStatus('not_found'); return null; }
+        if (!r.ok) throw new Error();
+        return r.json() as Promise<CbfMatchDetail>;
+      })
+      .then((d) => { if (d) { setFichaData(d); setFichaStatus('done'); } })
       .catch(() => setFichaStatus('error'));
   }
 
@@ -668,6 +791,11 @@ export function MatchCard({
   const live = match.status !== 'postponed' && nowMs >= kickoffMs && nowMs <= kickoffMs + LIVE_WINDOW_MS;
   const daysUntilRender = (kickoffMs - nowMs) / 86_400_000;
   const outsideSearchWindow = !live && (daysUntilRender < 0 || daysUntilRender > DAYS_AHEAD_FOR_BROADCAST_SEARCH);
+
+  // Hours until kickoff — used for ficha availability labelling (negative = past)
+  const hoursUntilKickoff = (kickoffMs - nowMs) / 3_600_000;
+  // Label shown inside the Ficha button to communicate what's available
+  const fichaHint = live ? 'Ao vivo' : hoursUntilKickoff <= 48 ? 'Árbitro' : 'Em breve';
 
   return (
     <>
@@ -760,7 +888,7 @@ export function MatchCard({
           {/* Action buttons */}
           <div className="mt-4 pt-4 border-t border-zinc-800 grid grid-cols-4 gap-2">
             <button
-              onClick={openH2HModal}
+              onClick={() => withEmailGate(openH2HModal)}
               aria-label="Ver confronto direto"
               className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
@@ -768,7 +896,7 @@ export function MatchCard({
               Confronto
             </button>
             <button
-              onClick={openPlayersModal}
+              onClick={() => withEmailGate(openPlayersModal)}
               aria-label="Ver jogadores"
               className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
@@ -776,23 +904,22 @@ export function MatchCard({
               Jogadores
             </button>
             <button
-              onClick={openFichaModal}
+              onClick={() => withEmailGate(openFichaModal)}
               aria-label="Ver ficha do jogo"
-              className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
+              className="flex flex-col items-center justify-center gap-0.5 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
               <FichaIcon />
-              Ficha
+              <span>Ficha</span>
+              <span className={`text-[9px] font-sans leading-none ${live ? 'text-green-400' : 'text-zinc-600'}`}>{fichaHint}</span>
             </button>
-            <a
-              href={`https://wa.me/?text=${encodeURIComponent(buildWhatsAppMessage(match, broadcasters))}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center gap-1 rounded-xl bg-zinc-800/60 border border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-[#25D366] hover:bg-zinc-800 hover:border-[#25D366]/40 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
-              aria-label="Compartilhar no WhatsApp"
+            <button
+              onClick={() => handleShare(buildShareText(match, broadcasters))}
+              className="flex flex-col items-center justify-center gap-1 rounded-xl bg-zinc-800/60 border border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
+              aria-label="Compartilhar jogo"
             >
-              <WhatsAppIcon />
+              <ShareIcon />
               Enviar
-            </a>
+            </button>
           </div>
 
           {/* Referee */}
@@ -848,6 +975,11 @@ export function MatchCard({
         </ModalShell>
       )}
 
+      {/* Email gate */}
+      {emailGateOpen && (
+        <EmailCaptureModal onClose={handleEmailGateClose} />
+      )}
+
       {/* Ficha Modal */}
       {activeModal === 'ficha' && (
         <ModalShell
@@ -857,13 +989,33 @@ export function MatchCard({
         >
           {fichaStatus === 'loading' && (
             <div className="space-y-4 animate-pulse">
+              <div className="h-6 w-24 bg-zinc-800 rounded-full" />
               <div className="h-16 bg-zinc-800 rounded-xl" />
               <div className="space-y-2">{Array.from({ length: 4 }).map((_, i) => <div key={i} className="h-8 bg-zinc-800 rounded-lg" />)}</div>
               <div className="space-y-2">{Array.from({ length: 3 }).map((_, i) => <div key={i} className="h-8 bg-zinc-800 rounded-lg" />)}</div>
             </div>
           )}
-          {fichaStatus === 'error' && <p className="text-sm text-zinc-500 font-sans text-center py-4">Não foi possível carregar a ficha do jogo.</p>}
-          {fichaStatus === 'done' && fichaData && <CbfMatchModalContent data={fichaData} match={match} />}
+          {fichaStatus === 'error' && (
+            <p className="text-sm text-zinc-500 font-sans text-center py-4">
+              Erro ao carregar a ficha. Tente novamente.
+            </p>
+          )}
+          {fichaStatus === 'not_found' && (
+            <CbfMatchModalContent
+              data={null}
+              match={match}
+              isLive={live}
+              hoursUntilKickoff={hoursUntilKickoff}
+            />
+          )}
+          {fichaStatus === 'done' && fichaData && (
+            <CbfMatchModalContent
+              data={fichaData}
+              match={match}
+              isLive={live}
+              hoursUntilKickoff={hoursUntilKickoff}
+            />
+          )}
         </ModalShell>
       )}
 

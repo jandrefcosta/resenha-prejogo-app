@@ -68,9 +68,9 @@ function groupByDate(matches: RoundMatch[]): [string, RoundMatch[]][] {
   return Array.from(map.entries());
 }
 
-// ─── WhatsApp share ───────────────────────────────────────────────────────────
+// ─── Share ────────────────────────────────────────────────────────────────────
 
-function buildRoundWhatsAppMessage(data: RoundData): string {
+function buildShareText(data: RoundData): string {
   if (!data.round || data.matches.length === 0) return '';
 
   const lines: string[] = [`*${data.round} — Brasileirão Série A*`];
@@ -91,19 +91,49 @@ function buildRoundWhatsAppMessage(data: RoundData): string {
     }
   }
 
-  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL ?? (typeof window !== 'undefined' ? window.location.origin : '');
-  if (siteUrl) lines.push('', siteUrl);
+  const siteUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://www.resenhaprejogo.app';
+  lines.push('', siteUrl);
 
   return lines.join('\n');
 }
 
+/**
+ * Share handler — cross-device strategy:
+ * 1. Web Share API (iOS/Android native share sheet) — most reliable on mobile,
+ *    includes WhatsApp, Telegram, SMS, etc. without fragile deep-link hacks.
+ * 2. Fallback: window.open wa.me link — desktop browsers and older mobile.
+ *
+ * Using window.open inside onClick is more reliable than <a target="_blank">
+ * inside a modal on iOS Safari / PWA contexts.
+ */
+async function handleShare(text: string): Promise<void> {
+  if (!text) return;
+
+  if (typeof navigator !== 'undefined' && navigator.share) {
+    try {
+      await navigator.share({ text });
+      return;
+    } catch (err) {
+      // AbortError = user dismissed the sheet — do nothing.
+      if ((err as DOMException).name === 'AbortError') return;
+      // Any other error: fall through to WhatsApp link.
+    }
+  }
+
+  // Desktop / browsers without Web Share API
+  window.open(
+    `https://wa.me/?text=${encodeURIComponent(text)}`,
+    '_blank',
+    'noopener,noreferrer',
+  );
+}
+
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
-function WhatsAppIcon() {
+function ShareIcon() {
   return (
     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/>
-      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.124.558 4.121 1.532 5.855L.057 23.522a.75.75 0 0 0 .921.921l5.668-1.475A11.95 11.95 0 0 0 12 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 21.75a9.715 9.715 0 0 1-5.003-1.383l-.36-.214-3.724.968.991-3.625-.235-.374A9.715 9.715 0 0 1 2.25 12C2.25 6.615 6.615 2.25 12 2.25S21.75 6.615 21.75 12 17.385 21.75 12 21.75z"/>
+      <path fillRule="evenodd" d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z" clipRule="evenodd" />
     </svg>
   );
 }
@@ -273,15 +303,13 @@ function RoundModal({ onClose }: { onClose: () => void }) {
           </div>
           <div className="flex items-center gap-1">
             {status === 'done' && data && (
-              <a
-                href={`https://wa.me/?text=${encodeURIComponent(buildRoundWhatsAppMessage({ ...data, matches: visibleMatches }))}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-[#25D366] hover:bg-zinc-800 transition-colors cursor-pointer"
-                aria-label="Compartilhar rodada no WhatsApp"
+              <button
+                onClick={() => handleShare(buildShareText({ ...data, matches: visibleMatches }))}
+                className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
+                aria-label="Compartilhar rodada"
               >
-                <WhatsAppIcon />
-              </a>
+                <ShareIcon />
+              </button>
             )}
             <button
               onClick={onClose}

@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 
-const EMAIL_REGISTERED_KEY = 'resenha-prejogo:email-registered';
+export const EMAIL_REGISTERED_KEY = 'resenha-prejogo:email-registered';
 const EMAIL_BANNER_DISMISSED_KEY = 'resenha-prejogo:email-banner-dismissed';
 const BANNER_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const JOURNEY_DELAY_MS = 45_000; // 45 seconds

@@ -26,3 +26,15 @@ export async function setCache<T>(key: string, value: T, ttlSeconds: number): Pr
     // Non-critical — do not break the request if cache write fails
   }
 }
+
+/**
+ * Store a value with no TTL — it persists until explicitly deleted.
+ * Use only for truly immutable data (e.g. finished match rounds).
+ */
+export async function setCachePermanent<T>(key: string, value: T): Promise<void> {
+  try {
+    await redis.set(key, value);
+  } catch {
+    // Non-critical
+  }
+}
