@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail } from '@/lib/types';
+import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer } from '@/lib/types';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import { EmailCaptureModal, EMAIL_REGISTERED_KEY } from '@/components/EmailCaptureModal';
@@ -462,11 +462,15 @@ function CbfMatchModalContent({
   match,
   isLive,
   hoursUntilKickoff,
+  injuries,
+  injuriesLoading,
 }: {
   data: CbfMatchDetail | null;
   match: Match;
   isLive: boolean;
   hoursUntilKickoff: number; // negative = kickoff already passed
+  injuries: InjuredPlayer[];
+  injuriesLoading: boolean;
 }) {
   const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
   const refereeLikelyConfirmed = hoursUntilKickoff <= 48;
@@ -641,6 +645,31 @@ function CbfMatchModalContent({
           </Pending>
         )}
       </section>
+
+      {/* ── Principais Desfalques ──────────────────────────────────────── */}
+      <section>
+        <SectionHeader label="Principais Desfalques" />
+        {injuriesLoading ? (
+          <div className="space-y-1 animate-pulse">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-8 bg-zinc-800 rounded-lg" />
+            ))}
+          </div>
+        ) : injuries.length > 0 ? (
+          <div className="space-y-1">
+            {injuries.map((p, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" aria-hidden="true" />
+                <span className="text-zinc-200 flex-1 truncate">{p.name}</span>
+                <span className="text-zinc-500 shrink-0">{p.teamName}</span>
+                <span className="text-zinc-600 shrink-0">{translateInjuryReason(p.reason) || translateInjuryType(p.type)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Pending>Sem desfalques confirmados</Pending>
+        )}
+      </section>
     </>
   );
 }
@@ -767,6 +796,15 @@ export function MatchCard({
 
   function openFichaModal() {
     setActiveModal('ficha');
+    // Also fetch h2h in background for injuries data
+    if (h2hStatus === 'idle') {
+      setH2hStatus('loading');
+      const h2hParams = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, fixture: match.id });
+      fetch(`/api/h2h?${h2hParams}`)
+        .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<H2HData>; })
+        .then((d) => { setH2hData(d); setH2hStatus('done'); })
+        .catch(() => setH2hStatus('error'));
+    }
     if (fichaStatus !== 'idle') return;
     setFichaStatus('loading');
     const round = match.round.match(/(\d+)/)?.[1] ?? '';
@@ -1006,6 +1044,8 @@ export function MatchCard({
               match={match}
               isLive={live}
               hoursUntilKickoff={hoursUntilKickoff}
+              injuries={h2hData?.injuries ?? []}
+              injuriesLoading={h2hStatus === 'loading'}
             />
           )}
           {fichaStatus === 'done' && fichaData && (
@@ -1014,6 +1054,8 @@ export function MatchCard({
               match={match}
               isLive={live}
               hoursUntilKickoff={hoursUntilKickoff}
+              injuries={h2hData?.injuries ?? []}
+              injuriesLoading={h2hStatus === 'loading'}
             />
           )}
         </ModalShell>

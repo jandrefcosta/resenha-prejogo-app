@@ -44,4 +44,11 @@
 
 ---
 
+## Planejamentos
+
+- [Suporte a múltiplos campeonatos](planning/multi-competition.md) — o que precisa mudar para adicionar Copa do Mundo, Libertadores etc.
+- [Bolão da Copa do Mundo](planning/bolao-copa.md) — gerenciador de bolão de resultados: auth, palpites, pontuação, leaderboard
+
+---
+
 > **Arquivos de raiz relacionados:** `PRODUCT.md` (visão de produto resumida), `CLAUDE.md` / `AGENTS.md` (instruções para IA).
