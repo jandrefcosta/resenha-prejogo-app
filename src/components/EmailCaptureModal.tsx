@@ -1,29 +1,14 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { EnvelopeIcon } from '@heroicons/react/20/solid';
+import { SoccerBallIcon } from '@/components/SoccerBallIcon';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 
 export const EMAIL_REGISTERED_KEY = 'resenha-prejogo:email-registered';
 const EMAIL_BANNER_DISMISSED_KEY = 'resenha-prejogo:email-banner-dismissed';
 const BANNER_COOLDOWN_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
 const JOURNEY_DELAY_MS = 45_000; // 45 seconds
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-function EnvelopeIcon({ className = 'w-4 h-4' }: { className?: string }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className={className}
-      aria-hidden="true"
-    >
-      <path d="M3 4a2 2 0 0 0-2 2v1.161l8.441 4.221a1.25 1.25 0 0 0 1.118 0L19 7.162V6a2 2 0 0 0-2-2H3Z" />
-      <path d="m19 8.839-7.77 3.885a2.75 2.75 0 0 1-2.46 0L1 8.839V14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V8.839Z" />
-    </svg>
-  );
-}
 
 // ─── Modal ────────────────────────────────────────────────────────────────────
 
@@ -83,7 +68,7 @@ export function EmailCaptureModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">
           <div className="flex items-center gap-2.5">
             <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-zinc-800 text-zinc-300">
-              <EnvelopeIcon />
+              <EnvelopeIcon className="w-4 h-4" aria-hidden="true" />
             </span>
             <p className="text-sm font-semibold text-white font-sans">Fique por dentro</p>
           </div>
@@ -98,7 +83,7 @@ export function EmailCaptureModal({ onClose }: { onClose: () => void }) {
 
         {status === 'success' ? (
           <div className="px-5 py-10 text-center">
-            <p className="text-3xl mb-3">⚽</p>
+            <div className="flex justify-center mb-3"><SoccerBallIcon className="w-10 h-10" /></div>
             <p className="text-sm font-semibold text-white font-sans">Cadastro feito!</p>
             <p className="mt-1.5 text-xs text-zinc-400 font-sans leading-relaxed max-w-xs mx-auto">
               Você será notificado das novidades do Resenha Pré-Jogo.

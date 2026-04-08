@@ -1,6 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState, useCallback } from 'react';
+import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/20/solid';
+import { SoccerBallIcon } from '@/components/SoccerBallIcon';
+import { useFocusTrap } from '@/lib/useFocusTrap';
 import clubsData from '@/data/clubs.json';
 import type { CbfMatchDetail, ClubTheme } from '@/lib/types';
 
@@ -83,6 +86,138 @@ function TeamLogo({ cbfId, alt }: { cbfId: string; alt: string }) {
   );
 }
 
+// ─── Ficha modal (post-match) ─────────────────────────────────────────────────
+
+function FichaResultModal({ data, onClose }: { data: CbfMatchDetail; onClose: () => void }) {
+  const panelRef = useRef<HTMLDivElement>(null);
+  useFocusTrap(panelRef, onClose);
+
+  const homeStarters = data.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando);
+  const awayStarters = data.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando);
+  const homeReserves = data.mandante.atletas.filter((a) => a.reserva && a.entrouJogando);
+  const awayReserves = data.visitante.atletas.filter((a) => a.reserva && a.entrouJogando);
+  const mainRef = data.arbitros.find((a) => a.funcao === 'Arbitro');
+  const varRef  = data.arbitros.find((a) => a.funcao === 'VAR');
+  const hasLineup = homeStarters.length > 0 || awayStarters.length > 0;
+  const hasSubs   = homeReserves.length > 0 || awayReserves.length > 0;
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4">
+      <div className="absolute inset-0 bg-black/70 backdrop-blur-sm" onClick={onClose} aria-hidden="true" />
+      <div
+        ref={panelRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="ficha-result-title"
+        className="relative z-10 flex flex-col w-full max-w-lg max-h-[90dvh] bg-zinc-900 rounded-t-2xl sm:rounded-2xl border border-zinc-800 shadow-2xl"
+      >
+        {/* Header */}
+        <div className="flex items-start justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
+          <div>
+            <h2 id="ficha-result-title" className="text-sm font-bold text-white font-sans">Ficha do Jogo</h2>
+            <p className="text-xs text-zinc-500 font-sans mt-0.5">
+              {stripState(data.mandante.nome)} × {stripState(data.visitante.nome)}
+            </p>
+          </div>
+          <button
+            onClick={onClose}
+            className="h-7 w-7 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 ml-3 shrink-0"
+            aria-label="Fechar"
+          >
+            <XMarkIcon className="w-4 h-4" aria-hidden="true" />
+          </button>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 overflow-y-auto scrollbar-none p-5 space-y-6">
+          {/* Phase banner */}
+          <div className="inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold font-sans text-zinc-400 border-zinc-700 bg-zinc-800">
+            Encerrado
+          </div>
+
+          {/* Escalação */}
+          <section>
+            <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2 font-sans">Escalação</p>
+            {hasLineup ? (
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: teamShort(data.mandante.id, data.mandante.nome), players: homeStarters },
+                  { label: teamShort(data.visitante.id, data.visitante.nome), players: awayStarters },
+                ].map(({ label, players }) => (
+                  <div key={label}>
+                    <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}</p>
+                    <div className="space-y-0.5">
+                      {players.map((p) => (
+                        <div key={p.id} className="flex items-center gap-1.5 text-xs font-sans">
+                          <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.numeroCamisa}</span>
+                          <span className="text-zinc-300 truncate">{p.apelido.replace(/^\d+\s+-\s+/, '')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex items-center gap-2 rounded-lg border border-dashed border-zinc-700 px-3 py-2.5 text-xs font-sans text-zinc-500">
+                <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" aria-hidden="true" />
+                Escalação não publicada pelo CBF
+              </div>
+            )}
+          </section>
+
+          {/* Substituições */}
+          {hasSubs && (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2 font-sans">Substituições</p>
+              <div className="grid grid-cols-2 gap-3">
+                {[
+                  { label: teamShort(data.mandante.id, data.mandante.nome), players: homeReserves },
+                  { label: teamShort(data.visitante.id, data.visitante.nome), players: awayReserves },
+                ].map(({ label, players }) => (
+                  <div key={label}>
+                    <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}</p>
+                    <div className="space-y-0.5">
+                      {players.map((p) => (
+                        <div key={p.id} className="flex items-center gap-1.5 text-xs font-sans">
+                          <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.numeroCamisa}</span>
+                          <span className="text-zinc-300 truncate">{p.apelido.replace(/^\d+\s+-\s+/, '')}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
+          {/* Arbitragem */}
+          {(mainRef || varRef) && (
+            <section>
+              <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2 font-sans">Arbitragem</p>
+              <div className="space-y-1">
+                {mainRef && (
+                  <div className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                    <span className="text-zinc-400 font-medium w-20 shrink-0">Principal</span>
+                    <span className="text-zinc-200 flex-1">{mainRef.nome}</span>
+                    {mainRef.uf && <span className="text-zinc-600 shrink-0">{mainRef.uf}</span>}
+                  </div>
+                )}
+                {varRef && (
+                  <div className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                    <span className="text-zinc-400 font-medium w-20 shrink-0">VAR</span>
+                    <span className="text-zinc-200 flex-1">{varRef.nome}</span>
+                    {varRef.uf && <span className="text-zinc-600 shrink-0">{varRef.uf}</span>}
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── ResultCard ───────────────────────────────────────────────────────────────
 
 export function ResultCard({
@@ -95,6 +230,8 @@ export function ResultCard({
   highlightCbfId: string;
 }) {
   const [expanded, setExpanded] = useState(false);
+  const [fichaOpen, setFichaOpen] = useState(false);
+  const closeFicha = useCallback(() => setFichaOpen(false), []);
 
   const isHome = data.mandante.id === highlightCbfId;
   const isAway = data.visitante.id === highlightCbfId;
@@ -179,7 +316,7 @@ export function ResultCard({
                   </span>
                 </div>
                 <span className="flex items-center gap-0.5 text-[9px] font-semibold text-zinc-600 font-sans uppercase tracking-wide whitespace-nowrap">
-                  ⚽ Gols
+                  <SoccerBallIcon className="w-2.5 h-2.5 shrink-0" /> Gols
                 </span>
               </div>
             ) : (
@@ -243,15 +380,24 @@ export function ResultCard({
           </div>
         )}
 
-        {/* Expand toggle */}
-        {hasDetails && (
+        {/* Actions */}
+        <div className="mt-3 flex items-center gap-4">
+          {hasDetails && (
+            <button
+              onClick={() => setExpanded((e) => !e)}
+              className="text-xs text-zinc-600 hover:text-zinc-400 font-sans transition-colors cursor-pointer"
+            >
+              {expanded ? '↑ Menos detalhes' : '↓ Cartões e árbitro'}
+            </button>
+          )}
           <button
-            onClick={() => setExpanded((e) => !e)}
-            className="mt-3 text-xs text-zinc-600 hover:text-zinc-400 font-sans transition-colors block"
+            onClick={() => setFichaOpen(true)}
+            className="flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400 font-sans transition-colors cursor-pointer"
           >
-            {expanded ? '↑ Menos detalhes' : '↓ Cartões e árbitro'}
+            <DocumentTextIcon className="w-3 h-3 shrink-0" aria-hidden="true" />
+            Ficha
           </button>
-        )}
+        </div>
 
         {expanded && (
           <div className="mt-3 space-y-3 border-t border-zinc-800 pt-3">
@@ -297,6 +443,8 @@ export function ResultCard({
           </div>
         )}
       </div>
+
+      {fichaOpen && <FichaResultModal data={data} onClose={closeFicha} />}
     </article>
   );
 }

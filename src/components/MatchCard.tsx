@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { XMarkIcon, ClockIcon, UsersIcon, DocumentTextIcon, ShareIcon } from '@heroicons/react/20/solid';
+import { SoccerBallIcon } from '@/components/SoccerBallIcon';
 import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer } from '@/lib/types';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
@@ -63,46 +65,6 @@ function FormBadge({ result }: { result: string }) {
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
 
-
-function CloseIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
-      <path d="M6.28 5.22a.75.75 0 0 0-1.06 1.06L8.94 10l-3.72 3.72a.75.75 0 1 0 1.06 1.06L10 11.06l3.72 3.72a.75.75 0 1 0 1.06-1.06L11.06 10l3.72-3.72a.75.75 0 0 0-1.06-1.06L10 8.94 6.28 5.22Z" />
-    </svg>
-  );
-}
-
-function HistoryIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path fillRule="evenodd" d="M10 18a8 8 0 1 0 0-16 8 8 0 0 0 0 16Zm.75-13a.75.75 0 0 0-1.5 0v5c0 .414.336.75.75.75h4a.75.75 0 0 0 0-1.5h-3.25V5Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function PlayersIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path d="M7 8a3 3 0 1 0 0-6 3 3 0 0 0 0 6ZM14.5 9a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM1.615 16.428a1.224 1.224 0 0 1-.569-1.175 6.002 6.002 0 0 1 11.908 0c.058.467-.172.92-.57 1.174A9.953 9.953 0 0 1 7 17a9.953 9.953 0 0 1-5.385-1.572ZM14.5 16h-.106c.07-.297.088-.611.048-.933a7.47 7.47 0 0 0-1.588-3.755 4.502 4.502 0 0 1 5.874 2.636.818.818 0 0 1-.36.98A7.465 7.465 0 0 1 14.5 16Z" />
-    </svg>
-  );
-}
-
-function FichaIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path fillRule="evenodd" d="M6 2a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V7.414A2 2 0 0 0 15.414 6L12 2.586A2 2 0 0 0 10.586 2H6Zm2 7a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Zm0 3a1 1 0 0 1 1-1h2a1 1 0 1 1 0 2H9a1 1 0 0 1-1-1Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function ShareIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path fillRule="evenodd" d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z" clipRule="evenodd" />
-    </svg>
-  );
-}
 
 // ─── Share ────────────────────────────────────────────────────────────────────
 
@@ -247,7 +209,7 @@ function ModalShell({
           <button onClick={onClose}
             className="h-7 w-7 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600 ml-3 shrink-0"
             aria-label="Fechar">
-            <CloseIcon />
+            <XMarkIcon className="w-4 h-4" aria-hidden="true" />
           </button>
         </div>
         {/* Scrollable content */}
@@ -325,7 +287,7 @@ function H2HModalContent({ data, match }: { data: H2HData; match: Match }) {
               <div key={m.id} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
                 <span className="flex-1 text-right text-zinc-300 truncate">{m.homeTeam}</span>
                 <span className="flex items-center gap-1 font-bold font-display text-white tabular-nums shrink-0 px-2">
-                  <span className="text-[10px] leading-none" aria-label="Gols">⚽</span>
+                  <SoccerBallIcon className="w-2.5 h-2.5 shrink-0" />
                   {m.homeScore ?? '–'}&thinsp;–&thinsp;{m.awayScore ?? '–'}
                 </span>
                 <span className="flex-1 text-zinc-300 truncate">{m.awayTeam}</span>
@@ -384,7 +346,7 @@ function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Ma
               {/* Column headers */}
               <div className="grid grid-cols-[1fr_auto_auto_auto] gap-x-4 px-3 pb-1">
                 <span className="text-xs text-zinc-600 font-sans">Jogador</span>
-                <span className="text-xs text-zinc-600 font-sans text-center w-7" title="Gols">⚽</span>
+                <span className="flex items-center justify-center w-7 text-zinc-600" title="Gols"><SoccerBallIcon className="w-3 h-3" /></span>
                 <span className="text-xs text-zinc-600 font-sans text-center w-7">A</span>
                 <span className="text-xs text-zinc-600 font-sans text-center w-7">J</span>
               </div>
@@ -397,7 +359,7 @@ function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Ma
                   <span className="text-xs text-zinc-600 font-sans tabular-nums text-center w-7">{p.appearances}</span>
                 </div>
               ))}
-              <p className="text-xs text-zinc-700 pt-1 px-1 font-sans">⚽ = Gols · A = Assistências · J = Jogos</p>
+              <p className="flex items-center gap-1 text-xs text-zinc-700 pt-1 px-1 font-sans"><SoccerBallIcon className="w-3 h-3 shrink-0" /> = Gols · A = Assistências · J = Jogos</p>
             </div>
           )}
         </section>
@@ -511,6 +473,12 @@ function CbfMatchModalContent({
         {isLive && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" aria-hidden="true" />}
         {phaseBanner.label}
       </div>
+      {!isLive && !isPostMatch && hoursUntilKickoff > 48 && (
+        <p className="flex items-center gap-1.5 text-xs text-zinc-600 font-sans mb-1">
+          <ClockIcon className="w-3 h-3 shrink-0" />
+          Árbitros e escalações ficam disponíveis ~48h antes do jogo
+        </p>
+      )}
 
       {/* ── Resultado ─────────────────────────────────────────────────────── */}
       <section>
@@ -525,7 +493,7 @@ function CbfMatchModalContent({
                 <span className="text-4xl font-black font-display text-white tabular-nums">{data!.visitante.gols}</span>
               </div>
               <span className="flex items-center gap-0.5 text-[9px] font-semibold text-zinc-600 font-sans uppercase tracking-wide">
-                ⚽ Gols
+                <SoccerBallIcon className="w-2.5 h-2.5 shrink-0" /> Gols
               </span>
             </div>
             <p className="flex-1 text-left text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
@@ -545,7 +513,7 @@ function CbfMatchModalContent({
             {[...homeGoals.map(g => ({ ...g, short: match.homeTeam.shortName })),
                ...awayGoals.map(g => ({ ...g, short: match.awayTeam.shortName }))].map((g, i) => (
               <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
-                <span className="text-base leading-none">⚽</span>
+                <SoccerBallIcon className="w-4 h-4 shrink-0" />
                 <span className="font-medium text-zinc-200 flex-1">{g.atletaApelido || g.atletaNome}</span>
                 <span className="text-zinc-500">{g.short}</span>
                 <span className="text-zinc-600 tabular-nums">{g.minutos}&apos;</span>
@@ -607,7 +575,7 @@ function CbfMatchModalContent({
               ? 'Escalação não publicada'
               : isLive
               ? 'Sendo confirmada'
-              : 'Publicada próximo ao jogo'}
+              : 'Publicada ~48h antes do jogo'}
           </Pending>
         )}
       </section>
@@ -732,11 +700,13 @@ export function MatchCard({
   highlightClubId,
   preview,
   previewLoading,
+  noEmailGate = false,
 }: {
   match: Match;
   highlightClubId: string;
   preview?: MatchPreview;
   previewLoading: boolean;
+  noEmailGate?: boolean;
 }) {
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [h2hData, setH2hData] = useState<H2HData | null>(null);
@@ -755,7 +725,7 @@ export function MatchCard({
   }, []);
 
   function withEmailGate(action: () => void) {
-    if (emailRegistered) {
+    if (noEmailGate || emailRegistered) {
       action();
     } else {
       pendingActionRef.current = action;
@@ -832,8 +802,9 @@ export function MatchCard({
 
   // Hours until kickoff — used for ficha availability labelling (negative = past)
   const hoursUntilKickoff = (kickoffMs - nowMs) / 3_600_000;
+  const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
   // Label shown inside the Ficha button to communicate what's available
-  const fichaHint = live ? 'Ao vivo' : hoursUntilKickoff <= 48 ? 'Árbitro' : 'Em breve';
+  const fichaHint = live ? 'Ao vivo' : isPostMatch ? 'Resultado' : hoursUntilKickoff <= 48 ? 'Árbitro' : '48h antes';
 
   return (
     <>
@@ -930,7 +901,7 @@ export function MatchCard({
               aria-label="Ver confronto direto"
               className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
-              <HistoryIcon />
+              <ClockIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
               Confronto
             </button>
             <button
@@ -938,7 +909,7 @@ export function MatchCard({
               aria-label="Ver jogadores"
               className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
-              <PlayersIcon />
+              <UsersIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
               Jogadores
             </button>
             <button
@@ -946,7 +917,7 @@ export function MatchCard({
               aria-label="Ver ficha do jogo"
               className="flex flex-col items-center justify-center gap-0.5 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
-              <FichaIcon />
+              <DocumentTextIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
               <span>Ficha</span>
               <span className={`text-[9px] font-sans leading-none ${live ? 'text-green-400' : 'text-zinc-600'}`}>{fichaHint}</span>
             </button>
@@ -955,7 +926,7 @@ export function MatchCard({
               className="flex flex-col items-center justify-center gap-1 rounded-xl bg-zinc-800/60 border border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
               aria-label="Compartilhar jogo"
             >
-              <ShareIcon />
+              <ShareIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
               Enviar
             </button>
           </div>

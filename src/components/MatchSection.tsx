@@ -308,7 +308,7 @@ export function MatchSection() {
           )}
           {scheduleGroups.length > 0 && (
             <div>
-              {scheduleGroups.map((group) => (
+              {scheduleGroups.map((group, groupIndex) => (
                 <div key={group.roundLabel}>
                   {group.roundNum === currentRoundNum ? (
                     <CurrentRoundHeader label={group.roundLabel} />
@@ -323,6 +323,7 @@ export function MatchSection() {
                         highlightClubId={club.id}
                         preview={previews?.[match.id]}
                         previewLoading={previewsLoading}
+                        noEmailGate={groupIndex <= 1}
                       />
                     ))}
                   </div>

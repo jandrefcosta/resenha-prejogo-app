@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { ShareIcon, CalendarIcon } from '@heroicons/react/20/solid';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import type { Match } from '@/lib/types';
@@ -129,22 +130,6 @@ async function handleShare(text: string): Promise<void> {
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-
-function ShareIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path fillRule="evenodd" d="M15.75 4.5a3 3 0 1 1 .825 2.066l-8.421 4.679a3.002 3.002 0 0 1 0 1.51l8.421 4.679a3 3 0 1 1-.729 1.31l-8.421-4.678a3 3 0 1 1 0-4.132l8.421-4.679a3 3 0 0 1-.096-.755Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function CalendarIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
-    </svg>
-  );
-}
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -308,7 +293,7 @@ function RoundModal({ onClose }: { onClose: () => void }) {
                 className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer"
                 aria-label="Compartilhar rodada"
               >
-                <ShareIcon />
+                <ShareIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
               </button>
             )}
             <button
@@ -382,7 +367,7 @@ export function RoundButton() {
         className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 min-h-[44px] text-sm font-medium font-sans text-white transition-all hover:bg-white/20 hover:border-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 cursor-pointer backdrop-blur-sm"
         aria-label="Ver jogos da rodada"
       >
-        <CalendarIcon />
+        <CalendarIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
         <span>Rodada</span>
       </button>
       {open && <RoundModal onClose={() => setOpen(false)} />}

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import { CalendarIcon, TvIcon, SparklesIcon, ChevronRightIcon, ArrowLeftIcon } from '@heroicons/react/20/solid';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import type { ClubTheme } from '@/lib/types';
@@ -13,47 +14,6 @@ function dismiss() {
 }
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
-
-function CalendarIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-none" aria-hidden="true">
-      <path fillRule="evenodd" d="M5.75 2a.75.75 0 0 1 .75.75V4h7V2.75a.75.75 0 0 1 1.5 0V4h.25A2.75 2.75 0 0 1 18 6.75v8.5A2.75 2.75 0 0 1 15.25 18H4.75A2.75 2.75 0 0 1 2 15.25v-8.5A2.75 2.75 0 0 1 4.75 4H5V2.75A.75.75 0 0 1 5.75 2Zm-1 5.5c-.69 0-1.25.56-1.25 1.25v6.5c0 .69.56 1.25 1.25 1.25h10.5c.69 0 1.25-.56 1.25-1.25v-6.5c0-.69-.56-1.25-1.25-1.25H4.75Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function TvIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-none" aria-hidden="true">
-      <path d="M4.75 3a.75.75 0 0 0 0 1.5h.586l-1.293 1.293a.75.75 0 0 0 1.06 1.06L6.5 5.56V6.25a.75.75 0 0 0 1.5 0v-.69l1.397 1.397a.75.75 0 0 0 1.06-1.06L9.164 4.5h.836a.75.75 0 0 0 0-1.5H4.75Z" />
-      <path fillRule="evenodd" d="M1 8.75A2.75 2.75 0 0 1 3.75 6h12.5A2.75 2.75 0 0 1 19 8.75v5.5A2.75 2.75 0 0 1 16.25 17H3.75A2.75 2.75 0 0 1 1 14.25v-5.5Zm2.75-1.25c-.69 0-1.25.56-1.25 1.25v5.5c0 .69.56 1.25 1.25 1.25h12.5c.69 0 1.25-.56 1.25-1.25v-5.5c0-.69-.56-1.25-1.25-1.25H3.75Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function SparklesIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-5 h-5 flex-none" aria-hidden="true">
-      <path d="M15.98 1.804a1 1 0 0 0-1.96 0l-.24 1.192a1 1 0 0 1-.784.785l-1.192.238a1 1 0 0 0 0 1.962l1.192.238a1 1 0 0 1 .785.785l.238 1.192a1 1 0 0 0 1.962 0l.238-1.192a1 1 0 0 1 .785-.785l1.192-.238a1 1 0 0 0 0-1.962l-1.192-.238a1 1 0 0 1-.785-.785l-.238-1.192ZM6.949 5.684a1 1 0 0 0-1.898 0l-.683 2.051a1 1 0 0 1-.633.633l-2.051.683a1 1 0 0 0 0 1.898l2.051.684a1 1 0 0 1 .633.632l.683 2.051a1 1 0 0 0 1.898 0l.683-2.051a1 1 0 0 1 .633-.633l2.051-.683a1 1 0 0 0 0-1.898l-2.051-.683a1 1 0 0 1-.633-.633L6.95 5.684ZM13.949 13.684a1 1 0 0 0-1.898 0l-.184.551a1 1 0 0 1-.632.633l-.551.183a1 1 0 0 0 0 1.898l.551.183a1 1 0 0 1 .633.633l.183.551a1 1 0 0 0 1.898 0l.184-.551a1 1 0 0 1 .632-.633l.551-.184a1 1 0 0 0 0-1.897l-.551-.184a1 1 0 0 1-.633-.632l-.183-.551Z" />
-    </svg>
-  );
-}
-
-function ChevronRightIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
-      <path fillRule="evenodd" d="M8.22 5.22a.75.75 0 0 1 1.06 0l4.25 4.25a.75.75 0 0 1 0 1.06l-4.25 4.25a.75.75 0 0 1-1.06-1.06L11.94 10 8.22 6.28a.75.75 0 0 1 0-1.06Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function ArrowLeftIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4" aria-hidden="true">
-      <path fillRule="evenodd" d="M11.78 5.22a.75.75 0 0 1 0 1.06L8.06 10l3.72 3.72a.75.75 0 1 1-1.06 1.06l-4.25-4.25a.75.75 0 0 1 0-1.06l4.25-4.25a.75.75 0 0 1 1.06 0Z" clipRule="evenodd" />
-    </svg>
-  );
-}
 
 // ─── Step indicator ───────────────────────────────────────────────────────────
 
@@ -73,17 +33,17 @@ function StepDots({ active }: { active: 1 | 2 }) {
 
 const FEATURES = [
   {
-    icon: <CalendarIcon />,
+    icon: <CalendarIcon className="w-5 h-5 flex-none" aria-hidden="true" />,
     title: 'Próximos jogos',
     description: 'Veja os próximos jogos do seu time com data, horário e estádio.',
   },
   {
-    icon: <TvIcon />,
+    icon: <TvIcon className="w-5 h-5 flex-none" aria-hidden="true" />,
     title: 'Onde assistir',
     description: 'Saiba em qual canal passa cada partida — buscado com IA em tempo real.',
   },
   {
-    icon: <SparklesIcon />,
+    icon: <SparklesIcon className="w-5 h-5 flex-none" aria-hidden="true" />,
     title: 'Análise pré-jogo',
     description: 'Análise gerada por IA antes de cada jogo, disponível direto no card da partida.',
   },
@@ -129,7 +89,7 @@ function WelcomeStep({ onNext, onSkip }: { onNext: () => void; onSkip: () => voi
           className="flex items-center justify-center gap-2 w-full rounded-full min-h-[44px] px-5 text-sm font-semibold font-sans bg-white text-zinc-950 transition-colors duration-200 hover:bg-zinc-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white cursor-pointer"
         >
           Escolher meu clube
-          <ChevronRightIcon />
+          <ChevronRightIcon className="w-4 h-4" aria-hidden="true" />
         </button>
         <button
           onClick={onSkip}
@@ -166,7 +126,7 @@ function ClubStep({
           className="flex h-7 w-7 flex-none items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-600"
           aria-label="Voltar"
         >
-          <ArrowLeftIcon />
+          <ArrowLeftIcon className="w-4 h-4" aria-hidden="true" />
         </button>
         <div className="flex-1">
           <p className="text-sm font-semibold text-white font-sans">Escolha seu clube</p>

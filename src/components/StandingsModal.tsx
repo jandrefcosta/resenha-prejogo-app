@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import { TableCellsIcon, ArrowPathIcon } from '@heroicons/react/20/solid';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import type { StandingEntry } from '@/lib/types';
@@ -26,33 +27,11 @@ export function StandingsButton() {
         className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 min-h-[44px] text-sm font-medium font-sans text-white transition-all hover:bg-white/20 hover:border-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 cursor-pointer backdrop-blur-sm"
         aria-label="Ver tabela de classificação"
       >
-        <TableIcon />
+        <TableCellsIcon className="w-4 h-4 shrink-0" aria-hidden="true" />
         <span>Tabela</span>
       </button>
       {open && <StandingsModal onClose={closeModal} />}
     </>
-  );
-}
-
-function TableIcon() {
-  return (
-    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="w-4 h-4 shrink-0" aria-hidden="true">
-      <path fillRule="evenodd" d="M.99 5.24A2.25 2.25 0 0 1 3.25 3h13.5A2.25 2.25 0 0 1 19 5.25l.01 9.5A2.25 2.25 0 0 1 16.76 17H3.26A2.267 2.267 0 0 1 1 14.75l-.01-9.51Zm8.26 9.52v-.625a.75.75 0 0 0-.75-.75H3.25a.75.75 0 0 0-.75.75v.615c0 .414.336.75.75.75h5.373a.75.75 0 0 0 .627-.74Zm1.5 0a.75.75 0 0 0 .627.74H16.75a.75.75 0 0 0 .75-.75v-.615a.75.75 0 0 0-.75-.75h-5.25a.75.75 0 0 0-.75.75v.625Zm6.75-3.63v-.625a.75.75 0 0 0-.75-.75h-5.25a.75.75 0 0 0-.75.75v.625c0 .414.336.75.75.75H17a.75.75 0 0 0 .5-.75Zm-8.25 0v-.625a.75.75 0 0 0-.75-.75H3.25a.75.75 0 0 0-.75.75v.625c0 .414.336.75.75.75H8.5a.75.75 0 0 0 .75-.75Zm0-3.378v-.625A.75.75 0 0 0 8.5 6H3.25a.75.75 0 0 0-.75.75v.625c0 .414.336.75.75.75H8.5a.75.75 0 0 0 .75-.75Zm8.25 0v-.625A.75.75 0 0 0 17 6h-5.25a.75.75 0 0 0-.75.75v.625c0 .414.336.75.75.75H17a.75.75 0 0 0 .5-.75Z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
-function RefreshIcon({ spinning }: { spinning: boolean }) {
-  return (
-    <svg
-      xmlns="http://www.w3.org/2000/svg"
-      viewBox="0 0 20 20"
-      fill="currentColor"
-      className={`w-4 h-4 shrink-0 transition-transform ${spinning ? 'animate-spin' : ''}`}
-      aria-hidden="true"
-    >
-      <path fillRule="evenodd" d="M15.312 11.424a5.5 5.5 0 0 1-9.201 2.466l-.312-.311h2.433a.75.75 0 0 0 0-1.5H3.989a.75.75 0 0 0-.75.75v4.242a.75.75 0 0 0 1.5 0v-2.43l.31.31a7 7 0 0 0 11.712-3.138.75.75 0 0 0-1.449-.39Zm1.23-3.723a.75.75 0 0 0 .219-.53V2.929a.75.75 0 0 0-1.5 0V5.36l-.31-.31A7 7 0 0 0 3.239 8.188a.75.75 0 1 0 1.448.389A5.5 5.5 0 0 1 13.89 6.11l.311.31h-2.432a.75.75 0 0 0 0 1.5h4.243a.75.75 0 0 0 .53-.219Z" clipRule="evenodd" />
-    </svg>
   );
 }
 
@@ -180,7 +159,7 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
                 className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label="Atualizar tabela"
               >
-                <RefreshIcon spinning={refreshing} />
+                <ArrowPathIcon className={`w-4 h-4 shrink-0 transition-transform ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
               </button>
             )}
             <button
