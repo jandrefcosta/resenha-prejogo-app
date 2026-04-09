@@ -2,9 +2,14 @@
 
 ## O que faz
 
-Exibe os detalhes oficiais de uma partida em andamento ou encerrada: placar, gols (com marcador e minuto), cartões, escalações (titular + banco), substituições e árbitros. Os dados são buscados da API oficial da CBF.
+Exibe os detalhes oficiais de uma partida. Existe em dois contextos:
 
-Antes do jogo, mostra indicadores de disponibilidade para cada seção — o usuário sabe o que esperar e quando.
+| Contexto | Componente | Acesso | Conteúdo |
+|----------|-----------|--------|---------|
+| Jogo futuro / ao vivo | `MatchCard` → `CbfMatchModalContent` | Botão "Ficha" no card de próximo jogo | Gols, cartões, escalação, substituições, árbitros + indicadores de disponibilidade por fase |
+| Jogo encerrado | `ResultCard` → `FichaResultModal` | Botão "Ficha" no card de resultado | Escalação, substituições, árbitros (gols e cartões ficam no inline expandível do `ResultCard`) |
+
+Antes do jogo (contexto `MatchCard`), mostra indicadores de disponibilidade para cada seção — o usuário sabe o que esperar e quando.
 
 ---
 
@@ -50,12 +55,22 @@ Todas as seções disponíveis com dados definitivos.
 
 ---
 
-## Componente
+## Componentes
+
+### Ficha de jogo futuro / ao vivo
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|-----------------|
 | `MatchCard` | `src/components/MatchCard.tsx` | Botão "Ficha", modal, fetch, renderização por fase |
 | `CbfMatchModalContent` | dentro de `MatchCard.tsx` | Conteúdo do modal organizado por seções |
+
+### Ficha de jogo encerrado (`ResultCard`)
+
+| Componente | Arquivo | Responsabilidade |
+|------------|---------|-----------------|
+| `FichaResultModal` | dentro de `ResultCard.tsx` | Modal com escalação, substituições e árbitros para partidas encerradas |
+
+O `FichaResultModal` usa os dados `CbfMatchDetail` já carregados pelo `ResultCard` — não faz fetch adicional. Gols e cartões são exibidos no próprio card expandível.
 
 ---
 

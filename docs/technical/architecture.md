@@ -42,6 +42,7 @@
 | IA | Google Gemini 2.5 Flash | @google/genai ^1.47 |
 | Monitoramento | Sentry | @sentry/nextjs ^10.47 |
 | Analytics | Vercel Analytics | @vercel/analytics ^2.0 |
+| Ícones | Heroicons | @heroicons/react ^2.2 |
 
 ---
 
@@ -84,7 +85,8 @@ src/
 │   ├── InitialLoader.tsx   # Skeleton durante hydration
 │   ├── OnboardingModal.tsx # Modal de boas-vindas
 │   ├── EmailCaptureModal.tsx
-│   └── SuggestionModal.tsx
+│   ├── SuggestionModal.tsx
+│   └── SoccerBallIcon.tsx  # Ícone SVG de bola de futebol (substitui emoji ⚽)
 │
 ├── lib/                    # Lógica de negócio e integrações
 │   ├── types.ts            # Tipos TypeScript centrais

@@ -52,7 +52,7 @@ function TeamLogo({ src, alt, size = 32 }: { src?: string; alt: string; size?: n
 function FormBadge({ result }: { result: string }) {
   const map: Record<string, { label: string; bg: string }> = {
     W: { label: 'V', bg: 'bg-green-600' },
-    D: { label: 'E', bg: 'bg-amber-500' },
+    D: { label: 'E', bg: 'bg-amber-700' },
     L: { label: 'D', bg: 'bg-red-700' },
   };
   const entry = map[result] ?? { label: '?', bg: 'bg-zinc-600' };

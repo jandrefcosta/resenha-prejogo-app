@@ -11,7 +11,9 @@ Exibe os resultados das rodadas encerradas com dados oficiais da CBF: placar, go
 1. O usuário clica na aba **"Resultados"** no `MatchSection`.
 2. As últimas 3 rodadas encerradas do clube selecionado são buscadas.
 3. Cada partida é renderizada como um `ResultCard`.
-4. O usuário pode expandir o card para ver a ficha completa (gols, cartões, escalações, árbitros).
+4. O usuário pode:
+   - Clicar em **"↓ Cartões e árbitro"** para expandir inline gols, cartões e árbitro da partida.
+   - Clicar em **"Ficha"** para abrir o `FichaResultModal`, que exibe escalação, substituições e árbitros em um modal dedicado.
 5. Rolando para baixo, mais rodadas podem ser carregadas (infinite scroll ou botão "ver mais").
 
 ---
@@ -21,7 +23,8 @@ Exibe os resultados das rodadas encerradas com dados oficiais da CBF: placar, go
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|-----------------|
 | `MatchSection` | `src/components/MatchSection.tsx` | Gerencia a aba Resultados, lazy-loading, paginação por rodada |
-| `ResultCard` | `src/components/ResultCard.tsx` | Card de resultado com placar e detalhes expansíveis |
+| `ResultCard` | `src/components/ResultCard.tsx` | Card de resultado com placar, detalhes expansíveis e botão Ficha |
+| `FichaResultModal` | dentro de `ResultCard.tsx` | Modal com escalação, substituições e árbitros da partida encerrada |
 
 ---
 

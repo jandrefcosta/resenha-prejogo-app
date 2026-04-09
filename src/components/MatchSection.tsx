@@ -228,7 +228,7 @@ export function MatchSection() {
                 role="tab"
                 aria-selected={isActive}
                 onClick={() => handleTabChange(tab.id)}
-                className="flex-1 py-2 text-xs font-semibold font-sans rounded-lg transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500 cursor-pointer"
+                className="flex-1 py-2 min-h-[44px] text-xs font-semibold font-sans rounded-lg transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500 cursor-pointer"
                 style={
                   isActive
                     ? {

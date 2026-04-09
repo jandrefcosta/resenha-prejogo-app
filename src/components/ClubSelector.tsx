@@ -118,7 +118,7 @@ function ClubModal({
           </button>
         </div>
 
-        <div className="p-3 grid grid-cols-2 gap-2 max-h-80 overflow-y-auto">
+        <ScrollFade>
           {clubs.map((c) => {
             const isActive = activeClub?.id === c.id;
             return (
@@ -164,8 +164,42 @@ function ClubModal({
               </button>
             );
           })}
-        </div>
+        </ScrollFade>
       </div>
+    </div>
+  );
+}
+
+// ─── Scroll fade indicator ────────────────────────────────────────────────────
+
+function ScrollFade({ children }: { children: React.ReactNode }) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const [showFade, setShowFade] = useState(false);
+
+  useEffect(() => {
+    const el = listRef.current;
+    if (!el) return;
+    const check = () => setShowFade(el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+    check();
+    el.addEventListener('scroll', check, { passive: true });
+    return () => el.removeEventListener('scroll', check);
+  }, []);
+
+  return (
+    <div className="relative">
+      <div
+        ref={listRef}
+        className="p-3 grid grid-cols-2 gap-2 max-h-80 overflow-y-auto scrollbar-none"
+      >
+        {children}
+      </div>
+      {showFade && (
+        <div
+          data-testid="scroll-fade"
+          className="pointer-events-none absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-zinc-900 to-transparent"
+          aria-hidden="true"
+        />
+      )}
     </div>
   );
 }

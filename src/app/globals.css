@@ -46,6 +46,11 @@ body {
   }
 }
 
+/* ─── Touch ───────────────────────────────────── */
+button, [role="button"] {
+  touch-action: manipulation;
+}
+
 /* ─── Scrollbar ───────────────────────────────── */
 .scrollbar-none {
   scrollbar-width: none;
