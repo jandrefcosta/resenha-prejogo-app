@@ -4,20 +4,36 @@ import React, { useEffect, useRef, useState } from 'react';
 import { TableCellsIcon, ArrowPathIcon } from '@heroicons/react/20/solid';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
+import { COMPETITIONS } from '@/data/competitions';
+import type { Competition } from '@/data/competitions';
 import type { StandingEntry } from '@/lib/types';
+
+// ─── Constants ────────────────────────────────────────────────────────────────
+
+// Exclude mata-mata competitions (Copa do Brasil) — they have no traditional
+// standings table, so showing the tab only creates a dead-end for the user.
+const STANDINGS_COMPETITIONS = COMPETITIONS.filter(
+  (c) => c.scope === 'club' && c.format !== 'mata-mata',
+);
+
+interface StandingsResponse {
+  groups: StandingEntry[][];
+  format: 'pontos-corridos' | 'grupos' | 'mata-mata';
+  updatedAt: string;
+}
 
 // ─── Trigger button ───────────────────────────────────────────────────────────
 export function StandingsButton() {
   const [open, setOpen] = useState(false);
+  useScrollLock(open);
 
   function openModal() {
     setOpen(true);
-    document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
     setOpen(false);
-    document.body.style.overflow = '';
   }
 
   return (
@@ -63,6 +79,99 @@ function MiniForm({ form }: { form: string }) {
   );
 }
 
+// ─── Group table (Libertadores / Sul-Americana) ───────────────────────────────
+function GroupTable({
+  entries,
+  groupLabel,
+  highlightTeamId,
+}: {
+  entries: StandingEntry[];
+  groupLabel: string;
+  highlightTeamId?: number;
+}) {
+  return (
+    <div className="mb-1">
+      <div className="px-4 pt-3 pb-1">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-zinc-500 font-sans">
+          {groupLabel}
+        </span>
+      </div>
+      <table className="w-full border-collapse">
+        <tbody>
+          {entries.map((entry) => {
+            const isHighlighted =
+              highlightTeamId !== undefined && entry.team.id === highlightTeamId;
+            const zone = zoneStyle(entry.description);
+            const { bg, border } = isHighlighted ? ZONE_HIGHLIGHTED : zone;
+            const rowStyle: React.CSSProperties = {
+              ...(bg ? { backgroundColor: bg } : {}),
+              ...(border ? { borderLeftColor: border, borderLeftWidth: 2, borderLeftStyle: 'solid' } : {}),
+            };
+            return (
+              <tr
+                key={entry.team.id}
+                style={rowStyle}
+                className={[
+                  'grid grid-cols-[22px_1fr_30px_24px_24px_24px_24px_30px] px-3 py-1.5 items-center',
+                  'border-b border-zinc-800/50 last:border-0',
+                  !isHighlighted && !zone.border ? 'hover:bg-zinc-800/40' : '',
+                ].join(' ')}
+              >
+                <td className="text-center">
+                  <span
+                    className="text-xs font-bold tabular-nums font-display"
+                    style={{ color: isHighlighted ? '#fbbf24' : '#a1a1aa' }}
+                  >
+                    {entry.rank}
+                  </span>
+                </td>
+                <td className="flex items-center gap-1.5 min-w-0">
+                  <img
+                    src={entry.team.logo}
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="object-contain shrink-0"
+                    aria-hidden="true"
+                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                  />
+                  <span className={`text-xs truncate font-sans ${isHighlighted ? 'text-white font-bold' : 'text-zinc-300'}`}>
+                    {entry.team.name}
+                  </span>
+                </td>
+                <td className="text-center">
+                  <span className={`text-xs font-bold tabular-nums font-display ${isHighlighted ? 'text-white' : 'text-zinc-100'}`}>
+                    {entry.points}
+                  </span>
+                </td>
+                <td className="text-center">
+                  <span className="text-xs tabular-nums text-zinc-400 font-sans">{entry.all.played}</span>
+                </td>
+                <td className="text-center">
+                  <span className="text-xs tabular-nums text-zinc-400 font-sans">{entry.all.win}</span>
+                </td>
+                <td className="text-center">
+                  <span className="text-xs tabular-nums text-zinc-400 font-sans">{entry.all.draw}</span>
+                </td>
+                <td className="text-center">
+                  <span className="text-xs tabular-nums text-zinc-400 font-sans">{entry.all.lose}</span>
+                </td>
+                <td className="text-center">
+                  <span
+                    className={`text-xs tabular-nums font-sans ${entry.goalsDiff > 0 ? 'text-green-400' : entry.goalsDiff < 0 ? 'text-red-400' : 'text-zinc-400'}`}
+                  >
+                    {entry.goalsDiff > 0 ? `+${entry.goalsDiff}` : entry.goalsDiff}
+                  </span>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export function StandingsModal({ onClose }: { onClose: () => void }) {
   const { club } = useTheme();
@@ -70,22 +179,29 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
   const highlightRef = useRef<HTMLTableRowElement>(null);
   useFocusTrap(panelRef, onClose);
 
-  const [standings, setStandings] = useState<StandingEntry[] | null>(null);
+  const [selectedComp, setSelectedComp] = useState<Competition>(STANDINGS_COMPETITIONS[0]);
+  const selectedCompRef = useRef(selectedComp);
+  selectedCompRef.current = selectedComp;
+
+  const [groups, setGroups] = useState<StandingEntry[][] | null>(null);
+  const [format, setFormat] = useState<StandingsResponse['format'] | null>(null);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'done' | 'error'>('loading');
   const [refreshing, setRefreshing] = useState(false);
 
   function fetchStandings(force = false) {
+    const compId = selectedCompRef.current.id;
     if (force) setRefreshing(true);
     else setStatus('loading');
 
-    fetch(force ? '/api/standings?force=1' : '/api/standings')
+    fetch(`/api/standings?competition=${compId}${force ? '&force=1' : ''}`)
       .then((r) => {
         if (!r.ok) throw new Error();
-        return r.json() as Promise<{ data: StandingEntry[]; updatedAt: string }>;
+        return r.json() as Promise<StandingsResponse>;
       })
-      .then(({ data, updatedAt: ua }) => {
-        setStandings(data);
+      .then(({ groups: g, format: f, updatedAt: ua }) => {
+        setGroups(g);
+        setFormat(f);
         setUpdatedAt(ua);
         setStatus('done');
       })
@@ -93,7 +209,16 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
       .finally(() => setRefreshing(false));
   }
 
+  // Initial fetch
   useEffect(() => { fetchStandings(); }, []);
+
+  // Refetch when competition tab changes (skip on mount — initial fetch covers it)
+  const isFirstMount = useRef(true);
+  useEffect(() => {
+    if (isFirstMount.current) { isFirstMount.current = false; return; }
+    fetchStandings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedComp]);
 
   // Auto-refresh silencioso se o cache estiver com mais de 30min ao abrir
   useEffect(() => {
@@ -102,14 +227,15 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
     if (ageMs > 30 * 60 * 1000) {
       fetchStandings(true);
     }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status]);
 
-  // Scroll highlighted row into view once data is ready
+  // Scroll highlighted row into view once data is ready (pontos-corridos only)
   useEffect(() => {
-    if (status === 'done' && highlightRef.current) {
+    if (status === 'done' && format === 'pontos-corridos' && highlightRef.current) {
       highlightRef.current.scrollIntoView({ block: 'center', behavior: 'smooth' });
     }
-  }, [status]);
+  }, [status, format]);
 
   function formatAge(iso: string): string {
     const diff = Math.floor((Date.now() - new Date(iso).getTime()) / 1000);
@@ -118,6 +244,9 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
     const h = Math.floor(diff / 3600);
     return `há ${h}h${Math.floor((diff % 3600) / 60).toString().padStart(2, '0')}`;
   }
+
+  const highlightTeamId = club?.apiFootballId ?? undefined;
+  const mainGroup = groups?.[0] ?? [];
 
   return (
     <div
@@ -172,6 +301,27 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
           </div>
         </div>
 
+        {/* Competition tabs */}
+        <div className="flex gap-1 px-3 py-2 border-b border-zinc-800 shrink-0 overflow-x-auto scrollbar-none">
+          {STANDINGS_COMPETITIONS.map((comp) => {
+            const active = comp.id === selectedComp.id;
+            return (
+              <button
+                key={comp.id}
+                onClick={() => setSelectedComp(comp)}
+                className={[
+                  'shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold font-sans transition-colors cursor-pointer whitespace-nowrap',
+                  active
+                    ? 'bg-white/10 text-white'
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50',
+                ].join(' ')}
+              >
+                {comp.shortName}
+              </button>
+            );
+          })}
+        </div>
+
         {/* Loading */}
         {status === 'loading' && (
           <div className="flex-1 flex items-center justify-center p-8">
@@ -192,8 +342,18 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {/* Table */}
-        {status === 'done' && standings && (
+        {/* Mata-mata: no traditional standings */}
+        {status === 'done' && format === 'mata-mata' && (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <p className="text-sm text-zinc-400 font-sans text-center leading-relaxed">
+              A {selectedComp.name} usa formato mata-mata.<br />
+              A tabela de classificação não se aplica.
+            </p>
+          </div>
+        )}
+
+        {/* Pontos corridos (Série A) */}
+        {status === 'done' && format === 'pontos-corridos' && groups && (
           <div className="overflow-y-auto flex-1">
             {/* Zone legend */}
             <div className="px-4 py-2 flex flex-wrap gap-3 border-b border-zinc-800/60 shrink-0">
@@ -229,11 +389,11 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
 
             <table className="w-full border-collapse">
               <tbody>
-                {standings.map((entry) => {
+                {mainGroup.map((entry) => {
                   const isHighlighted =
-                    club?.apiFootballId !== undefined &&
-                    club?.apiFootballId !== null &&
-                    entry.team.id === club.apiFootballId;
+                    highlightTeamId !== undefined &&
+                    highlightTeamId !== null &&
+                    entry.team.id === highlightTeamId;
                   const zone = zoneStyle(entry.description);
 
                   const { bg, border } = isHighlighted ? ZONE_HIGHLIGHTED : zone;
@@ -337,6 +497,40 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
                 })}
               </tbody>
             </table>
+          </div>
+        )}
+
+        {/* Grupos (Libertadores / Sul-Americana) */}
+        {status === 'done' && format === 'grupos' && groups && (
+          <div className="overflow-y-auto flex-1">
+            {/* Column headers (sticky) */}
+            <div className="sticky top-0 bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 z-10">
+              <div className="grid grid-cols-[22px_1fr_30px_24px_24px_24px_24px_30px] px-3 py-2 text-[10px] font-semibold uppercase tracking-wider text-zinc-500 font-sans">
+                <span className="text-center">#</span>
+                <span></span>
+                <span className="text-center">Pts</span>
+                <span className="text-center">J</span>
+                <span className="text-center">V</span>
+                <span className="text-center">E</span>
+                <span className="text-center">D</span>
+                <span className="text-center">SG</span>
+              </div>
+            </div>
+
+            {groups.length === 0 && (
+              <p className="py-8 text-center text-sm text-zinc-500 font-sans">
+                Grupos ainda não disponíveis.
+              </p>
+            )}
+
+            {groups.map((groupEntries, idx) => (
+              <GroupTable
+                key={idx}
+                entries={groupEntries}
+                groupLabel={`Grupo ${String.fromCharCode(65 + idx)}`}
+                highlightTeamId={highlightTeamId}
+              />
+            ))}
           </div>
         )}
       </div>

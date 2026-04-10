@@ -17,10 +17,13 @@ export async function GET(req: NextRequest) {
   }
 
   const season = new Date().getFullYear();
+  const leagueId = req.nextUrl.searchParams.get('leagueId')
+    ? Number(req.nextUrl.searchParams.get('leagueId'))
+    : 71;
 
   const [homeRaw, awayRaw] = await Promise.all([
-    getTeamForm(homeId, season),
-    getTeamForm(awayId, season),
+    getTeamForm(homeId, season, leagueId),
+    getTeamForm(awayId, season, leagueId),
   ]);
 
   return NextResponse.json({

@@ -89,13 +89,22 @@ export interface Match {
   stadium: string | null;
   /** Null when API does not return venue data */
   city: string | null;
+  /** Raw competition name from the API (e.g. "Campeonato Brasileiro") */
   competition: string;
+  /** API-Football league ID (71=Série A, 13=Libertadores, 73=Copa do Brasil, 11=Sul-Americana) */
+  leagueId: number;
+  /** Human-readable competition label for display (e.g. "Brasileirão", "Libertadores") */
+  competitionName: string;
+  /** Competition phase for knockout/group-stage competitions (e.g. "Oitavas de Final") */
+  competitionPhase?: string;
   round: string;
   /** Undefined when the API does not return broadcast data for this fixture */
   broadcasters?: string[];
   /** Undefined when not yet assigned by the federation */
   referee?: string;
-  status: 'scheduled' | 'postponed';
+  status: 'scheduled' | 'postponed' | 'finished';
+  /** Populated for finished matches (status === 'finished') */
+  score?: { home: number | null; away: number | null };
 }
 
 export interface StandingEntry {

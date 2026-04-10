@@ -4,21 +4,48 @@ Todas as chaves utilizadas no Upstash Redis, com formato, TTL e dados armazenado
 
 ---
 
-## Fixtures & Calendário
+## Fixtures & Calendário (Próximos Jogos)
+
+Uma chave por competição — dados brutos da API-Football antes do merge por clube.
 
 | Chave | TTL | Tipo | Conteúdo |
 |-------|-----|------|---------|
-| `fixtures:serie-a` | 6h | JSON | `Match[]` — todos os fixtures da Série A |
+| `fixtures:serie-a` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Série A |
+| `fixtures:libertadores` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Libertadores |
+| `fixtures:copa-brasil` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Copa do Brasil |
+| `fixtures:sul-americana` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Sul-Americana |
+
+**Nota:** O merge por clube e a deduplicação por fixture ID acontecem em `/api/fixtures` em runtime — não são cacheados no Redis.
+
+---
+
+## Resultados de Outras Competições (Jogos Encerrados)
+
+Uma chave por par competição+time.
+
+| Chave | TTL | Tipo | Conteúdo |
+|-------|-----|------|---------|
+| `finished:{competition.id}:{teamApiId}` | 6h | JSON | `ApiFixtureItem[]` — últimos 5 jogos encerrados |
+
+**Exemplos:**
+- `finished:libertadores:127` — últimos jogos do Flamengo (id 127) na Libertadores
+- `finished:copa-brasil:134` — últimos jogos do Athletico (id 134) na Copa do Brasil
 
 ---
 
 ## Classificação
 
+Chave usa `leagueId` numérico (não o slug), sufixo `:v2`.
+
 | Chave | TTL | Tipo | Conteúdo |
 |-------|-----|------|---------|
-| `standings:serie-a` | 30min–3h | JSON | `StandingEntry[]` — tabela da Série A |
+| `standings:71:v2` | 30min–3h | JSON | `StandingsPayload` — Brasileirão Série A |
+| `standings:13:v2` | 3h | JSON | `StandingsPayload` — Copa Libertadores |
+| `standings:11:v2` | 3h | JSON | `StandingsPayload` — Copa Sul-Americana |
 
-TTL dinâmico: 30min durante janela de jogos (qua–dom), 3h no restante.
+TTL dinâmico (apenas Série A / leagueId 71): 30min durante janela de jogos (qua–dom), 3h no restante.
+
+**Nota:** Copa do Brasil (73) é formato mata-mata sem standings tradicionais — não é exibida no modal de classificação.
 
 ---
 
@@ -36,14 +63,19 @@ TTL 24h quando canais encontrados; 1h quando array vazio (não publicado ainda).
 
 | Chave | TTL | Tipo | Conteúdo |
 |-------|-----|------|---------|
-| `form:{teamId}` | 6h | JSON | `string[]` — últimos 5 resultados `['W','D','L',...]` |
-| `h2h:{homeId}:{awayId}` | 6h | JSON | `H2HData` — stats, partidas, lesionados |
-| `injuries:{teamId}` | 3h | JSON | `InjuredPlayer[]` |
+| `form:{teamId}:71:{season}` | 6h | string | Form bruta da Série A, ex: `"WDLWW"` |
+| `h2h:{min}-{max}` | 6h | JSON | `RawH2HFixture[]` — últimos 10 confrontos (cross-competition) |
+| `injuries:v2:{fixtureId}` | 3h | JSON | `RawInjury[]` — lesionados do fixture específico |
 | `players:{homeId}:{awayId}` | 24h | JSON | `{ home: PlayerStat[], away: PlayerStat[] }` |
+
+**Notas:**
+- `form` sempre usa `leagueId=71` — form unificada independente da competição do jogo
+- `h2h` usa `min(homeId, awayId)-max(homeId, awayId)` para garantir a mesma chave independente de quem é mandante
+- `injuries` é por `fixtureId` (não por time) — garante lesionados do jogo específico
 
 ---
 
-## Rodadas CBF
+## Rodadas CBF (Série A — Resultados Oficiais)
 
 Cada rodada usa **duas chaves** — primária (TTL variável) e stale (backup/permanente).
 
@@ -100,11 +132,17 @@ O Upstash Ratelimit gerencia suas próprias chaves internamente sob o prefixo `@
 ## Comandos úteis (Upstash console / redis-cli)
 
 ```bash
+# Ver todas as chaves de fixtures
+KEYS fixtures:*
+
+# Ver chaves de resultados encerrados
+KEYS finished:*
+
+# Forçar expiração de um fixture (TTL de 1s)
+EXPIRE fixtures:serie-a 1
+
 # Ver todas as chaves CBF
 KEYS cbf:round:*
-
-# Ver chaves stale permanentes
-KEYS cbf:round:*:stale
 
 # Checar TTL de uma chave
 TTL cbf:round:10
@@ -117,10 +155,4 @@ LRANGE suggestions 0 -1
 
 # Contar sugestões
 LLEN suggestions
-
-# Ver dados de classificação
-GET standings:serie-a
-
-# Forçar expiração de fixtures (TTL de 1s)
-EXPIRE fixtures:serie-a 1
 ```

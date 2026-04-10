@@ -3,17 +3,19 @@ import { getCache, setCache, TTL_1H, TTL_24H } from '@/lib/redisCache';
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
-const SYSTEM_PROMPT = `Você é um assistente especializado em transmissões de futebol brasileiro.
-Sua tarefa: buscar na web onde uma partida ESPECÍFICA do Brasileirão Série A será transmitida.
+function buildSystemPrompt(competitionName: string): string {
+  return `Você é um assistente especializado em transmissões de futebol.
+Sua tarefa: buscar na web onde uma partida ESPECÍFICA da ${competitionName} será transmitida.
 
 REGRAS ESTRITAS:
 1. Retorne SOMENTE canais com transmissão CONFIRMADA para essa partida específica.
-2. NÃO liste todos os canais que costumam transmitir o Brasileirão em geral.
+2. NÃO liste todos os canais que costumam transmitir a ${competitionName} em geral.
 3. Se não encontrar informação específica e confirmada para essa partida, retorne [].
-4. Canais válidos: Globo, SporTV, SporTV 2, SporTV 3, Premiere, CazéTV, Amazon Prime Video, TNT Sports, Max, ESPN, Band.
+4. Canais válidos: Globo, SporTV, SporTV 2, SporTV 3, Premiere, CazéTV, Amazon Prime Video, TNT Sports, Max, ESPN, Band, SBT.
 
 Formato de resposta: SOMENTE um array JSON. Ex: ["Globo","SporTV"] ou []
 Sem texto adicional.`;
+}
 
 function parseBroadcasters(text: string): string[] {
   let parsed: unknown = null;
@@ -36,6 +38,8 @@ export async function getBroadcastersForFixture(
   awayTeam: string,
   round: string,
   date: string,
+  /** Display name of the competition, used to focus the Gemini search prompt */
+  competitionName: string = 'Brasileirão Série A',
 ): Promise<string[]> {
   const cacheKey = `broadcasters:${fixtureId}`;
 
@@ -53,17 +57,27 @@ export async function getBroadcastersForFixture(
 
   const userMessage =
     `Onde assistir: ${homeTeam} x ${awayTeam}\n` +
-    `${round} — Campeonato Brasileiro Série A\n` +
+    `${round} — ${competitionName}\n` +
     `Data: ${formattedDate} (Horário de Brasília)`;
 
-  const response = await gemini.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: userMessage,
-    config: {
-      tools: [{ googleSearch: {} }],
-      systemInstruction: SYSTEM_PROMPT,
-    },
-  });
+  let response: Awaited<ReturnType<typeof gemini.models.generateContent>>;
+  try {
+    response = await gemini.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: userMessage,
+      config: {
+        tools: [{ googleSearch: {} }],
+        systemInstruction: buildSystemPrompt(competitionName),
+      },
+    });
+  } catch (err) {
+    // 429 / quota exhausted — do NOT cache so next request retries immediately.
+    const msg = String((err as Error)?.message ?? err);
+    if (msg.includes('429') || msg.toLowerCase().includes('quota') || msg.toLowerCase().includes('rate')) {
+      return [];
+    }
+    throw err;
+  }
 
   const broadcasters = parseBroadcasters(response.text ?? '');
   // Empty result = schedule not yet published. Cache briefly so we retry soon.

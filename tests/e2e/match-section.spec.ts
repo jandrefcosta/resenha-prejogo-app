@@ -1,6 +1,6 @@
 import { test, expect } from '@playwright/test';
-import { setupStorage, mockAllApis } from './helpers/setup';
-import { MOCK_FIXTURES } from './helpers/mocks';
+import { setupStorage, mockAllApis, mockAllApisMulti } from './helpers/setup';
+import { MOCK_FIXTURES, MOCK_FIXTURES_MULTI } from './helpers/mocks';
 
 test.describe('loading states', () => {
   test('shows skeleton while fixtures are loading', async ({ page }) => {
@@ -87,6 +87,131 @@ test.describe('error state', () => {
 
     await expect(
       page.getByText('Não foi possível carregar os jogos'),
+    ).toBeVisible({ timeout: 5_000 });
+  });
+});
+
+test.describe('competition filter pills', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupStorage(page);
+    await mockAllApisMulti(page);
+    await page.goto('/');
+    await expect(
+      page.getByRole('status', { name: 'Carregando jogos' }),
+    ).not.toBeVisible({ timeout: 5_000 });
+  });
+
+  test('shows filter pills when club plays in multiple competitions', async ({ page }) => {
+    const group = page.getByRole('group', { name: 'Filtrar por competição' });
+    await expect(group).toBeVisible();
+    await expect(group.getByRole('button', { name: 'Todos' })).toBeVisible();
+    await expect(group.getByRole('button', { name: 'Brasileirão' })).toBeVisible();
+    await expect(group.getByRole('button', { name: 'Copa do Brasil' })).toBeVisible();
+  });
+
+  test('"Todos" pill is active by default', async ({ page }) => {
+    const articles = page.getByRole('article');
+    await expect(articles).toHaveCount(MOCK_FIXTURES_MULTI['athletico-pr'].length);
+  });
+
+  test('clicking a competition pill filters matches', async ({ page }) => {
+    await page.getByRole('group', { name: 'Filtrar por competição' })
+      .getByRole('button', { name: 'Brasileirão' })
+      .click();
+
+    // Only the Série A fixture should remain visible
+    const articles = page.getByRole('article');
+    await expect(articles).toHaveCount(1);
+  });
+
+  test('clicking active pill again deselects and restores all matches', async ({ page }) => {
+    const pill = page.getByRole('group', { name: 'Filtrar por competição' })
+      .getByRole('button', { name: 'Brasileirão' });
+
+    await pill.click(); // select
+    await pill.click(); // deselect
+
+    const articles = page.getByRole('article');
+    await expect(articles).toHaveCount(MOCK_FIXTURES_MULTI['athletico-pr'].length);
+  });
+
+  test('filter persists when switching tabs', async ({ page }) => {
+    // Select a filter
+    await page.getByRole('group', { name: 'Filtrar por competição' })
+      .getByRole('button', { name: 'Brasileirão' })
+      .click();
+
+    // Switch to Resultados and back
+    await page.getByRole('tab', { name: 'Resultados' }).click();
+    await page.getByRole('tab', { name: 'Próximos Jogos' }).click();
+
+    // Filter should still be active — only Brasileirão matches visible
+    const brazilMatches = MOCK_FIXTURES_MULTI['athletico-pr'].filter(
+      (m) => m.leagueId === 71,
+    );
+    const articles = page.getByRole('article');
+    await expect(articles).toHaveCount(brazilMatches.length);
+
+  });
+});
+
+test.describe('Resultados tab', () => {
+  test.beforeEach(async ({ page }) => {
+    await setupStorage(page);
+    await mockAllApis(page);
+    await page.goto('/');
+    await expect(
+      page.getByRole('status', { name: 'Carregando jogos' }),
+    ).not.toBeVisible({ timeout: 5_000 });
+    await page.getByRole('tab', { name: 'Resultados' }).click();
+  });
+
+  test('shows loading skeleton while fetching results', async ({ page }) => {
+    await setupStorage(page);
+
+    await page.route('/api/**', (route) => route.fulfill({ json: {} }));
+    await page.route('/api/past-fixtures**', async (route) => {
+      await new Promise((r) => setTimeout(r, 800));
+      route.fulfill({ json: [] });
+    });
+    await page.route('/api/fixtures', (route) =>
+      route.fulfill({ json: MOCK_FIXTURES }),
+    );
+
+    await page.goto('/');
+    await expect(
+      page.getByRole('status', { name: 'Carregando jogos' }),
+    ).not.toBeVisible({ timeout: 5_000 });
+
+    await page.getByRole('tab', { name: 'Resultados' }).click();
+    await expect(
+      page.getByRole('status', { name: 'Carregando resultados' }),
+    ).toBeVisible();
+  });
+
+  test('shows past results from other competitions', async ({ page }) => {
+    // SimpleResultCard renders an article with competition name in the header
+    await expect(page.getByRole('article').filter({ hasText: 'Copa do Brasil' })).toBeVisible({
+      timeout: 5_000,
+    });
+  });
+
+  test('shows empty state when no results available', async ({ page }) => {
+    await setupStorage(page);
+
+    await page.route('/api/**', (route) => route.fulfill({ json: {} }));
+    await page.route('/api/past-results**', (route) => route.fulfill({ json: [] }));
+    await page.route('/api/past-fixtures**', (route) => route.fulfill({ json: [] }));
+    await page.route('/api/fixtures', (route) => route.fulfill({ json: MOCK_FIXTURES }));
+
+    await page.goto('/');
+    await expect(
+      page.getByRole('status', { name: 'Carregando jogos' }),
+    ).not.toBeVisible({ timeout: 5_000 });
+
+    await page.getByRole('tab', { name: 'Resultados' }).click();
+    await expect(
+      page.getByText('Sem resultados anteriores disponíveis'),
     ).toBeVisible({ timeout: 5_000 });
   });
 });

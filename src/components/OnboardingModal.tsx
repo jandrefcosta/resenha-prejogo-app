@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { CalendarIcon, TvIcon, SparklesIcon, ChevronRightIcon, ArrowLeftIcon } from '@heroicons/react/20/solid';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
 import type { ClubTheme } from '@/lib/types';
 
 const ONBOARDING_KEY = 'resenha-prejogo:onboarded';
@@ -185,17 +186,16 @@ export function OnboardingModal() {
   function handleClose() {
     dismiss();
     setVisible(false);
-    document.body.style.overflow = '';
   }
 
   useFocusTrap(panelRef, handleClose);
+  useScrollLock(visible);
 
   useEffect(() => {
     const alreadyOnboarded = localStorage.getItem(ONBOARDING_KEY);
     const hasSavedClub = localStorage.getItem(CLUB_KEY);
     if (!alreadyOnboarded && !hasSavedClub) {
       setVisible(true);
-      document.body.style.overflow = 'hidden';
     }
   }, []);
 
@@ -203,7 +203,6 @@ export function OnboardingModal() {
     setClub(c);
     dismiss();
     setVisible(false);
-    document.body.style.overflow = '';
   }
 
   if (!visible) return null;

@@ -8,46 +8,76 @@ Todos os endpoints internos da aplicação (`src/app/api`).
 
 ### `GET /api/fixtures`
 
-Retorna todos os fixtures da Série A dos próximos 90 dias.
+Retorna fixtures das próximas 4 competições de clube (Série A, Libertadores, Copa do Brasil, Sul-Americana), agrupados por slug de clube.
 
 | | |
 |-|-|
-| **Fonte** | API-Football v3 |
-| **Cache** | `unstable_cache` 6h + Redis `fixtures:serie-a` 6h |
+| **Fonte** | API-Football v3 — 4 calls em paralelo, cada um cacheado individualmente |
+| **Cache** | `unstable_cache` 6h + Redis `fixtures:{competition.id}` 6h por competição |
 | **Auth** | Nenhuma (público) |
 
 **Resposta:**
 ```typescript
-Match[]
+Record<string, Match[]>   // slug do clube → array de jogos ordenados por data
 ```
 
 **Notas:**
-- Apenas status `NS` (Not Started)
-- Campeonato: Série A brasileira (league ID da API-Football)
-- Todos os 20 times — o filtro por clube é feito no cliente
+- Fixtures de cada competição são limitados a 5 por clube (`MATCHES_PER_CLUB`)
+- Janela de busca: hoje → hoje + 90 dias (apenas status `NS` e `PST`)
+- O merge é feito **por slug de clube** (deduplicação por fixture ID dentro do mesmo clube, não global — um fixture pertence ao mandante E ao visitante)
+- O filtro por clube é feito no cliente (`MatchSection`) via `allFixtures[club.id]`
 
 ---
 
-### `GET /api/round`
+### `GET /api/round?competition=<id>`
 
-Retorna todos os fixtures da rodada atual com broadcasters.
+Retorna todos os fixtures da rodada atual de uma competição, com broadcasters.
 
 | | |
 |-|-|
+| **Parâmetros** | `competition` — slug da competição (padrão: `serie-a`) |
 | **Fonte** | `/api/fixtures` interno + `/api/broadcasters` por fixture |
 | **Cache** | Herdado dos sub-endpoints |
 
 **Resposta:**
 ```typescript
 {
-  round: number;
+  round: string;           // ex: "Rodada 12" ou "Group Stage - 2"
+  competition: string;     // nome curto da competição
   matches: MatchWithBroadcasters[];
 }
 ```
 
 **Notas:**
-- Rodada atual = menor rodada entre fixtures futuros
+- Rodada atual = primeiro grupo de fixtures futuros para a competição selecionada
 - Deduplicação aplicada (API-Football retorna duplicatas ocasionalmente)
+
+---
+
+## Resultados de Outras Competições
+
+### `GET /api/past-results?club=<slug>`
+
+Retorna os últimos jogos encerrados do clube nas competições que **não** têm dados CBF (Libertadores, Copa do Brasil, Sul-Americana).
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `club` | string | Slug do clube (ex: `flamengo`) |
+
+| | |
+|-|-|
+| **Fonte** | API-Football v3 — `?last=5` por competição+time |
+| **Cache** | Redis `finished:{competition.id}:{teamApiId}` — 30 min |
+| **Auth** | Nenhuma (público) |
+
+**Resposta:**
+```typescript
+Match[]   // ordenados do mais recente para o mais antigo
+```
+
+**Notas:**
+- Filtra apenas status `FT`, `AET`, `PEN`
+- Chama `getFinishedFixturesByClub()` para cada competição não-CBF em paralelo; falhas individuais são toleradas
 
 ---
 
@@ -110,7 +140,7 @@ Forma recente (últimos 5 jogos) dos dois times.
 | | |
 |-|-|
 | **Parâmetros** | `home`, `away` — IDs API-Football dos times |
-| **Fonte** | API-Football `/teams/seasons` e `/fixtures` |
+| **Fonte** | API-Football `/teams/statistics` |
 | **Cache** | Redis 6h |
 
 **Resposta:**
@@ -168,28 +198,32 @@ Top 6 jogadores (artilheiros + assistentes) de cada time.
 
 ## Standings
 
-### `GET /api/standings?force=0|1`
+### `GET /api/standings?competition=<id>&force=0|1`
 
-Tabela de classificação completa da Série A.
+Tabela de classificação de uma competição.
 
 | | |
 |-|-|
-| **Parâmetros** | `force` — se `1`, ignora cache |
+| **Parâmetros** | `competition` — slug (padrão: `serie-a`); `force` — se `1`, ignora cache |
 | **Fonte** | API-Football `/standings` |
-| **Cache** | Redis `standings:serie-a` — 30min (janela de jogos) / 3h (fora) |
+| **Cache** | Redis `standings:{competition.id}` — 30min (janela de jogos) / 3h (fora) |
 
 **Resposta:**
 ```typescript
-StandingEntry[]   // 20 entradas ordenadas por posição
+{
+  groups: StandingEntry[][];   // array de grupos (1 para pontos-corridos, N para grupos)
+  format: 'pontos-corridos' | 'grupos' | 'mata-mata';
+  updatedAt: string;
+}
 ```
 
 ---
 
-## Dados CBF (Resultados Oficiais)
+## Dados CBF (Resultados Oficiais — Série A)
 
 ### `GET /api/past-fixtures?club=<slug>&beforeRound=<N>&limit=<3>`
 
-Resultados das últimas rodadas para um clube específico.
+Resultados das últimas rodadas do Brasileirão para um clube específico.
 
 | Parâmetro | Tipo | Padrão | Descrição |
 |-----------|------|--------|-----------|
@@ -202,19 +236,17 @@ Resultados das últimas rodadas para um clube específico.
 
 **Resposta:**
 ```typescript
-{
-  rounds: Array<{
-    round: number;
-    matches: CbfMatchDetail[];   // só os jogos do clube solicitado
-  }>;
-}
+Array<{
+  round: number;
+  match: CbfMatchDetail;   // só o jogo do clube solicitado
+}>
 ```
 
 ---
 
 ### `GET /api/cbf/round/[round]?force=0|1`
 
-Todos os jogos de uma rodada específica.
+Todos os jogos de uma rodada específica do Brasileirão.
 
 | Parâmetro | Tipo | Descrição |
 |-----------|------|-----------|
@@ -267,12 +299,31 @@ Envia feedback/sugestão.
 
 ## Debug (desenvolvimento)
 
-### `GET /api/debug/broadcast`
+### `GET /api/debug/fixtures?secret=<SECRET>&competition=<id>&club=<slug>&bust=1`
 
-Testa o fluxo de busca de broadcasters para um fixture específico.
+Diagnóstico completo do pipeline de fixtures — replica exatamente o que `/api/fixtures` faz.
 
-### `GET /api/debug/teams`
+| Parâmetro | Descrição |
+|-----------|-----------|
+| `secret` | Deve bater com `DEBUG_SECRET` no `.env.local` |
+| `club` | (opcional) Slug para ver os matches detalhados daquele clube |
+| `bust=1` | Apaga **todas** as chaves `fixtures:*` do Redis antes de buscar |
 
-Lista times e IDs para debug de mapeamento de clubes.
+**Resposta:**
+```typescript
+{
+  cacheBusted: boolean;
+  caches: Array<{ id: string; status: 'HIT' | 'MISS'; rawCount: number }>;
+  errors?: string[];   // competições que falharam
+  pipeline: {
+    totalClubsWithMatches: number;
+    clubsWithFewMatches: Array<{ slug, name, total, byCompetition }>;
+    allClubs: Array<{ slug, name, total, byCompetition }>;
+    clubDetail?: { slug: string; matches: Match[] };
+  };
+}
+```
 
-> Estes endpoints não têm proteção de autenticação — usar apenas em desenvolvimento.
+**Notas:**
+- `clubsWithFewMatches` lista clubes com menos de 3 jogos no total — indicativo de mismatch de `apiFootballId` ou agenda não publicada pela API
+- `bust=1` limpa todas as 4 competições simultaneamente

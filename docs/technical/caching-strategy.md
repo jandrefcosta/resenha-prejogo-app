@@ -24,22 +24,46 @@ O L1 (`unstable_cache`) deduplica requisições concorrentes dentro da mesma ins
 
 ## TTLs por tipo de dado
 
-### Fixtures & form (API-Football)
+### Fixtures próximos (API-Football)
+
+Uma chave por competição — armazenam a resposta bruta da API, antes do merge por clube.
 
 | Dado | Chave Redis | TTL |
 |------|-------------|-----|
-| Todos os fixtures Série A | `fixtures:serie-a` | 6 horas |
-| Form do time | `form:{teamId}` | 6 horas |
-| H2H entre dois times | `h2h:{homeId}:{awayId}` | 6 horas |
-| Lesionados | `injuries:{teamId}` | 3 horas |
+| Fixtures Série A | `fixtures:serie-a` | 6 horas |
+| Fixtures Libertadores | `fixtures:libertadores` | 6 horas |
+| Fixtures Copa do Brasil | `fixtures:copa-brasil` | 6 horas |
+| Fixtures Sul-Americana | `fixtures:sul-americana` | 6 horas |
+
+### Resultados encerrados (API-Football)
+
+| Dado | Chave Redis | TTL |
+|------|-------------|-----|
+| Últimos 5 jogos por competição+time | `finished:{competition.id}:{teamApiId}` | 6 horas |
+
+Placares encerrados são imutáveis após ~2h de finalização. TTL de 6h evita chamadas redundantes à API sem impacto na frescor dos dados exibidos.
+
+### Outros dados de times
+
+| Dado | Chave Redis | TTL |
+|------|-------------|-----|
+| Form do time (Série A) | `form:{teamId}:71:{season}` | 6 horas |
+| H2H entre dois times | `h2h:{min}-{max}` | 6 horas |
+| Lesionados por fixture | `injuries:v2:{fixtureId}` | 3 horas |
 | Jogadores (artilheiros) | `players:{homeId}:{awayId}` | 24 horas |
+
+Form sempre usa `leagueId=71` — unificada por decisão de performance (evita 4× calls por competição).
+H2H usa `min(homeId,awayId)-max(homeId,awayId)` — independente de quem é mandante.
 
 ### Classificação (API-Football)
 
+Chave usa `leagueId` numérico com sufixo `:v2`.
+
 | Período | Chave Redis | TTL |
 |---------|-------------|-----|
-| Janela de jogos (qua–dom) | `standings:serie-a` | 30 minutos |
-| Fora da janela (seg–ter) | `standings:serie-a` | 3 horas |
+| Janela de jogos (qua–dom) | `standings:71:v2` | 30 minutos |
+| Fora da janela (seg–ter) | `standings:71:v2` | 3 horas |
+| Libertadores / Sul-Americana | `standings:{leagueId}:v2` | 3 horas |
 
 A janela de jogos considera que a maioria das rodadas ocorre de quarta a domingo.
 
@@ -114,9 +138,9 @@ Definido em `src/lib/matchConstants.ts` — single source of truth usado pelo `c
 
 O cache de fixtures não tem invalidação manual — expira naturalmente em 6h.
 
-Para forçar refresh:
+Para forçar refresh via endpoint de debug (apaga todas as 4 competições de uma vez):
 ```
-GET /api/standings?force=1
+GET /api/debug/fixtures?secret=<SECRET>&bust=1
 ```
 
 ### CBF rounds

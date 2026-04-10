@@ -1,14 +1,13 @@
 import { unstable_cache } from 'next/cache';
 import clubsData from '@/data/clubs.json';
 import { getCache, setCache, TTL_6H } from '@/lib/redisCache';
+import { SERIE_A, getCompetitionByLeagueId, type Competition } from '@/data/competitions';
 import type { ClubTheme, Match, MatchTeam } from '@/lib/types';
 
 const clubs = clubsData as ClubTheme[];
 const BASE_URL = 'https://v3.football.api-sports.io';
-const LEAGUE_ID = 71; // Brasileirão Série A
 const MATCHES_PER_CLUB = 5;
 const CACHE_TTL_SECONDS = 60 * 60 * 6; // 6 h
-const REDIS_CACHE_KEY = 'fixtures:serie-a';
 
 // ─── Lookup maps (built once at module init) ──────────────────────────────────
 
@@ -34,8 +33,9 @@ interface ApiFixtureItem {
     venue: { name: string | null; city: string | null };
     status: { short: string };
   };
-  league: { name: string; round: string };
+  league: { id: number; name: string; round: string; season: number };
   teams: { home: ApiTeam; away: ApiTeam };
+  goals?: { home: number | null; away: number | null };
 }
 
 interface ApiResponse<T> {
@@ -60,16 +60,24 @@ function toMatchTeam(t: ApiTeam): MatchTeam {
   };
 }
 
-function normaliseRound(raw: string): string {
-  const m = raw.match(/(\d+)$/);
-  return m ? `Rodada ${m[1]}` : raw;
+/**
+ * Normalises a raw round string from API-Football.
+ * - Série A (71): "Regular Season - 12" → "Rodada 12"
+ * - Other competitions: returned as-is; Phase 1 handles display formatting.
+ */
+function normaliseRound(raw: string, leagueId: number): string {
+  if (leagueId === 71) {
+    const m = raw.match(/(\d+)$/);
+    return m ? `Rodada ${m[1]}` : raw;
+  }
+  return raw;
 }
 
 function mapFixture(f: ApiFixtureItem): Match {
-  // Venue: prefer API data; fall back to home club's known stadium/city
   const homeClub = idToClub.get(f.teams.home.id);
   const stadium = f.fixture.venue.name ?? homeClub?.stadium ?? null;
   const city = f.fixture.venue.city ?? homeClub?.city ?? null;
+  const competition = getCompetitionByLeagueId(f.league.id);
 
   return {
     id: String(f.fixture.id),
@@ -79,10 +87,16 @@ function mapFixture(f: ApiFixtureItem): Match {
     stadium,
     city,
     competition: f.league.name,
-    round: normaliseRound(f.league.round),
-    // Referee is assigned by CBF ~48h before kick-off; null until then
+    leagueId: f.league.id,
+    competitionName: competition?.shortName ?? f.league.name,
+    round: normaliseRound(f.league.round, f.league.id),
     referee: f.fixture.referee ?? undefined,
-    status: f.fixture.status.short === 'PST' ? 'postponed' : 'scheduled',
+    status: f.fixture.status.short === 'PST'
+      ? 'postponed'
+      : ['FT', 'AET', 'PEN'].includes(f.fixture.status.short)
+        ? 'finished'
+        : 'scheduled',
+    score: f.goals ? { home: f.goals.home, away: f.goals.away } : undefined,
   };
 }
 
@@ -91,17 +105,16 @@ function mapFixture(f: ApiFixtureItem): Match {
 /**
  * Layer 1 — unstable_cache (in-memory, 6 h)
  *   Deduplicates concurrent requests within the same server process.
- * Layer 2 — Redis cache (key: fixtures:serie-a, 6 h)
+ * Layer 2 — Redis cache (key: fixtures:{competition.id}, 6 h)
  *   Persists across server restarts and cold starts.
  * Layer 3 — API-Football (fallback when both caches are cold/stale)
  */
-const fetchLeagueFixtures = unstable_cache(
-  async (): Promise<ApiFixtureItem[]> => {
-    // Check Redis cache first
-    const cached = await getCache<ApiFixtureItem[]>(REDIS_CACHE_KEY);
+const fetchLeagueFixturesRaw = unstable_cache(
+  async (leagueId: number, competitionId: string, season: number): Promise<ApiFixtureItem[]> => {
+    const cacheKey = `fixtures:${competitionId}`;
+    const cached = await getCache<ApiFixtureItem[]>(cacheKey);
     if (cached) return cached;
 
-    // Cold fetch from API-Football
     const key = process.env.API_FOOTBALL_KEY;
     if (!key) throw new Error('API_FOOTBALL_KEY is not set');
 
@@ -111,8 +124,8 @@ const fetchLeagueFixtures = unstable_cache(
     const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
     const url = new URL(`${BASE_URL}/fixtures`);
-    url.searchParams.set('league', String(LEAGUE_ID));
-    url.searchParams.set('season', String(today.getFullYear()));
+    url.searchParams.set('league', String(leagueId));
+    url.searchParams.set('season', String(season));
     url.searchParams.set('from', fmt(today));
     url.searchParams.set('to', fmt(to));
 
@@ -132,19 +145,32 @@ const fetchLeagueFixtures = unstable_cache(
       (f) => f.fixture.status.short === 'NS' || f.fixture.status.short === 'PST',
     );
 
-    // Persist to Redis for cross-restart durability
-    await setCache(REDIS_CACHE_KEY, fixtures, TTL_6H);
-
+    await setCache(cacheKey, fixtures, TTL_6H);
     return fixtures;
   },
-  ['serie-a-upcoming-fixtures'],
+  ['league-upcoming-fixtures'],
   { revalidate: CACHE_TTL_SECONDS },
 );
 
+async function fetchLeagueFixtures(competition: Competition): Promise<ApiFixtureItem[]> {
+  return fetchLeagueFixturesRaw(
+    competition.apiFootballLeagueId,
+    competition.id,
+    competition.season,
+  );
+}
+
 // ─── Public API ───────────────────────────────────────────────────────────────
 
-export async function getFixturesByClub(): Promise<Record<string, Match[]>> {
-  const raw = await fetchLeagueFixtures();
+/**
+ * Returns upcoming fixtures grouped by club slug.
+ * Defaults to Série A — pass a different Competition for other leagues.
+ * Retrocompatível: existing callers without arguments continue to work.
+ */
+export async function getFixturesByClub(
+  competition: Competition = SERIE_A,
+): Promise<Record<string, Match[]>> {
+  const raw = await fetchLeagueFixtures(competition);
 
   const idToSlug = new Map<number, string>(
     clubs
@@ -169,4 +195,61 @@ export async function getFixturesByClub(): Promise<Record<string, Match[]>> {
   }
 
   return grouped;
+}
+
+const FINISHED_PER_COMPETITION = 5;
+// Finished scores are immutable after ~2h post-match (stats finalization window).
+// 6h TTL avoids redundant API calls for data that never changes after that point.
+// The 30-min window of the previous TTL was unnecessarily aggressive.
+const TTL_FINISHED = 60 * 60 * 6; // 6h
+
+/**
+ * Returns the last N finished fixtures for a specific team in a competition.
+ * Uses `?last=N` API param to avoid a date-range scan of the full season.
+ * Cached per competition+team pair.
+ */
+export async function getFinishedFixturesByClub(
+  competition: Competition,
+  teamApiId: number,
+): Promise<Match[]> {
+  const cacheKey = `finished:${competition.id}:${teamApiId}`;
+  const cached = await getCache<ApiFixtureItem[]>(cacheKey);
+
+  let raw: ApiFixtureItem[];
+
+  if (cached) {
+    raw = cached;
+  } else {
+    const key = process.env.API_FOOTBALL_KEY;
+    if (!key) throw new Error('API_FOOTBALL_KEY is not set');
+
+    const url = new URL(`${BASE_URL}/fixtures`);
+    url.searchParams.set('league', String(competition.apiFootballLeagueId));
+    url.searchParams.set('season', String(competition.season));
+    url.searchParams.set('team', String(teamApiId));
+    url.searchParams.set('last', String(FINISHED_PER_COMPETITION));
+
+    const res = await fetch(url.toString(), {
+      headers: { 'x-apisports-key': key },
+    });
+    if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
+
+    const data: ApiResponse<ApiFixtureItem> = await res.json();
+
+    const hasErrors = Array.isArray(data.errors)
+      ? data.errors.length > 0
+      : Object.keys(data.errors).length > 0;
+    if (hasErrors) throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
+
+    // Filter to genuinely finished statuses only
+    raw = data.response.filter((f) =>
+      ['FT', 'AET', 'PEN'].includes(f.fixture.status.short),
+    );
+
+    await setCache(cacheKey, raw, TTL_FINISHED);
+  }
+
+  return raw
+    .map(mapFixture)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // newest first
 }

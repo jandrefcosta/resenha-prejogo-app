@@ -3,8 +3,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { ShareIcon, CalendarIcon } from '@heroicons/react/20/solid';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
+import { COMPETITIONS } from '@/data/competitions';
+import type { Competition } from '@/data/competitions';
 import type { Match } from '@/lib/types';
+import { BROADCASTER_COLORS } from '@/lib/broadcasterColors';
+import { localiseRound } from '@/lib/localiseRound';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,24 +20,12 @@ interface RoundMatch extends Match {
 interface RoundData {
   round: string | null;
   matches: RoundMatch[];
+  competition: string;
 }
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const BROADCASTER_COLORS: Record<string, string> = {
-  Globo: '#0B57D0',
-  Premiere: '#111111',
-  SporTV: '#005A9C',
-  'SporTV 2': '#005A9C',
-  'SporTV 3': '#005A9C',
-  CazéTV: '#E8500A',
-  'Amazon Prime Video': '#00A8E0',
-  'TNT Sports': '#CC0000',
-  Max: '#002BE7',
-  ESPN: '#CC0000',
-  Band: '#E8500A',
-  Record: '#C8102E',
-};
+const CLUB_COMPETITIONS = COMPETITIONS.filter((c) => c.scope === 'club');
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -74,7 +67,7 @@ function groupByDate(matches: RoundMatch[]): [string, RoundMatch[]][] {
 function buildShareText(data: RoundData): string {
   if (!data.round || data.matches.length === 0) return '';
 
-  const lines: string[] = [`*${data.round} — Brasileirão Série A*`];
+  const lines: string[] = [`*${localiseRound(data.round)} — ${data.competition}*`];
   const groups = groupByDate(data.matches);
 
   for (const [, matches] of groups) {
@@ -128,8 +121,6 @@ async function handleShare(text: string): Promise<void> {
     'noopener,noreferrer',
   );
 }
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
@@ -231,23 +222,38 @@ function RoundModal({ onClose }: { onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, onClose);
 
+  const [selectedComp, setSelectedComp] = useState<Competition>(CLUB_COMPETITIONS[0]);
+  const selectedCompRef = useRef(selectedComp);
+  selectedCompRef.current = selectedComp;
+
   const [data, setData] = useState<RoundData | null>(null);
   const [status, setStatus] = useState<'loading' | 'done' | 'error'>('loading');
 
-  useEffect(() => {
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = ''; };
-  }, []);
+  useScrollLock();
 
-  useEffect(() => {
-    fetch('/api/round')
+  function fetchRound() {
+    const compId = selectedCompRef.current.id;
+    setStatus('loading');
+    setData(null);
+    fetch(`/api/round?competition=${compId}`)
       .then((r) => {
         if (!r.ok) throw new Error();
         return r.json() as Promise<RoundData>;
       })
       .then((d) => { setData(d); setStatus('done'); })
       .catch(() => setStatus('error'));
-  }, []);
+  }
+
+  // Initial fetch
+  useEffect(() => { fetchRound(); }, []);
+
+  // Refetch when competition tab changes (skip on mount)
+  const isFirstMount = useRef(true);
+  useEffect(() => {
+    if (isFirstMount.current) { isFirstMount.current = false; return; }
+    fetchRound();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedComp]);
 
   const visibleMatches = data
     ? data.matches.filter((m) => {
@@ -256,6 +262,8 @@ function RoundModal({ onClose }: { onClose: () => void }) {
       })
     : [];
   const groups = groupByDate(visibleMatches);
+
+  const competitionLabel = data?.competition ?? selectedComp.shortName;
 
   return (
     <div
@@ -280,10 +288,10 @@ function RoundModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
           <div>
             <p className="text-sm font-bold text-white font-display uppercase tracking-wide">
-              {data?.round ?? 'Próxima Rodada'}
+              {data?.round ? localiseRound(data.round) : 'Próxima Rodada'}
             </p>
             <p className="text-xs text-zinc-500 font-sans mt-0.5">
-              Brasileirão Série A · Temporada 2026
+              {competitionLabel} · Temporada 2026
             </p>
           </div>
           <div className="flex items-center gap-1">
@@ -304,6 +312,27 @@ function RoundModal({ onClose }: { onClose: () => void }) {
               ×
             </button>
           </div>
+        </div>
+
+        {/* Competition tabs */}
+        <div className="flex gap-1 px-3 py-2 border-b border-zinc-800 shrink-0 overflow-x-auto scrollbar-none">
+          {CLUB_COMPETITIONS.map((comp) => {
+            const active = comp.id === selectedComp.id;
+            return (
+              <button
+                key={comp.id}
+                onClick={() => setSelectedComp(comp)}
+                className={[
+                  'shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold font-sans transition-colors cursor-pointer whitespace-nowrap',
+                  active
+                    ? 'bg-white/10 text-white'
+                    : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50',
+                ].join(' ')}
+              >
+                {comp.shortName}
+              </button>
+            );
+          })}
         </div>
 
         {/* Loading */}

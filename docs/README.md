@@ -15,8 +15,8 @@
 | # | Funcionalidade | Descrição rápida |
 |---|----------------|-----------------|
 | 01 | [Seleção de Clube & Tema](features/01-club-selection.md) | Personalização visual por clube |
-| 02 | [Próximos Jogos](features/02-upcoming-matches.md) | Calendário dos próximos 90 dias |
-| 03 | [Resultados Passados](features/03-past-results.md) | Histórico oficial via CBF |
+| 02 | [Próximos Jogos](features/02-upcoming-matches.md) | Calendário multi-competição com pills de filtro |
+| 03 | [Resultados Passados](features/03-past-results.md) | Histórico CBF (Série A) + API-Football (outras competições) |
 | 04 | [Classificação](features/04-standings.md) | Tabela da Série A com zonas |
 | 05 | [Onde Assistir](features/05-broadcasters.md) | Canais via IA + Google Search |
 | 06 | [Ficha do Jogo](features/06-ficha-do-jogo.md) | Detalhes oficiais: gols, cartões, escalações |
@@ -46,7 +46,9 @@
 
 ## Planejamentos
 
-- [Suporte a múltiplos campeonatos](planning/multi-competition.md) — o que precisa mudar para adicionar Copa do Mundo, Libertadores etc.
+- [Suporte a múltiplos campeonatos](planning/multi-competition.md) — histórico de decisões e fases de implementação
+- [V2 Múltiplas Competições](planning/v2-multiplas-competicoes.md) — roadmap detalhado da expansão multi-competição
+- [Roadmap](planning/roadmap.md) — prioridades e próximos passos
 - [Bolão da Copa do Mundo](planning/bolao-copa.md) — gerenciador de bolão de resultados: auth, palpites, pontuação, leaderboard
 
 ---

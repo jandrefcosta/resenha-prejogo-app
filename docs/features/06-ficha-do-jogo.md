@@ -2,52 +2,60 @@
 
 ## O que faz
 
-Exibe os detalhes oficiais de uma partida. Existe em dois contextos:
+Exibe os detalhes de uma partida. O conteúdo varia conforme a competição e o contexto (pré-jogo, ao vivo, encerrado):
 
-| Contexto | Componente | Acesso | Conteúdo |
+| Contexto | Competição | Acesso | Conteúdo |
 |----------|-----------|--------|---------|
-| Jogo futuro / ao vivo | `MatchCard` → `CbfMatchModalContent` | Botão "Ficha" no card de próximo jogo | Gols, cartões, escalação, substituições, árbitros + indicadores de disponibilidade por fase |
-| Jogo encerrado | `ResultCard` → `FichaResultModal` | Botão "Ficha" no card de resultado | Escalação, substituições, árbitros (gols e cartões ficam no inline expandível do `ResultCard`) |
-
-Antes do jogo (contexto `MatchCard`), mostra indicadores de disponibilidade para cada seção — o usuário sabe o que esperar e quando.
+| Jogo futuro / ao vivo | Série A | Botão "Ficha" no `MatchCard` | Gols, cartões, escalação, substituições, árbitros (via CBF) |
+| Jogo futuro / ao vivo | Demais | Botão "Ficha" no `MatchCard` | Placar parcial (se disponível) + lesionados |
+| Jogo encerrado | Série A | Botão "Ficha" no `ResultCard` | Escalação, substituições, árbitros (via CBF) |
 
 ---
 
 ## Fluxo do usuário
 
+### Série A
+
 1. O usuário clica no botão **"Ficha"** em um `MatchCard`.
-2. Um modal abre exibindo o conteúdo de acordo com a fase do jogo.
-3. Após o encerramento e publicação dos dados pela CBF, todas as seções ficam preenchidas.
+2. O modal abre e busca dados da CBF (`/api/cbf/round/{round}`).
+3. O conteúdo é renderizado conforme a fase do jogo.
+4. Após o encerramento e publicação pela CBF, todas as seções ficam preenchidas.
+
+### Outras competições (Libertadores, Copa do Brasil, Sul-Americana)
+
+1. O usuário clica em **"Ficha"** em um `MatchCard` de partida não-Série-A.
+2. Nenhum fetch CBF é feito — a ficha exibe o `NonCbfFichaContent`.
+3. Conteúdo: placar atual (do `match.score`) + lesionados (já carregados via H2H).
+4. Sem escalação, cartões ou árbitros (dados não disponíveis fora da CBF).
 
 ---
 
-## Fases e disponibilidade por seção
+## Fases e disponibilidade — Série A
 
 ### Pré-jogo distante (>48h antes do kickoff)
 
-| Seção | Estado | Mensagem |
-|-------|--------|----------|
-| Resultado | Pendente | "Disponível após o apito final" |
-| Gols | Pendente | "Disponível após o apito final" |
-| Cartões | Pendente | "Disponível após o apito final" |
-| Escalação | Pendente | "Disponível ~48h antes do jogo" |
-| Árbitros | Pendente | "Disponível próximo ao jogo" |
+| Seção | Estado |
+|-------|--------|
+| Resultado | Pendente |
+| Gols | Pendente |
+| Cartões | Pendente |
+| Escalação | Pendente ("Disponível ~48h antes") |
+| Árbitros | Pendente ("Disponível próximo ao jogo") |
 
 ### Pré-jogo próximo (≤48h antes do kickoff)
 
-| Seção | Estado | Observação |
-|-------|--------|-----------|
-| Resultado | Pendente | Ainda não jogou |
-| Escalação | Pode estar disponível | CBF publica escala ~48h antes |
-| Árbitros | Pode estar disponível | CBF publica árbitro perto do jogo |
+| Seção | Estado |
+|-------|--------|
+| Escalação | Pode estar disponível (CBF publica ~48h antes) |
+| Árbitros | Pode estar disponível |
 
-### Ao vivo (entre o kickoff e kickoff + 115min)
+### Ao vivo (kickoff → kickoff + 115min)
 
-| Seção | Estado | Observação |
-|-------|--------|-----------|
-| Resultado | Parcial | Placar em tempo real |
-| Gols | Parcial | Atualizado a cada 5min |
-| Escalação | Disponível | Publicada antes do apito |
+| Seção | Estado |
+|-------|--------|
+| Resultado | Parcial (placar em tempo real) |
+| Gols | Parcial (atualizado a cada 5min) |
+| Escalação | Disponível |
 
 ### Encerrado (>kickoff + 115min)
 
@@ -57,24 +65,40 @@ Todas as seções disponíveis com dados definitivos.
 
 ## Componentes
 
-### Ficha de jogo futuro / ao vivo
+### Ficha de jogo futuro / ao vivo (`MatchCard`)
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|-----------------|
-| `MatchCard` | `src/components/MatchCard.tsx` | Botão "Ficha", modal, fetch, renderização por fase |
-| `CbfMatchModalContent` | dentro de `MatchCard.tsx` | Conteúdo do modal organizado por seções |
+| `MatchCard` | `src/components/MatchCard.tsx` | Botão "Ficha", estado do modal, dispatch por competição |
+| `CbfMatchModalContent` | dentro de `MatchCard.tsx` | Conteúdo CBF organizado por seções (Série A) |
+| `NonCbfFichaContent` | dentro de `MatchCard.tsx` | Conteúdo alternativo: placar + lesionados (outras competições) |
 
 ### Ficha de jogo encerrado (`ResultCard`)
 
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|-----------------|
-| `FichaResultModal` | dentro de `ResultCard.tsx` | Modal com escalação, substituições e árbitros para partidas encerradas |
-
-O `FichaResultModal` usa os dados `CbfMatchDetail` já carregados pelo `ResultCard` — não faz fetch adicional. Gols e cartões são exibidos no próprio card expandível.
+| `FichaResultModal` | dentro de `ResultCard.tsx` | Modal com escalação, substituições e árbitros (Série A) |
 
 ---
 
-## API Endpoint (interno)
+## Botão "Ficha" — hint contextual
+
+```
+[ícone]
+ Ficha
+[hint]
+```
+
+| Estado | Série A | Outras competições |
+|--------|---------|-------------------|
+| Ao vivo | "Ao vivo" | "Ao vivo" |
+| Pós-jogo | "Resultado" | "Resultado" |
+| ≤48h | "Árbitro" | "Lesões" |
+| >48h | "48h antes" | "Lesões" |
+
+---
+
+## API Endpoint (Série A)
 
 ### `GET /api/cbf/round/{round}`
 
@@ -98,56 +122,28 @@ interface CbfMatchDetail {
 }
 ```
 
----
-
-## Botão "Ficha" no MatchCard
-
-O botão exibe 3 linhas de informação contextual:
-
-```
-[ícone]
- Ficha
-[hint]
-```
-
-| Estado | Hint exibido |
-|--------|-------------|
-| Ao vivo | "Ao vivo" |
-| ≤48h para o jogo | "Árbitro" (dado disponível em breve) |
-| >48h | "Em breve" |
+Não há endpoint CBF equivalente para Libertadores, Copa do Brasil ou Sul-Americana.
 
 ---
 
-## Banner de fase no modal
-
-O topo do modal exibe um banner com a fase atual:
-
-| Fase | Cor | Texto |
-|------|-----|-------|
-| Pré-jogo >48h | Âmbar | "Pré-jogo · Nd/Nh" |
-| Pré-jogo ≤48h | Âmbar | "Pré-jogo · Nd/Nh" |
-| Ao vivo | Verde | "Ao Vivo" |
-| Encerrado | Cinza | "Encerrado" |
-
----
-
-## Estados de fetch
+## Estados de fetch (`MatchCard`)
 
 | Estado | UI exibida |
 |--------|-----------|
 | `idle` | Nada (botão apenas) |
 | `loading` | Spinner no modal |
-| `done` | Dados da ficha |
-| `not_found` | Todas as seções com `<Pending>` (dado ainda não publicado pela CBF) |
+| `done` | Dados da ficha (CBF) |
+| `not_found` + Série A | Seções com `<Pending>` (dado ainda não publicado pela CBF) |
+| `not_found` + outra comp. | `NonCbfFichaContent` com placar + lesionados |
 | `error` | "Erro ao carregar a ficha. Tente novamente." |
 
 **Distinção `not_found` vs `error`:**
-- `not_found` = HTTP 4xx — jogo existe mas CBF não publicou dados ainda → mostra Pending
-- `error` = HTTP 5xx ou erro de rede → mostra mensagem de erro
+- `not_found` = HTTP 4xx — dado não publicado ainda
+- `error` = HTTP 5xx ou erro de rede
 
 ---
 
-## Estrutura de dados detalhada
+## Estrutura de dados (Série A)
 
 ### Gols
 

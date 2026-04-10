@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStorage, mockAllApis } from './helpers/setup';
+import { setupStorage, mockAllApis, mockAllApisMulti } from './helpers/setup';
 
 // All tests run at 375px — the minimum mobile viewport target
 test.use({ viewport: { width: 375, height: 812 } });
@@ -47,4 +47,43 @@ test('touch-action manipulation applied to buttons', async ({ page }) => {
     return btn ? getComputedStyle(btn).touchAction : null;
   });
   expect(value).toBe('manipulation');
+});
+
+test('competition filter pills do not overflow viewport at 375px', async ({ page }) => {
+  await setupStorage(page);
+  await mockAllApisMulti(page);
+  await page.goto('/');
+  await expect(
+    page.getByRole('status', { name: 'Carregando jogos' }),
+  ).not.toBeVisible({ timeout: 5_000 });
+
+  const group = page.getByRole('group', { name: 'Filtrar por competição' });
+  await expect(group).toBeVisible();
+
+  const box = await group.boundingBox();
+  expect(box?.x, 'pills start inside left edge').toBeGreaterThanOrEqual(0);
+  expect((box?.x ?? 0) + (box?.width ?? 0), 'pills end inside right edge').toBeLessThanOrEqual(375);
+});
+
+test('Resultados tab is functional on mobile', async ({ page }) => {
+  const resultsTab = page.getByRole('tab', { name: 'Resultados' });
+  await resultsTab.click();
+  await expect(resultsTab).toHaveAttribute('aria-selected', 'true');
+
+  // Past results card renders (Copa do Brasil result from mock)
+  await expect(
+    page.getByRole('article').filter({ hasText: 'Copa do Brasil' }),
+  ).toBeVisible({ timeout: 5_000 });
+});
+
+test('Resultados tab cards do not overflow viewport', async ({ page }) => {
+  await page.getByRole('tab', { name: 'Resultados' }).click();
+
+  const card = page.getByRole('article').first();
+  await expect(card).toBeVisible({ timeout: 5_000 });
+
+  const box = await card.boundingBox();
+  if (!box) return;
+  expect(box.x, 'result card should not start outside left edge').toBeGreaterThanOrEqual(0);
+  expect(box.x + box.width, 'result card should not overflow right edge').toBeLessThanOrEqual(375);
 });

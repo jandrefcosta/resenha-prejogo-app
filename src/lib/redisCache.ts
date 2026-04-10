@@ -27,6 +27,14 @@ export async function setCache<T>(key: string, value: T, ttlSeconds: number): Pr
   }
 }
 
+export async function deleteCache(key: string): Promise<void> {
+  try {
+    await redis.del(key);
+  } catch {
+    // Non-critical
+  }
+}
+
 /**
  * Store a value with no TTL — it persists until explicitly deleted.
  * Use only for truly immutable data (e.g. finished match rounds).

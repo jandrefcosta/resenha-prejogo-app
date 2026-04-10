@@ -3,20 +3,21 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
 import type { ClubTheme } from '@/lib/types';
 
 export function ClubSelector() {
   const { club: activeClub, clubs, setClub } = useTheme();
   const [open, setOpen] = useState(false);
 
+  useScrollLock(open);
+
   function openModal() {
     setOpen(true);
-    document.body.style.overflow = 'hidden';
   }
 
   function closeModal() {
     setOpen(false);
-    document.body.style.overflow = '';
   }
 
   function handleSelect(c: ClubTheme) {

@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { EnvelopeIcon } from '@heroicons/react/20/solid';
 import { SoccerBallIcon } from '@/components/SoccerBallIcon';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
 
 export const EMAIL_REGISTERED_KEY = 'resenha-prejogo:email-registered';
 const EMAIL_BANNER_DISMISSED_KEY = 'resenha-prejogo:email-banner-dismissed';
@@ -19,6 +20,7 @@ export function EmailCaptureModal({ onClose }: { onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
 
   useFocusTrap(panelRef, onClose);
+  useScrollLock();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

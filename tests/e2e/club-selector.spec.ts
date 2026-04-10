@@ -69,3 +69,29 @@ test('club list buttons meet 44px touch target', async ({ page }) => {
     expect(box?.height, `club button height should be ≥ 44px`).toBeGreaterThanOrEqual(44);
   }
 });
+
+test('Escape key closes modal', async ({ page }) => {
+  await page.getByRole('button', { name: /alterar/i }).click();
+  await expect(page.getByRole('dialog', { name: 'Escolher clube' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(page.getByRole('dialog', { name: 'Escolher clube' })).not.toBeVisible();
+});
+
+test('focus returns to trigger button after modal closes', async ({ page }) => {
+  const trigger = page.getByRole('button', { name: /alterar/i });
+  await trigger.click();
+  await page.getByRole('button', { name: 'Fechar' }).click();
+  await expect(trigger).toBeFocused();
+});
+
+test('selecting a different club updates the match section context', async ({ page }) => {
+  // MatchSection loads fixtures once on mount and filters client-side on club change.
+  // The observable change is the section aria-label and the "Jogos" subtitle.
+  await page.getByRole('button', { name: /alterar/i }).click();
+  await page.getByRole('button', { name: 'Flamengo' }).click();
+
+  // Section aria-label reflects the new club
+  await expect(
+    page.getByRole('region', { name: /Jogos — Flamengo/i }),
+  ).toBeVisible({ timeout: 5_000 });
+});

@@ -5,25 +5,10 @@ import { XMarkIcon, ClockIcon, UsersIcon, DocumentTextIcon, ShareIcon } from '@h
 import { SoccerBallIcon } from '@/components/SoccerBallIcon';
 import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer } from '@/lib/types';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import { EmailCaptureModal, EMAIL_REGISTERED_KEY } from '@/components/EmailCaptureModal';
-
-// ─── Constants ────────────────────────────────────────────────────────────────
-
-const BROADCASTER_COLORS: Record<string, string> = {
-  Globo: '#0B57D0',
-  Premiere: '#111111',
-  SporTV: '#005A9C',
-  'SporTV 2': '#005A9C',
-  'SporTV 3': '#005A9C',
-  CazéTV: '#E8500A',
-  'Amazon Prime Video': '#00A8E0',
-  'TNT Sports': '#CC0000',
-  Max: '#002BE7',
-  ESPN: '#CC0000',
-  Band: '#E8500A',
-  Record: '#C8102E',
-};
+import { BROADCASTER_COLORS } from '@/lib/broadcasterColors';
 
 const DAYS_AHEAD_FOR_BROADCAST_SEARCH = 14;
 
@@ -100,7 +85,7 @@ function buildShareText(match: Match, broadcasters: string[]): string {
 
   const lines = [
     `*${match.homeTeam.name} x ${match.awayTeam.name}*`,
-    `${match.round} — ${match.competition}`,
+    `${match.round} — ${match.competitionName}`,
     '',
     `Data: ${date} às ${time} (Brasília)`,
   ];
@@ -187,12 +172,7 @@ function ModalShell({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, onClose);
-
-  useEffect(() => {
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-    return () => { document.body.style.overflow = prev; };
-  }, []);
+  useScrollLock();
 
   return (
     <div className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center p-4"
@@ -364,6 +344,94 @@ function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Ma
           )}
         </section>
       ))}
+    </>
+  );
+}
+
+// ─── Non-CBF match modal (Libertadores, Copa do Brasil, Sul-Americana) ───────
+
+/**
+ * Simplified ficha for competitions not covered by CBF.
+ * Shows phase banner, score from the API-Football match object, and injuries.
+ */
+function NonCbfFichaContent({
+  match,
+  isLive,
+  hoursUntilKickoff,
+  injuries,
+  injuriesLoading,
+}: {
+  match: Match;
+  isLive: boolean;
+  hoursUntilKickoff: number;
+  injuries: InjuredPlayer[];
+  injuriesLoading: boolean;
+}) {
+  const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
+
+  const phaseBanner = isLive
+    ? { label: 'Ao Vivo', cls: 'text-green-400 border-green-400/30 bg-green-400/10' }
+    : isPostMatch
+    ? { label: 'Encerrado', cls: 'text-zinc-400 border-zinc-700 bg-zinc-800' }
+    : { label: `Pré-jogo · ${hoursUntilKickoff > 24 ? `${Math.ceil(hoursUntilKickoff / 24)}d` : `${Math.round(hoursUntilKickoff)}h`}`, cls: 'text-zinc-400 border-zinc-700 bg-zinc-800' };
+
+  const hasScore = isPostMatch && match.score?.home !== null && match.score?.away !== null;
+
+  return (
+    <>
+      <div className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold font-sans mb-1 ${phaseBanner.cls}`}>
+        {isLive && <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" aria-hidden="true" />}
+        {phaseBanner.label}
+      </div>
+
+      {/* Score — available from API-Football for finished matches */}
+      <section>
+        <SectionHeader label="Resultado" />
+        {hasScore ? (
+          <div className="flex items-center justify-center gap-6 rounded-xl bg-zinc-800 py-4 px-4">
+            <p className="flex-1 text-right text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-4xl font-black font-display text-white tabular-nums">{match.score!.home}</span>
+              <span className="text-xl font-black font-display text-zinc-600">–</span>
+              <span className="text-4xl font-black font-display text-white tabular-nums">{match.score!.away}</span>
+            </div>
+            <p className="flex-1 text-left text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
+          </div>
+        ) : isLive ? (
+          <Pending>Jogo em andamento — placar atualizado após o apito final</Pending>
+        ) : (
+          <Pending>Disponível após o apito final</Pending>
+        )}
+      </section>
+
+      {/* Injuries — fetched via H2H endpoint, available for all competitions */}
+      <section>
+        <SectionHeader label="Principais Desfalques" />
+        {injuriesLoading ? (
+          <div className="space-y-1 animate-pulse">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="h-8 bg-zinc-800 rounded-lg" />
+            ))}
+          </div>
+        ) : injuries.length > 0 ? (
+          <div className="space-y-1">
+            {injuries.map((p, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" aria-hidden="true" />
+                <span className="text-zinc-200 flex-1 truncate">{p.name}</span>
+                <span className="text-zinc-500 shrink-0">{p.teamName}</span>
+                <span className="text-zinc-600 shrink-0">{translateInjuryReason(p.reason) || translateInjuryType(p.type)}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Pending>Sem desfalques confirmados</Pending>
+        )}
+      </section>
+
+      <p className="text-xs text-zinc-700 font-sans text-center">
+        Ficha detalhada disponível apenas para Brasileirão Série A
+      </p>
     </>
   );
 }
@@ -747,7 +815,7 @@ export function MatchCard({
     setActiveModal('h2h');
     if (h2hStatus !== 'idle') return;
     setH2hStatus('loading');
-    const params = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, fixture: match.id });
+    const params = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, fixture: match.id, leagueId: String(match.leagueId) });
     fetch(`/api/h2h?${params}`)
       .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<H2HData>; })
       .then((d) => { setH2hData(d); setH2hStatus('done'); })
@@ -766,16 +834,21 @@ export function MatchCard({
 
   function openFichaModal() {
     setActiveModal('ficha');
-    // Also fetch h2h in background for injuries data
+    // Always fetch h2h in background for injuries data (all competitions)
     if (h2hStatus === 'idle') {
       setH2hStatus('loading');
-      const h2hParams = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, fixture: match.id });
+      const h2hParams = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, fixture: match.id, leagueId: String(match.leagueId) });
       fetch(`/api/h2h?${h2hParams}`)
         .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<H2HData>; })
         .then((d) => { setH2hData(d); setH2hStatus('done'); })
         .catch(() => setH2hStatus('error'));
     }
     if (fichaStatus !== 'idle') return;
+    // Non-Série-A: CBF does not cover this competition — skip the CBF fetch entirely
+    if (match.leagueId !== 71) {
+      setFichaStatus('not_found');
+      return;
+    }
     setFichaStatus('loading');
     const round = match.round.match(/(\d+)/)?.[1] ?? '';
     const params = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, round });
@@ -803,15 +876,22 @@ export function MatchCard({
   // Hours until kickoff — used for ficha availability labelling (negative = past)
   const hoursUntilKickoff = (kickoffMs - nowMs) / 3_600_000;
   const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
-  // Label shown inside the Ficha button to communicate what's available
-  const fichaHint = live ? 'Ao vivo' : isPostMatch ? 'Resultado' : hoursUntilKickoff <= 48 ? 'Árbitro' : '48h antes';
+  // Label shown inside the Ficha button to communicate what's available.
+  // Non-Série-A competitions are not covered by CBF, so pre-match hints differ.
+  const fichaHint = live
+    ? 'Ao vivo'
+    : isPostMatch
+    ? 'Resultado'
+    : match.leagueId === 71
+    ? hoursUntilKickoff <= 48 ? 'Árbitro' : '48h antes'
+    : 'Lesões';
 
   return (
     <>
       <article className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/60">
-          <span className="text-xs font-medium text-zinc-400 truncate font-sans">{match.competition}</span>
+          <span className="text-xs font-medium text-zinc-400 truncate font-sans">{match.competitionName}</span>
           <div className="ml-2 flex-none flex items-center gap-2">
             {live && (
               <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-green-400 border border-green-400/30 bg-green-400/10 font-sans">
@@ -882,7 +962,11 @@ export function MatchCard({
             {!previewLoading && broadcasters.length > 0 && broadcasters.map((b: string) => <BroadcasterBadge key={b} name={b} />)}
             {!previewLoading && broadcasters.length === 0 && (
               <span className="text-xs text-zinc-600 font-sans italic">
-                {outsideSearchWindow ? 'disponível em breve' : 'não encontrado'}
+                {outsideSearchWindow
+                  ? 'disponível em breve'
+                  : daysUntilRender >= 2
+                    ? 'grade ainda não publicada'
+                    : 'transmissão não confirmada'}
               </span>
             )}
           </div>
@@ -966,7 +1050,7 @@ export function MatchCard({
       {activeModal === 'players' && (
         <ModalShell
           title="Destaques da Temporada"
-          subtitle={`${match.homeTeam.shortName} × ${match.awayTeam.shortName} · Brasileirão ${new Date().getFullYear()}`}
+          subtitle={`${match.homeTeam.shortName} × ${match.awayTeam.shortName} · ${match.competitionName} ${new Date().getFullYear()}`}
           onClose={() => setActiveModal(null)}
         >
           {playersStatus === 'loading' && (
@@ -1009,7 +1093,16 @@ export function MatchCard({
               Erro ao carregar a ficha. Tente novamente.
             </p>
           )}
-          {fichaStatus === 'not_found' && (
+          {fichaStatus === 'not_found' && match.leagueId !== 71 && (
+            <NonCbfFichaContent
+              match={match}
+              isLive={live}
+              hoursUntilKickoff={hoursUntilKickoff}
+              injuries={h2hData?.injuries ?? []}
+              injuriesLoading={h2hStatus === 'loading'}
+            />
+          )}
+          {fichaStatus === 'not_found' && match.leagueId === 71 && (
             <CbfMatchModalContent
               data={null}
               match={match}

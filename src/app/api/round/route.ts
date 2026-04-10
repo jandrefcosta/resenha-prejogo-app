@@ -1,12 +1,16 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getFixturesByClub } from '@/lib/apiFootball';
 import { getBroadcastersForFixture } from '@/lib/broadcasterSearch';
+import { getCompetitionById, SERIE_A } from '@/data/competitions';
 import type { Match } from '@/lib/types';
 
 const DAYS_AHEAD_FOR_BROADCAST_SEARCH = 14;
 
-export async function GET() {
-  const byClub = await getFixturesByClub();
+export async function GET(req: NextRequest) {
+  const competitionParam = req.nextUrl.searchParams.get('competition') ?? 'serie-a';
+  const competition = getCompetitionById(competitionParam) ?? SERIE_A;
+
+  const byClub = await getFixturesByClub(competition);
 
   // Deduplicate all fixtures across clubs
   const seen = new Set<string>();
@@ -23,7 +27,7 @@ export async function GET() {
   all.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
 
   if (all.length === 0) {
-    return NextResponse.json({ round: null, matches: [] });
+    return NextResponse.json({ round: null, matches: [], competition: competition.shortName });
   }
 
   // Current round = the round that has the earliest upcoming match
@@ -43,11 +47,12 @@ export async function GET() {
               m.awayTeam.name,
               m.round,
               m.date,
+              m.competitionName,
             ).catch(() => [] as string[])
           : [];
       return { ...m, broadcasters };
     }),
   );
 
-  return NextResponse.json({ round: currentRound, matches });
+  return NextResponse.json({ round: currentRound, matches, competition: competition.shortName });
 }

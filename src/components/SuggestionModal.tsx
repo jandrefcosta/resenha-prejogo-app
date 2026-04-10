@@ -2,6 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
 
 export function FloatingSuggestion() {
   const [open, setOpen] = useState(false);
@@ -39,6 +40,7 @@ export function SuggestionModal({ onClose }: { onClose: () => void }) {
   const [status, setStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, onClose);
+  useScrollLock();
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();

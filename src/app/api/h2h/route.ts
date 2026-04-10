@@ -98,6 +98,8 @@ export async function GET(req: NextRequest) {
 
   const season = new Date().getFullYear();
 
+  // H2H history is cross-competition — cache key omits leagueId intentionally.
+  // Form is always fetched from Série A (71), so leagueId query param is unused.
   const h2hKey = `h2h:${Math.min(homeId, awayId)}-${Math.max(homeId, awayId)}`;
   const injuriesKey = fixtureId ? `injuries:v2:${fixtureId}` : null;
 
@@ -106,12 +108,14 @@ export async function GET(req: NextRequest) {
     injuriesKey ? getCache<RawInjury[]>(injuriesKey) : Promise.resolve(null),
   ]);
 
+  // Form is always fetched from Série A (71) — consistent with /api/previews
+  // and avoids duplicate cache keys per competition for the same team.
   const [rawH2H, homeFormRaw, awayFormRaw, rawInjuries] = await Promise.all([
     cachedH2H !== null
       ? Promise.resolve(cachedH2H)
       : fetchH2H(homeId, awayId).catch(() => [] as RawH2HFixture[]),
-    getTeamForm(homeId, season),
-    getTeamForm(awayId, season),
+    getTeamForm(homeId, season, 71),
+    getTeamForm(awayId, season, 71),
     (injuriesKey && cachedInjuries === null && fixtureId)
       ? fetchInjuries(fixtureId).catch(() => [] as RawInjury[])
       : Promise.resolve(cachedInjuries ?? [] as RawInjury[]),
@@ -155,5 +159,9 @@ export async function GET(req: NextRequest) {
     injuries,
   };
 
-  return NextResponse.json(result);
+  // H2H and form are public, fixture-specific — cache at CDN level.
+  // Injuries TTL is shorter (3h) so we use that as the conservative bound.
+  return NextResponse.json(result, {
+    headers: { 'Cache-Control': 'public, s-maxage=10800, stale-while-revalidate=300' },
+  });
 }

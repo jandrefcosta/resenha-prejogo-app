@@ -4,6 +4,7 @@ import { useRef, useState, useCallback } from 'react';
 import { XMarkIcon, DocumentTextIcon } from '@heroicons/react/20/solid';
 import { SoccerBallIcon } from '@/components/SoccerBallIcon';
 import { useFocusTrap } from '@/lib/useFocusTrap';
+import { useScrollLock } from '@/lib/useScrollLock';
 import clubsData from '@/data/clubs.json';
 import type { CbfMatchDetail, ClubTheme } from '@/lib/types';
 
@@ -91,6 +92,7 @@ function TeamLogo({ cbfId, alt }: { cbfId: string; alt: string }) {
 function FichaResultModal({ data, onClose }: { data: CbfMatchDetail; onClose: () => void }) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, onClose);
+  useScrollLock();
 
   const homeStarters = data.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando);
   const awayStarters = data.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando);
