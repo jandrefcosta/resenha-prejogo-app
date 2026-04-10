@@ -826,7 +826,7 @@ export function MatchCard({
     setActiveModal('players');
     if (playersStatus !== 'idle') return;
     setPlayersStatus('loading');
-    fetch(`/api/players?home=${match.homeTeam.id}&away=${match.awayTeam.id}`)
+    fetch(`/api/players?home=${match.homeTeam.id}&away=${match.awayTeam.id}&leagueId=${match.leagueId}`)
       .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<TeamPlayersData>; })
       .then((d) => { setPlayersData(d); setPlayersStatus('done'); })
       .catch(() => setPlayersStatus('error'));

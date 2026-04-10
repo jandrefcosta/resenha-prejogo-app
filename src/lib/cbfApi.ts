@@ -44,6 +44,13 @@ const TTL = {
   FUTURE_NOW: 60 * 60,            // 1 h
 } as const;
 
+/**
+ * Maximum age (ms) for stale data to be served on CBF API errors.
+ * Stale data older than this is discarded and the error is thrown instead,
+ * preventing week-old data from silently appearing for the current round.
+ */
+const STALE_MAX_AGE_MS = 60 * 60 * 24 * 1000; // 24 h
+
 const CBF_HEADERS = {
   Accept: '*/*',
   'Accept-Language': 'pt-BR,pt;q=0.9',
@@ -310,6 +317,16 @@ function computeTtl(matches: CbfMatchDetail[], status: CbfRoundStatus): number {
 
 // ─── Public API ───────────────────────────────────────────────────────────────
 
+/**
+ * Returns the stale entry only if it was fetched within STALE_MAX_AGE_MS.
+ * Prevents serving week-old data when CBF has a prolonged outage.
+ */
+function acceptStale(stale: CbfRoundData | null): CbfRoundData | null {
+  if (!stale) return null;
+  const age = Date.now() - new Date(stale.fetchedAt).getTime();
+  return age <= STALE_MAX_AGE_MS ? stale : null;
+}
+
 function cacheKey(round: number): string {
   return `cbf:round:${round}`;
 }
@@ -342,13 +359,13 @@ export async function getCbfRound(round: number, force = false): Promise<CbfRoun
   try {
     res = await fetch(url, { headers: CBF_HEADERS, cache: 'no-store' });
   } catch (networkErr) {
-    const stale = await getCache<CbfRoundData>(staleKey(round));
+    const stale = acceptStale(await getCache<CbfRoundData>(staleKey(round)));
     if (stale) return stale;
     throw networkErr;
   }
 
   if (!res.ok) {
-    const stale = await getCache<CbfRoundData>(staleKey(round));
+    const stale = acceptStale(await getCache<CbfRoundData>(staleKey(round)));
     if (stale) return stale;
     throw new Error(`CBF API error: ${res.status} ${res.statusText}`);
   }

@@ -26,14 +26,16 @@ O L1 (`unstable_cache`) deduplica requisições concorrentes dentro da mesma ins
 
 ### Fixtures próximos (API-Football)
 
-Uma chave por competição — armazenam a resposta bruta da API, antes do merge por clube.
+Uma chave por competição+temporada — armazenam a resposta bruta da API, antes do merge por clube.
 
 | Dado | Chave Redis | TTL |
 |------|-------------|-----|
-| Fixtures Série A | `fixtures:serie-a` | 6 horas |
-| Fixtures Libertadores | `fixtures:libertadores` | 6 horas |
-| Fixtures Copa do Brasil | `fixtures:copa-brasil` | 6 horas |
-| Fixtures Sul-Americana | `fixtures:sul-americana` | 6 horas |
+| Fixtures Série A | `fixtures:serie-a:{season}` | 6 horas |
+| Fixtures Libertadores | `fixtures:libertadores:{season}` | 6 horas |
+| Fixtures Copa do Brasil | `fixtures:copa-brasil:{season}` | 6 horas |
+| Fixtures Sul-Americana | `fixtures:sul-americana:{season}` | 6 horas |
+
+O campo `{season}` (ano) garante que na virada de temporada os dados do ano anterior não sejam servidos até o TTL expirar.
 
 ### Resultados encerrados (API-Football)
 
@@ -47,13 +49,13 @@ Placares encerrados são imutáveis após ~2h de finalização. TTL de 6h evita 
 
 | Dado | Chave Redis | TTL |
 |------|-------------|-----|
-| Form do time (Série A) | `form:{teamId}:71:{season}` | 6 horas |
-| H2H entre dois times | `h2h:{min}-{max}` | 6 horas |
+| Form do time por competição | `form:{teamId}:{leagueId}:{season}` | 6 horas |
+| H2H por competição | `h2h:{min}-{max}:{leagueId}` | 6 horas |
 | Lesionados por fixture | `injuries:v2:{fixtureId}` | 3 horas |
-| Jogadores (artilheiros) | `players:{homeId}:{awayId}` | 24 horas |
+| Jogadores por competição | `players:v2:{teamId}:{leagueId}:{season}` | 24 horas |
 
-Form sempre usa `leagueId=71` — unificada por decisão de performance (evita 4× calls por competição).
-H2H usa `min(homeId,awayId)-max(homeId,awayId)` — independente de quem é mandante.
+Form usa o `leagueId` da competição do jogo — cada campeonato tem sua própria entrada no cache.
+H2H usa `min(homeId,awayId)-max(homeId,awayId):{leagueId}` — isolado por competição para evitar colisão de dados entre campeonatos diferentes com o mesmo par de times.
 
 ### Classificação (API-Football)
 
@@ -67,6 +69,8 @@ Chave usa `leagueId` numérico com sufixo `:v2`.
 
 A janela de jogos considera que a maioria das rodadas ocorre de quarta a domingo.
 
+**TTL gravado no payload:** o `StandingsPayload` inclui o campo `ttlSeconds` com o valor calculado no momento da escrita. Cache hits reutilizam esse valor para o `Cache-Control`, evitando que leituras concorrentes no limite do TTL gerem cabeçalhos inconsistentes.
+
 ### Broadcasters (Gemini + Google Search)
 
 | Situação | Chave Redis | TTL |
@@ -75,6 +79,25 @@ A janela de jogos considera que a maioria das rodadas ocorre de quarta a domingo
 | Sem canais (não publicado) | `broadcasters:{fixtureId}` | 1 hora |
 
 O TTL mais curto quando sem canais permite retry frequente até a grade ser publicada.
+
+### Dados CONMEBOL (Libertadores & Sul-Americana)
+
+TTL varia por status inferido dos jogos do torneio:
+
+| Status | TTL | Condição |
+|--------|-----|----------|
+| `live` | 5 minutos | `isLive === true` ou dentro da janela kickoff + 115 min |
+| `post-match` | 10 minutos | Entre kickoff + 115 min e kickoff + 150 min (aguardando publicação do placar) |
+| `finished` | 6 horas | Todos os jogos com `matchStatus === 'Played'` |
+| `upcoming` | 6 horas | Nenhum ao vivo, nenhum recém-encerrado |
+
+**Duas chaves por torneio:**
+- `conmebol:tournament:{id}` — chave primária com TTL dinâmico
+- `conmebol:tournament:{id}:stale` — backup permanente (6h) para stale-while-error
+
+**Janela `post-match`:** A CONMEBOL publica o placar final dentro de ~150 min após o kickoff. O sistema detecta essa janela quando um jogo ainda exibe `Fixture` mas o tempo estimado de encerramento (kickoff + 115 min) já passou. Durante esse período o cache é revalidado a cada 10 min.
+
+---
 
 ### Dados CBF (rodadas)
 
@@ -96,6 +119,25 @@ Esta é a estratégia mais complexa — TTL varia por status da rodada:
 
 ---
 
+## Stale-while-error (CONMEBOL)
+
+Se a API da CONMEBOL falhar, o sistema cai para a chave `:stale`:
+
+```
+getConmebolTournament(id)
+  ├─ Redis primary hit → retorna
+  ├─ Primary miss → fetch CONMEBOL API
+  │   ├─ Sucesso → salva primary (TTL dinâmico) + stale (6h) → retorna
+  │   └─ Falha (network/HTTP error)
+  │       ├─ Redis stale hit + fetchedAt ≤ 24h → retorna stale
+  │       ├─ Redis stale hit + fetchedAt > 24h → descarta, throw Error
+  │       └─ Stale miss → throw Error
+```
+
+**Validação de staleness:** igual à CBF — dado de backup só é servido se foi buscado há menos de 24 horas (`STALE_MAX_AGE_MS`).
+
+---
+
 ## Stale-while-error (CBF)
 
 Se a CBF API falhar (erro de rede ou HTTP não-2xx), o sistema cai automaticamente para a chave `:stale`:
@@ -106,11 +148,14 @@ getCbfRound(round)
   ├─ Primary miss → fetch CBF API
   │   ├─ Sucesso → salva primary + stale → retorna
   │   └─ Falha (network/HTTP error)
-  │       ├─ Redis stale hit → retorna stale (dado antigo)
+  │       ├─ Redis stale hit + fetchedAt ≤ 24h → retorna stale
+  │       ├─ Redis stale hit + fetchedAt > 24h → descarta, throw Error
   │       └─ Stale miss → throw Error
 ```
 
 Para rodadas encerradas (`finished`), a chave stale é permanente — o dado nunca expira. Isso garante que resultados históricos nunca desapareçam por indisponibilidade da CBF.
+
+**Validação de staleness:** o dado de backup só é servido se foi buscado há menos de 24 horas (`STALE_MAX_AGE_MS`). Isso evita que uma indisponibilidade prolongada da CBF resulte em dados da semana anterior sendo exibidos silenciosamente para rodadas em andamento.
 
 ---
 
@@ -177,6 +222,7 @@ Ver: [Script seed-cbf](../scripts/seed-cbf.md)
 | API-Football | Por request (~1000/dia free tier) | ~1 req/6h por dado |
 | Gemini | Por 1K tokens | ~1 req/24h por fixture |
 | CBF | Sem custo (sem auth comercial) | ~1 req/5min (ao vivo) |
+| CONMEBOL | Sem custo (API pública) | ~1 req/10min (pós-jogo) / 1 req/6h (outros) |
 | Redis | Por request (Upstash free tier generoso) | — |
 
 O cache de broadcasters (24h) é crítico: sem ele, cada carregamento de página chamaria o Gemini para cada jogo visível, esgotando quota rapidamente.

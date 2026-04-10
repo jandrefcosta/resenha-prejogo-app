@@ -3,7 +3,6 @@ import { getCache, setCache, TTL_24H } from '@/lib/redisCache';
 import type { PlayerStat, TeamPlayersData } from '@/lib/types';
 
 const BASE_URL = 'https://v3.football.api-sports.io';
-const LEAGUE_ID = 71;
 const TOP_N = 6;
 
 function apiHeaders(): HeadersInit {
@@ -21,9 +20,9 @@ interface RawPlayerEntry {
   }>;
 }
 
-async function fetchTeamPlayers(teamId: number, season: number): Promise<PlayerStat[]> {
+async function fetchTeamPlayers(teamId: number, season: number, leagueId: number): Promise<PlayerStat[]> {
   const res = await fetch(
-    `${BASE_URL}/players?team=${teamId}&season=${season}&league=${LEAGUE_ID}&page=1`,
+    `${BASE_URL}/players?team=${teamId}&season=${season}&league=${leagueId}&page=1`,
     { headers: apiHeaders(), cache: 'no-store' },
   );
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -41,7 +40,7 @@ async function fetchTeamPlayers(teamId: number, season: number): Promise<PlayerS
 
   return unique
     .map((e) => {
-      const stats = e.statistics.find((s) => s.league.id === LEAGUE_ID) ?? e.statistics[0];
+      const stats = e.statistics.find((s) => s.league.id === leagueId) ?? e.statistics[0];
       if (!stats) return null;
       return {
         name: e.player.name,
@@ -57,8 +56,10 @@ async function fetchTeamPlayers(teamId: number, season: number): Promise<PlayerS
 }
 
 export async function GET(req: NextRequest) {
-  const homeStr = req.nextUrl.searchParams.get('home');
-  const awayStr = req.nextUrl.searchParams.get('away');
+  const sp = req.nextUrl.searchParams;
+  const homeStr = sp.get('home');
+  const awayStr = sp.get('away');
+  const leagueIdStr = sp.get('leagueId');
 
   if (!homeStr || !awayStr) {
     return NextResponse.json({ error: 'Missing params' }, { status: 400 });
@@ -66,14 +67,15 @@ export async function GET(req: NextRequest) {
 
   const homeId = Number(homeStr);
   const awayId = Number(awayStr);
+  const leagueId = leagueIdStr ? Number(leagueIdStr) : 71;
 
   if (!Number.isInteger(homeId) || !Number.isInteger(awayId) || homeId <= 0 || awayId <= 0) {
     return NextResponse.json({ error: 'Invalid team IDs' }, { status: 400 });
   }
 
   const season = new Date().getFullYear();
-  const homeKey = `players:v2:${homeId}:${season}`;
-  const awayKey = `players:v2:${awayId}:${season}`;
+  const homeKey = `players:v2:${homeId}:${leagueId}:${season}`;
+  const awayKey = `players:v2:${awayId}:${leagueId}:${season}`;
 
   const [cachedHome, cachedAway] = await Promise.all([
     getCache<PlayerStat[]>(homeKey),
@@ -81,8 +83,8 @@ export async function GET(req: NextRequest) {
   ]);
 
   const [home, away] = await Promise.all([
-    cachedHome !== null ? Promise.resolve(cachedHome) : fetchTeamPlayers(homeId, season).catch(() => [] as PlayerStat[]),
-    cachedAway !== null ? Promise.resolve(cachedAway) : fetchTeamPlayers(awayId, season).catch(() => [] as PlayerStat[]),
+    cachedHome !== null ? Promise.resolve(cachedHome) : fetchTeamPlayers(homeId, season, leagueId).catch(() => [] as PlayerStat[]),
+    cachedAway !== null ? Promise.resolve(cachedAway) : fetchTeamPlayers(awayId, season, leagueId).catch(() => [] as PlayerStat[]),
   ]);
 
   if (cachedHome === null) setCache(homeKey, home, TTL_24H);

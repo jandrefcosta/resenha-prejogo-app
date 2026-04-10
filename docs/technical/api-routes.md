@@ -58,7 +58,7 @@ Retorna todos os fixtures da rodada atual de uma competição, com broadcasters.
 
 ### `GET /api/past-results?club=<slug>`
 
-Retorna os últimos jogos encerrados do clube nas competições que **não** têm dados CBF (Libertadores, Copa do Brasil, Sul-Americana).
+Retorna os últimos jogos encerrados do clube nas competições que **não** têm dados CBF (Libertadores, Sul-Americana, Copa do Brasil).
 
 | Parâmetro | Tipo | Descrição |
 |-----------|------|-----------|
@@ -66,8 +66,9 @@ Retorna os últimos jogos encerrados do clube nas competições que **não** tê
 
 | | |
 |-|-|
-| **Fonte** | API-Football v3 — `?last=5` por competição+time |
-| **Cache** | Redis `finished:{competition.id}:{teamApiId}` — 30 min |
+| **Fonte primária** | CONMEBOL API — Libertadores e Sul-Americana para clubes com `conmebolId` |
+| **Fonte secundária** | API-Football v3 — Copa do Brasil e demais competições; fallback quando CONMEBOL retorna vazio |
+| **Cache** | CONMEBOL: Redis `conmebol:tournament:{id}` (TTL dinâmico); API-Football: `finished:{competition.id}:{teamApiId}` 6h |
 | **Auth** | Nenhuma (público) |
 
 **Resposta:**
@@ -76,8 +77,10 @@ Match[]   // ordenados do mais recente para o mais antigo
 ```
 
 **Notas:**
-- Filtra apenas status `FT`, `AET`, `PEN`
-- Chama `getFinishedFixturesByClub()` para cada competição não-CBF em paralelo; falhas individuais são toleradas
+- Libertadores e Sul-Americana: fonte principal é a CONMEBOL API (`getConmebolFinishedByTeam`), com fallback automático para API-Football se o clube não tiver `conmebolId` ou a CONMEBOL não retornar dados
+- Copa do Brasil e outras competições: exclusivamente API-Football (`getFinishedFixturesByClub`)
+- Falhas individuais por competição são toleradas (`Promise.allSettled`) — o card não aparece vazio se uma fonte falhar
+- Campos CONMEBOL enriquecidos no `Match`: `scoreDetail` (HT, pênaltis, agregado), `winner` ("home"/"away"/"draw"), `hadExtraTime`, `isNeutralVenue`
 
 ---
 
@@ -153,15 +156,15 @@ Forma recente (últimos 5 jogos) dos dois times.
 
 ---
 
-### `GET /api/h2h?home=X&away=Y&fixture=F`
+### `GET /api/h2h?home=X&away=Y&fixture=F&leagueId=L`
 
 Head-to-head, lesionados e form para um confronto.
 
 | | |
 |-|-|
-| **Parâmetros** | `home`, `away` — IDs API-Football; `fixture` — ID do fixture (opcional) |
+| **Parâmetros** | `home`, `away` — IDs API-Football; `fixture` — ID do fixture (opcional); `leagueId` — ID da liga (padrão: `71`) |
 | **Fonte** | API-Football `/fixtures/headtohead` + `/injuries` |
-| **Cache** | Redis 6h |
+| **Cache** | Redis 6h — chave isolada por competição (`h2h:{min}-{max}:{leagueId}`) |
 
 **Resposta:**
 ```typescript
@@ -174,17 +177,21 @@ H2HData {
 }
 ```
 
+**Notas:**
+- `leagueId` isola o cache por competição — evita que dados de Série A sejam retornados para um confronto da Libertadores e vice-versa
+- Form de cada time é buscada na competição do jogo (`leagueId`), não fixada na Série A
+
 ---
 
-### `GET /api/players?home=X&away=Y`
+### `GET /api/players?home=X&away=Y&leagueId=L`
 
-Top 6 jogadores (artilheiros + assistentes) de cada time.
+Top 6 jogadores (artilheiros + assistentes) de cada time na competição do jogo.
 
 | | |
 |-|-|
-| **Parâmetros** | `home`, `away` — IDs API-Football |
-| **Fonte** | API-Football `/players/topscorers` + `/players/topassists` |
-| **Cache** | Redis 24h |
+| **Parâmetros** | `home`, `away` — IDs API-Football; `leagueId` — ID da liga (padrão: `71`) |
+| **Fonte** | API-Football `/players` filtrado por `league` e `season` |
+| **Cache** | Redis 24h — chave `players:v2:{teamId}:{leagueId}:{season}` isolada por time, competição e temporada |
 
 **Resposta:**
 ```typescript
@@ -193,6 +200,10 @@ Top 6 jogadores (artilheiros + assistentes) de cada time.
   away: PlayerStat[];
 }
 ```
+
+**Notas:**
+- `leagueId` garante que estatísticas retornadas sejam da competição correta (ex: Libertadores, não Série A)
+- Cache isolado por `leagueId` evita que uma consulta anterior na Série A seja reutilizada para um jogo da Copa do Brasil
 
 ---
 
@@ -206,7 +217,7 @@ Tabela de classificação de uma competição.
 |-|-|
 | **Parâmetros** | `competition` — slug (padrão: `serie-a`); `force` — se `1`, ignora cache |
 | **Fonte** | API-Football `/standings` |
-| **Cache** | Redis `standings:{competition.id}` — 30min (janela de jogos) / 3h (fora) |
+| **Cache** | Redis `standings:{leagueId}:v2` — 30min (janela de jogos, Série A) / 3h (fora ou outras competições) |
 
 **Resposta:**
 ```typescript
@@ -214,8 +225,12 @@ Tabela de classificação de uma competição.
   groups: StandingEntry[][];   // array de grupos (1 para pontos-corridos, N para grupos)
   format: 'pontos-corridos' | 'grupos' | 'mata-mata';
   updatedAt: string;
+  ttlSeconds: number;          // TTL calculado no momento da escrita — reutilizado em cache hits
 }
 ```
+
+**Notas:**
+- `ttlSeconds` é gravado no payload para que cache hits usem o mesmo valor no `Cache-Control`, evitando inconsistências em leituras concorrentes no limite do TTL
 
 ---
 

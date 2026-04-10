@@ -19,6 +19,8 @@ export interface StandingsPayload {
   /** UI hint — consumer decides how to render */
   format: 'pontos-corridos' | 'grupos' | 'mata-mata';
   updatedAt: string;
+  /** TTL in seconds used when this payload was written — used for Cache-Control on cache hits */
+  ttlSeconds: number;
 }
 
 // ─── Raw API types ────────────────────────────────────────────────────────────
@@ -82,16 +84,20 @@ export async function GET(req: NextRequest) {
   const season = competition.season;
   const cacheKey = `standings:${leagueId}:v2`;
 
-  const ttl = leagueId === 71 ? getSmartTTL() : TTL_3H;
-
   if (!force) {
     const cached = await getCache<StandingsPayload>(cacheKey);
     if (cached) {
+      // Use the TTL recorded at write time, not a freshly-computed value,
+      // to avoid serving a Cache-Control header inconsistent with the cache entry.
+      const cachedTtl = cached.ttlSeconds ?? TTL_3H;
       return NextResponse.json(cached, {
-        headers: { 'Cache-Control': `public, max-age=${ttl}` },
+        headers: { 'Cache-Control': `public, max-age=${cachedTtl}` },
       });
     }
   }
+
+  // Compute TTL once at write time so cache hits reuse the same value.
+  const ttl = leagueId === 71 ? getSmartTTL() : TTL_3H;
 
   const key = process.env.API_FOOTBALL_KEY;
   if (!key) return NextResponse.json({ error: 'API_FOOTBALL_KEY not set' }, { status: 500 });
@@ -120,6 +126,7 @@ export async function GET(req: NextRequest) {
       : competition.format === 'mata-mata' ? 'mata-mata'
       : 'grupos',
     updatedAt: new Date().toISOString(),
+    ttlSeconds: ttl,
   };
 
   await setCache(cacheKey, payload, ttl);

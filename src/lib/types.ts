@@ -9,6 +9,8 @@ export interface ClubTheme {
   apiFootballId: number | null;
   /** CBF internal club ID (gweb.cbf.com.br). Used to correlate with official match data. */
   cbfId?: number;
+  /** CONMEBOL internal team ID (gol.conmebol.com). Used to filter Libertadores/Sul-Americana results. */
+  conmebolId: number | null;
   colors: {
     primary: string;
     secondary: string;
@@ -105,6 +107,22 @@ export interface Match {
   status: 'scheduled' | 'postponed' | 'finished';
   /** Populated for finished matches (status === 'finished') */
   score?: { home: number | null; away: number | null };
+  /**
+   * Extended score breakdown — populated by CONMEBOL source.
+   * All fields are optional; only present when the competition provides them.
+   */
+  scoreDetail?: {
+    ht?:        { home: number; away: number };
+    et?:        { home: number; away: number };
+    pen?:       { home: number; away: number };
+    aggregate?: { home: number; away: number };
+  };
+  /** "home" | "away" | "draw" — explicit winner from CONMEBOL source */
+  winner?: string;
+  /** True when match went to extra time (matchLengthMin > 90) */
+  hadExtraTime?: boolean;
+  /** True when match was played at a neutral venue */
+  isNeutralVenue?: boolean;
 }
 
 export interface StandingEntry {
@@ -218,6 +236,78 @@ export interface CbfMatchDetail {
   cartoes: CbfCard[];
   documentos: Array<{ url: string; title: string }>;
 }
+
+// ─── CONMEBOL API types (gol.conmebol.com) ────────────────────────────────────
+
+export interface ConmebolScoreEntries {
+  /** Half-time score */
+  ht?: { home_score: number; away_score: number };
+  /** Full-time score (90 min) */
+  ft?: { home_score: number; away_score: number };
+  /** Extra time score */
+  et?: { home_score: number; away_score: number };
+  /** Penalty shootout score */
+  pen?: { home_score: number; away_score: number };
+  /** Aggregate score (two-legged ties) */
+  aggregate?: { home_score: number; away_score: number };
+  /** Final result considering all periods */
+  total?: { home_score: number; away_score: number };
+}
+
+export interface ConmebolMatchDetail {
+  /** CONMEBOL internal match ID */
+  id: number;
+  /** Unix timestamp (seconds) */
+  date: number;
+  /** "Home Team vs Away Team" */
+  description: string;
+  /** Phase/stage name e.g. "Group Stage", "1st Round" */
+  stage: string;
+  /** Whether the date is unconfirmed */
+  tbc: boolean;
+  /** Whether the match is at a neutral venue */
+  isNeutralVenue: boolean;
+  venue: string | null;
+  home: {
+    id: number;
+    name: string;
+    shortName: string;
+    code: string;
+    /** CDN crest URL (light theme, 1x) */
+    crestUrl: string;
+  };
+  away: {
+    id: number;
+    name: string;
+    shortName: string;
+    code: string;
+    crestUrl: string;
+  };
+  /** "Played" | "Fixture" | "Live" */
+  matchStatus: string;
+  isLive: boolean;
+  homeScore: number | null;
+  awayScore: number | null;
+  /** "home" | "away" | "draw" | null */
+  winner: string | null;
+  /** Actual match duration in minutes (includes extra time) */
+  matchLengthMin: number | null;
+  scoreEntries: ConmebolScoreEntries | null;
+  /** ISO timestamp of when this data was fetched */
+  fetchedAt: string;
+}
+
+export interface ConmebolTournamentData {
+  /** CONMEBOL tournament calendar ID (e.g. 15 for Libertadores 2026) */
+  tournamentId: number;
+  /** ISO timestamp of when this data was fetched */
+  fetchedAt: string;
+  /** Seconds until stale */
+  ttlSeconds: number;
+  matches: ConmebolMatchDetail[];
+}
+
+export type ConmebolMatchStatus = 'finished' | 'live' | 'post-match' | 'upcoming';
 
 /** State used to compute cache TTL */
 export type CbfRoundStatus = 'finished' | 'live' | 'upcoming';

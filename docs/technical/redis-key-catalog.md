@@ -6,16 +6,18 @@ Todas as chaves utilizadas no Upstash Redis, com formato, TTL e dados armazenado
 
 ## Fixtures & Calendário (Próximos Jogos)
 
-Uma chave por competição — dados brutos da API-Football antes do merge por clube.
+Uma chave por competição+temporada — dados brutos da API-Football antes do merge por clube.
 
 | Chave | TTL | Tipo | Conteúdo |
 |-------|-----|------|---------|
-| `fixtures:serie-a` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Série A |
-| `fixtures:libertadores` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Libertadores |
-| `fixtures:copa-brasil` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Copa do Brasil |
-| `fixtures:sul-americana` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Sul-Americana |
+| `fixtures:serie-a:{season}` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Série A |
+| `fixtures:libertadores:{season}` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Libertadores |
+| `fixtures:copa-brasil:{season}` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Copa do Brasil |
+| `fixtures:sul-americana:{season}` | 6h | JSON | `ApiFixtureItem[]` — fixtures da Sul-Americana |
 
-**Nota:** O merge por clube e a deduplicação por fixture ID acontecem em `/api/fixtures` em runtime — não são cacheados no Redis.
+**Exemplo:** `fixtures:serie-a:2026`
+
+**Nota:** O campo `{season}` garante que na virada de temporada os dados do ano anterior não sejam reutilizados. O merge por clube e a deduplicação por fixture ID acontecem em `/api/fixtures` em runtime — não são cacheados no Redis.
 
 ---
 
@@ -45,6 +47,8 @@ Chave usa `leagueId` numérico (não o slug), sufixo `:v2`.
 
 TTL dinâmico (apenas Série A / leagueId 71): 30min durante janela de jogos (qua–dom), 3h no restante.
 
+O `StandingsPayload` armazenado inclui o campo `ttlSeconds` com o valor calculado no momento da escrita. Cache hits reutilizam esse valor para o `Cache-Control`, garantindo consistência entre leituras concorrentes.
+
 **Nota:** Copa do Brasil (73) é formato mata-mata sem standings tradicionais — não é exibida no modal de classificação.
 
 ---
@@ -63,14 +67,21 @@ TTL 24h quando canais encontrados; 1h quando array vazio (não publicado ainda).
 
 | Chave | TTL | Tipo | Conteúdo |
 |-------|-----|------|---------|
-| `form:{teamId}:71:{season}` | 6h | string | Form bruta da Série A, ex: `"WDLWW"` |
-| `h2h:{min}-{max}` | 6h | JSON | `RawH2HFixture[]` — últimos 10 confrontos (cross-competition) |
+| `form:{teamId}:{leagueId}:{season}` | 6h | string | Form bruta do time na competição, ex: `"WDLWW"` |
+| `h2h:{min}-{max}:{leagueId}` | 6h | JSON | `RawH2HFixture[]` — últimos 10 confrontos na competição |
 | `injuries:v2:{fixtureId}` | 3h | JSON | `RawInjury[]` — lesionados do fixture específico |
-| `players:{homeId}:{awayId}` | 24h | JSON | `{ home: PlayerStat[], away: PlayerStat[] }` |
+| `players:v2:{teamId}:{leagueId}:{season}` | 24h | JSON | `PlayerStat[]` — top 6 do time na competição |
+
+**Exemplos:**
+- `form:127:71:2026` — form do Flamengo (127) na Série A (71) em 2026
+- `form:127:13:2026` — form do Flamengo (127) na Libertadores (13) em 2026
+- `h2h:127-134:71` — H2H Flamengo×Athletico na Série A
+- `h2h:127-134:13` — H2H Flamengo×Athletico na Libertadores
+- `players:v2:127:13:2026` — artilheiros do Flamengo na Libertadores em 2026
 
 **Notas:**
-- `form` sempre usa `leagueId=71` — form unificada independente da competição do jogo
-- `h2h` usa `min(homeId, awayId)-max(homeId, awayId)` para garantir a mesma chave independente de quem é mandante
+- `form` e `players` usam `leagueId` da competição do jogo — cada campeonato tem entrada independente no cache
+- `h2h` usa `min(homeId, awayId)-max(homeId, awayId):{leagueId}` — mesma chave independente de quem é mandante, isolada por competição
 - `injuries` é por `fixtureId` (não por time) — garante lesionados do jogo específico
 
 ---
@@ -107,6 +118,40 @@ A chave stale permanente garante que rodadas encerradas nunca desapareçam por f
 
 ---
 
+## Torneios CONMEBOL (Libertadores & Sul-Americana)
+
+Cada torneio usa **duas chaves** — primária (TTL dinâmico) e stale (backup, 6h).
+
+| Chave | TTL | Tipo | Conteúdo |
+|-------|-----|------|---------|
+| `conmebol:tournament:{id}` | 5min–6h | JSON | `ConmebolTournamentData` — todos os jogos do torneio |
+| `conmebol:tournament:{id}:stale` | 6h | JSON | `ConmebolTournamentData` — backup para falhas de API |
+
+### IDs de torneio
+
+| Competição | ID |
+|---|---|
+| Libertadores | `15` |
+| Sul-Americana | `104` |
+
+**Exemplos:**
+- `conmebol:tournament:15` — Libertadores (primária)
+- `conmebol:tournament:15:stale` — Libertadores (backup)
+- `conmebol:tournament:104` — Sul-Americana (primária)
+
+### TTL da chave primária
+
+| Status inferido | TTL | Condição |
+|----------------|-----|----------|
+| `live` | 5 min | `isLive` ou dentro de kickoff + 115 min |
+| `post-match` | 10 min | Kickoff + 115 min até kickoff + 150 min |
+| `finished` | 6 h | Todos os jogos `Played` |
+| `upcoming` | 6 h | Nenhum ao vivo, nenhum recém-encerrado |
+
+**Nota:** `ConmebolTournamentData` contém todos os jogos do torneio. A filtragem por time (`getConmebolFinishedByTeam`) é feita em memória — não há chave Redis por time.
+
+---
+
 ## Identidade de Usuário
 
 | Chave | TTL | Tipo | Conteúdo |
@@ -132,14 +177,29 @@ O Upstash Ratelimit gerencia suas próprias chaves internamente sob o prefixo `@
 ## Comandos úteis (Upstash console / redis-cli)
 
 ```bash
-# Ver todas as chaves de fixtures
+# Ver todas as chaves de fixtures (agora incluem o ano)
 KEYS fixtures:*
+
+# Exemplo: expirar fixtures da Série A 2026
+EXPIRE fixtures:serie-a:2026 1
 
 # Ver chaves de resultados encerrados
 KEYS finished:*
 
-# Forçar expiração de um fixture (TTL de 1s)
-EXPIRE fixtures:serie-a 1
+# Ver chaves de H2H (agora incluem leagueId)
+KEYS h2h:*
+
+# Ver chaves de form por competição
+KEYS form:*
+
+# Ver chaves de jogadores por competição
+KEYS players:v2:*
+
+# Ver todas as chaves CONMEBOL
+KEYS conmebol:tournament:*
+
+# Expirar torneio imediatamente (força re-fetch)
+EXPIRE conmebol:tournament:15 1
 
 # Ver todas as chaves CBF
 KEYS cbf:round:*

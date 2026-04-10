@@ -111,7 +111,7 @@ function mapFixture(f: ApiFixtureItem): Match {
  */
 const fetchLeagueFixturesRaw = unstable_cache(
   async (leagueId: number, competitionId: string, season: number): Promise<ApiFixtureItem[]> => {
-    const cacheKey = `fixtures:${competitionId}`;
+    const cacheKey = `fixtures:${competitionId}:${season}`;
     const cached = await getCache<ApiFixtureItem[]>(cacheKey);
     if (cached) return cached;
 

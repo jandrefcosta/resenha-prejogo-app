@@ -8,7 +8,12 @@
     "stadium": "Ligga Arena",
     "apiFootballId": 134,
     "cbfId": 20052,
-    "colors": { "primary": "#CC0000", "secondary": "#1A1A1A", "accent": "#E60000" },
+    "conmebolId": null,
+    "colors": {
+      "primary": "#CC0000",
+      "secondary": "#1A1A1A",
+      "accent": "#E60000"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -20,7 +25,12 @@
     "stadium": "Arena MRV",
     "apiFootballId": 1062,
     "cbfId": 62194,
-    "colors": { "primary": "#000000", "secondary": "#FFFFFF", "accent": "#555555" },
+    "conmebolId": 58,
+    "colors": {
+      "primary": "#000000",
+      "secondary": "#FFFFFF",
+      "accent": "#555555"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -32,7 +42,12 @@
     "stadium": "Arena Fonte Nova",
     "apiFootballId": 118,
     "cbfId": 61377,
-    "colors": { "primary": "#003399", "secondary": "#CC0000", "accent": "#4466CC" },
+    "conmebolId": 8,
+    "colors": {
+      "primary": "#003399",
+      "secondary": "#CC0000",
+      "accent": "#4466CC"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -44,7 +59,12 @@
     "stadium": "Nilton Santos",
     "apiFootballId": 120,
     "cbfId": 60175,
-    "colors": { "primary": "#1A1A1A", "secondary": "#FFFFFF", "accent": "#888888" },
+    "conmebolId": 4,
+    "colors": {
+      "primary": "#1A1A1A",
+      "secondary": "#FFFFFF",
+      "accent": "#888888"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -56,7 +76,12 @@
     "stadium": "Arena Condá",
     "apiFootballId": 132,
     "cbfId": 20086,
-    "colors": { "primary": "#1A5F2A", "secondary": "#FFFFFF", "accent": "#2E8B3E" },
+    "conmebolId": null,
+    "colors": {
+      "primary": "#1A5F2A",
+      "secondary": "#FFFFFF",
+      "accent": "#2E8B3E"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -68,7 +93,12 @@
     "stadium": "Neo Química Arena",
     "apiFootballId": 131,
     "cbfId": 20001,
-    "colors": { "primary": "#1C1C1C", "secondary": "#FFFFFF", "accent": "#444444" },
+    "conmebolId": 46,
+    "colors": {
+      "primary": "#1C1C1C",
+      "secondary": "#FFFFFF",
+      "accent": "#444444"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -80,7 +110,12 @@
     "stadium": "Couto Pereira",
     "apiFootballId": 147,
     "cbfId": 61590,
-    "colors": { "primary": "#1E7A34", "secondary": "#FFFFFF", "accent": "#25993F" },
+    "conmebolId": null,
+    "colors": {
+      "primary": "#1E7A34",
+      "secondary": "#FFFFFF",
+      "accent": "#25993F"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -92,7 +127,12 @@
     "stadium": "Mineirão",
     "apiFootballId": 135,
     "cbfId": 59849,
-    "colors": { "primary": "#003D99", "secondary": "#FFFFFF", "accent": "#0057E7" },
+    "conmebolId": 104,
+    "colors": {
+      "primary": "#003D99",
+      "secondary": "#FFFFFF",
+      "accent": "#0057E7"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -104,7 +144,12 @@
     "stadium": "Maracanã",
     "apiFootballId": 127,
     "cbfId": 20016,
-    "colors": { "primary": "#E8212B", "secondary": "#000000", "accent": "#FF3A3A" },
+    "conmebolId": 20,
+    "colors": {
+      "primary": "#E8212B",
+      "secondary": "#000000",
+      "accent": "#FF3A3A"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -116,7 +161,12 @@
     "stadium": "Maracanã",
     "apiFootballId": 124,
     "cbfId": 20014,
-    "colors": { "primary": "#7B1C28", "secondary": "#228B22", "accent": "#FFFFFF" },
+    "conmebolId": 59,
+    "colors": {
+      "primary": "#7B1C28",
+      "secondary": "#228B22",
+      "accent": "#FFFFFF"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -128,7 +178,12 @@
     "stadium": "Arena do Grêmio",
     "apiFootballId": 130,
     "cbfId": 20013,
-    "colors": { "primary": "#1B63AB", "secondary": "#000000", "accent": "#4D8FD1" },
+    "conmebolId": 62,
+    "colors": {
+      "primary": "#1B63AB",
+      "secondary": "#000000",
+      "accent": "#4D8FD1"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -140,7 +195,12 @@
     "stadium": "Beira-Rio",
     "apiFootballId": 119,
     "cbfId": 20011,
-    "colors": { "primary": "#CC0000", "secondary": "#FFFFFF", "accent": "#E60000" },
+    "conmebolId": null,
+    "colors": {
+      "primary": "#CC0000",
+      "secondary": "#FFFFFF",
+      "accent": "#E60000"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -152,7 +212,12 @@
     "stadium": "José Maria de Campos Maia",
     "apiFootballId": 7848,
     "cbfId": 20385,
-    "colors": { "primary": "#F5C518", "secondary": "#1249AA", "accent": "#E6B800" },
+    "conmebolId": null,
+    "colors": {
+      "primary": "#F5C518",
+      "secondary": "#1249AA",
+      "accent": "#E6B800"
+    },
     "textOnPrimary": "dark"
   },
   {
@@ -164,7 +229,12 @@
     "stadium": "Allianz Parque",
     "apiFootballId": 121,
     "cbfId": 20002,
-    "colors": { "primary": "#006437", "secondary": "#FFFFFF", "accent": "#00A551" },
+    "conmebolId": 21,
+    "colors": {
+      "primary": "#006437",
+      "secondary": "#FFFFFF",
+      "accent": "#00A551"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -176,7 +246,12 @@
     "stadium": "Nabi Abi Chedid",
     "apiFootballId": 794,
     "cbfId": 20007,
-    "colors": { "primary": "#CC0000", "secondary": "#FFFFFF", "accent": "#B20000" },
+    "conmebolId": 70,
+    "colors": {
+      "primary": "#CC0000",
+      "secondary": "#FFFFFF",
+      "accent": "#B20000"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -188,7 +263,12 @@
     "stadium": "Baenão",
     "apiFootballId": 1198,
     "cbfId": 20022,
-    "colors": { "primary": "#1249AA", "secondary": "#FFFFFF", "accent": "#1A5FCC" },
+    "conmebolId": null,
+    "colors": {
+      "primary": "#1249AA",
+      "secondary": "#FFFFFF",
+      "accent": "#1A5FCC"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -200,7 +280,12 @@
     "stadium": "Vila Belmiro",
     "apiFootballId": 128,
     "cbfId": 20008,
-    "colors": { "primary": "#1A1A1A", "secondary": "#FFFFFF", "accent": "#C0C0C0" },
+    "conmebolId": 146,
+    "colors": {
+      "primary": "#1A1A1A",
+      "secondary": "#FFFFFF",
+      "accent": "#C0C0C0"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -212,7 +297,12 @@
     "stadium": "MorumBIS",
     "apiFootballId": 126,
     "cbfId": 20005,
-    "colors": { "primary": "#CC0000", "secondary": "#000000", "accent": "#FFFFFF" },
+    "conmebolId": 25,
+    "colors": {
+      "primary": "#CC0000",
+      "secondary": "#000000",
+      "accent": "#FFFFFF"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -224,7 +314,12 @@
     "stadium": "São Januário",
     "apiFootballId": 133,
     "cbfId": 60646,
-    "colors": { "primary": "#2C2C2C", "secondary": "#FFFFFF", "accent": "#737373" },
+    "conmebolId": 97,
+    "colors": {
+      "primary": "#2C2C2C",
+      "secondary": "#FFFFFF",
+      "accent": "#737373"
+    },
     "textOnPrimary": "white"
   },
   {
@@ -236,7 +331,12 @@
     "stadium": "Barradão",
     "apiFootballId": 136,
     "cbfId": 20018,
-    "colors": { "primary": "#CC0000", "secondary": "#1A1A1A", "accent": "#E60000" },
+    "conmebolId": null,
+    "colors": {
+      "primary": "#CC0000",
+      "secondary": "#1A1A1A",
+      "accent": "#E60000"
+    },
     "textOnPrimary": "white"
   }
 ]

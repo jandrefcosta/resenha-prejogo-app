@@ -83,6 +83,7 @@ export async function GET(req: NextRequest) {
   const homeStr = sp.get('home');
   const awayStr = sp.get('away');
   const fixtureStr = sp.get('fixture');
+  const leagueIdStr = sp.get('leagueId');
 
   if (!homeStr || !awayStr) {
     return NextResponse.json({ error: 'Missing home or away params' }, { status: 400 });
@@ -91,6 +92,7 @@ export async function GET(req: NextRequest) {
   const homeId = Number(homeStr);
   const awayId = Number(awayStr);
   const fixtureId = fixtureStr ? Number(fixtureStr) : null;
+  const leagueId = leagueIdStr ? Number(leagueIdStr) : 71;
 
   if (!Number.isInteger(homeId) || !Number.isInteger(awayId) || homeId <= 0 || awayId <= 0) {
     return NextResponse.json({ error: 'Invalid team IDs' }, { status: 400 });
@@ -98,9 +100,8 @@ export async function GET(req: NextRequest) {
 
   const season = new Date().getFullYear();
 
-  // H2H history is cross-competition — cache key omits leagueId intentionally.
-  // Form is always fetched from Série A (71), so leagueId query param is unused.
-  const h2hKey = `h2h:${Math.min(homeId, awayId)}-${Math.max(homeId, awayId)}`;
+  // H2H cache key is scoped per competition to avoid cross-championship data collisions.
+  const h2hKey = `h2h:${Math.min(homeId, awayId)}-${Math.max(homeId, awayId)}:${leagueId}`;
   const injuriesKey = fixtureId ? `injuries:v2:${fixtureId}` : null;
 
   const [cachedH2H, cachedInjuries] = await Promise.all([
@@ -108,14 +109,12 @@ export async function GET(req: NextRequest) {
     injuriesKey ? getCache<RawInjury[]>(injuriesKey) : Promise.resolve(null),
   ]);
 
-  // Form is always fetched from Série A (71) — consistent with /api/previews
-  // and avoids duplicate cache keys per competition for the same team.
   const [rawH2H, homeFormRaw, awayFormRaw, rawInjuries] = await Promise.all([
     cachedH2H !== null
       ? Promise.resolve(cachedH2H)
       : fetchH2H(homeId, awayId).catch(() => [] as RawH2HFixture[]),
-    getTeamForm(homeId, season, 71),
-    getTeamForm(awayId, season, 71),
+    getTeamForm(homeId, season, leagueId),
+    getTeamForm(awayId, season, leagueId),
     (injuriesKey && cachedInjuries === null && fixtureId)
       ? fetchInjuries(fixtureId).catch(() => [] as RawInjury[])
       : Promise.resolve(cachedInjuries ?? [] as RawInjury[]),
