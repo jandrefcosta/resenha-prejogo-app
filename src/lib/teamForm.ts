@@ -36,7 +36,10 @@ export async function getTeamForm(
   const cached = await getCache<string>(key);
   if (cached !== null) return cached;
 
-  const raw = await fetchForm(teamId, season, leagueId).catch(() => '');
-  await setCache(key, raw, TTL_6H);
-  return raw;
+  const raw = await fetchForm(teamId, season, leagueId).catch(() => null);
+  // Only cache a non-empty result. An empty string or null means the API returned
+  // no data (season not started, team not in league, or transient error) — caching
+  // that would serve stale "no form" for 6h and hide real data once it becomes available.
+  if (raw) await setCache(key, raw, TTL_6H);
+  return raw ?? '';
 }

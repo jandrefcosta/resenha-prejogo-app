@@ -56,8 +56,8 @@ O objetivo da área admin é centralizar essas operações numa interface visual
 /api/admin/cache/keys          → lista chaves Redis com TTL
 /api/admin/cache/bust          → expira chaves por padrão
 /api/admin/cache/view          → retorna payload de uma chave
-/api/admin/seed/status         → status das rodadas CBF no Redis
-/api/admin/seed/run            → executa seed (SSE stream)
+/api/admin/seed/status         → status geral do cache (todas as categorias)
+/api/admin/seed/run            → executa seed por categoria (SSE stream)
 /api/admin/clubs/validate      → valida ID externo de um clube
 /api/admin/clubs/save          → persiste alteração no clubs.json
 /api/admin/logs/suggestions    → lê lista de sugestões do Redis
@@ -102,34 +102,70 @@ Chaves agrupadas por categoria:
 | Bust Tudo | Expira todas as chaves de cache (com modal de confirmação) |
 | Force Refresh | Chama o endpoint correspondente com `force=1` e exibe resposta |
 
+**Ações de re-seed (botões com confirmação + log SSE):**
+
+Cada botão apaga as chaves da categoria e re-popula a partir das APIs externas,
+equivalente a `npm run seed:<categoria> -- --reset`. O progresso é exibido em
+tempo real via SSE no terminal simulado ao lado.
+
+| Botão | Equivalente CLI | Chaves afetadas |
+|-------|----------------|-----------------|
+| Seed Fixtures | `seed:fixtures -- --reset` | `fixtures:*` |
+| Seed Form | `seed:form -- --reset` | `form:*` |
+| Seed Resultados | `seed:past-results -- --reset` | `finished:*`, `conmebol:tournament:*` |
+| Seed Rodadas CBF | `seed:cbf -- --reset` | `cbf:round:*` |
+| **Seed Tudo** | `seed:all -- --reset` | todas acima (com modal de confirmação) |
+
+Botões individuais permitem re-sedar só a categoria problemática sem tocar no resto.
+
 **Visualizador de payload:**
 - Botão "Visualizar" expande o JSON armazenado na chave inline
 - Syntax highlight básico (sem dependência externa — `<pre>` com Tailwind)
 
 ---
 
-### `/admin/seed` — Seed de Rodadas CBF
+### `/admin/seed` — Aquecimento de Cache
 
-Interface para o que hoje é `npm run seed:cbf`.
+Interface para os scripts `seed:*` — substitui o CLI para operações de manutenção.
 
-**Status das rodadas:**
+**Painel de status geral:**
 
-Tabela com as 38 rodadas mostrando:
-- ✅ No Redis (hit na chave `cbf:round:{N}`)
-- ⬜ Ausente (miss)
-- TTL da chave primária e se existe chave stale
+Cards por categoria mostrando estado atual do Redis:
 
-**Formulário de seed:**
+| Categoria | Indicador |
+|-----------|-----------|
+| Fixtures | 4 chaves — TTL médio restante |
+| Form | N/20 chaves presentes — TTL médio |
+| Resultados | N chaves `finished:*` + status CONMEBOL |
+| Rodadas CBF | N/38 rodadas no Redis — quantas permanentes |
+
+**Ações de seed por categoria:**
+
+Cada categoria tem um botão **"Re-seed"** (com confirmação) que:
+1. Apaga as chaves da categoria via pipeline Redis
+2. Re-fetcha da API externa
+3. Exibe progresso em tempo real via SSE no terminal simulado
+
+| Botão | Script equivalente |
+|-------|--------------------|
+| Re-seed Fixtures | `seed:fixtures -- --reset` |
+| Re-seed Form | `seed:form -- --reset` |
+| Re-seed Resultados | `seed:past-results -- --reset` |
+| Re-seed Rodadas CBF | `seed:cbf -- --reset` |
+| **Re-seed Tudo** | `seed:all -- --reset` (modal de confirmação adicional) |
+
+**Formulário avançado (Rodadas CBF):**
 
 | Campo | Tipo | Detalhe |
 |-------|------|---------|
 | Rodada | Number input | Seed de uma rodada específica |
 | Intervalo | De / Até | Seed de múltiplas rodadas em sequência |
-| Force | Checkbox | Sobrescreve dados já existentes (`--force`) |
+| Force | Checkbox | Sobrescreve dados já existentes |
 
 **Log em tempo real:**
 - Output via Server-Sent Events (SSE) exibido num terminal simulado
-- Mostra progresso rodada a rodada, erros e resumo final
+- Mostra progresso item a item, ícones de status (✓ ◎ ⚠ ✗) e resumo final
+- Log persistido na sessão até novo seed ser executado
 
 ---
 
@@ -217,8 +253,8 @@ src/app/api/admin/
     bust/route.ts
     view/route.ts
   seed/
-    status/route.ts
-    run/route.ts               # SSE
+    status/route.ts            # status de todas as categorias
+    run/route.ts               # SSE — aceita ?category=all|fixtures|form|past|cbf
   clubs/
     validate/route.ts
     save/route.ts

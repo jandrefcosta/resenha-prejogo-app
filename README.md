@@ -45,6 +45,21 @@ npm run dev
 
 Acesse [http://localhost:3000](http://localhost:3000).
 
+## Aquecimento de cache
+
+O cache Redis é populado por demanda. Para eliminar cold-starts antes de um deploy
+ou renovar periodicamente (~5h), execute:
+
+```bash
+npm run seed:all             # aquece o que está frio
+npm run seed:all -- --reset  # apaga tudo e re-popula do zero
+```
+
+Scripts individuais: `seed:cbf`, `seed:fixtures`, `seed:form`, `seed:past-results`.  
+Ver [`docs/scripts/`](docs/scripts/) para documentação completa.
+
+---
+
 ## Deploy (Vercel)
 
 Configure as mesmas variáveis de ambiente acima no painel da Vercel antes de fazer o deploy.

@@ -8,6 +8,10 @@
     "start": "next start",
     "lint": "eslint",
     "seed:cbf": "tsx --env-file=.env.local scripts/seed-cbf.ts",
+    "seed:form": "tsx --env-file=.env.local scripts/seed-form.ts",
+    "seed:fixtures": "tsx --env-file=.env.local scripts/seed-fixtures.ts",
+    "seed:past-results": "tsx --env-file=.env.local scripts/seed-past-results.ts",
+    "seed:all": "tsx --env-file=.env.local scripts/seed-all.ts",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui"
   },

@@ -30,8 +30,8 @@ npm run seed:cbf -- --rounds=15
 npm run seed:cbf -- --round=10
 
 # Forçar re-fetch mesmo se já permanente
-npm run seed:cbf -- --round=10 --force
-npm run seed:cbf -- --force
+npm run seed:cbf -- --round=10 --reset
+npm run seed:cbf -- --reset
 ```
 
 ---
@@ -42,7 +42,7 @@ npm run seed:cbf -- --force
 |------|-----------|
 | `--rounds=N` | Processa rodadas 1 até N (padrão: 38) |
 | `--round=N` | Processa somente a rodada N |
-| `--force` | Re-fetcha mesmo rodadas já com stale permanente |
+| `--reset` / `--force` | Re-fetcha mesmo rodadas já com stale permanente |
 
 ---
 

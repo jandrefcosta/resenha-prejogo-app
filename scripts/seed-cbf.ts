@@ -8,7 +8,7 @@
  *   npm run seed:cbf                   # seeds rounds 1–38
  *   npm run seed:cbf -- --rounds=15    # seeds rounds 1–15
  *   npm run seed:cbf -- --round=10     # seeds only round 10
- *   npm run seed:cbf -- --force        # re-fetch even rounds already seeded
+ *   npm run seed:cbf -- --reset        # re-fetch even rounds already seeded
  *
  * Requires: .env.local with UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN
  *           Node ≥ 20.6 (--env-file flag) or vars already in environment
@@ -16,18 +16,16 @@
 
 import { redis } from '@/lib/redisCache';
 import { getCbfRound } from '@/lib/cbfApi';
+import { deleteCbfRounds } from './lib/deleteKeys';
+import { hasReset, getArg } from './lib/args';
 import type { CbfRoundData } from '@/lib/types';
 
 // ─── CLI args ─────────────────────────────────────────────────────────────────
 
 function parseArgs() {
-  const args = process.argv.slice(2);
-  const get = (flag: string) =>
-    args.find((a) => a.startsWith(`--${flag}=`))?.split('=')[1];
-
-  const roundsStr = get('rounds');
-  const roundStr  = get('round');
-  const force     = args.includes('--force');
+  const roundStr  = getArg('round');
+  const roundsStr = getArg('rounds');
+  const force     = hasReset();
 
   if (roundStr) {
     const n = parseInt(roundStr, 10);
@@ -79,6 +77,7 @@ async function seedRound(round: number, force: boolean): Promise<SeedResult> {
 
   let data: CbfRoundData;
   try {
+    // force=true bypasses the in-library cache check; keys were already deleted above
     data = await getCbfRound(round, /* force= */ true);
   } catch {
     return 'error';
@@ -88,11 +87,7 @@ async function seedRound(round: number, force: boolean): Promise<SeedResult> {
     return 'not_finished';
   }
 
-  // getCbfRound already wrote primary + stale keys, but stale for finished
-  // rounds is now setCachePermanent — so it's already handled.
-  // This explicit write is a safety net in case the app code path differed.
-  await redis.set(staleKey, data); // no TTL = permanent
-
+  // getCbfRound already wrote primary + stale as permanent for finished rounds.
   return 'seeded';
 }
 
@@ -106,6 +101,12 @@ async function main() {
   console.log('  ║   CBF Redis Seed — Resenha Pré-Jogo ║');
   console.log('  ╚══════════════════════════════════════╝');
   console.log(`\n  Rodadas: ${from}–${to}  |  Force: ${force}\n`);
+
+  if (force) {
+    process.stdout.write(`  Deletando chaves cbf:round:${from}–${to} (primary + stale) ... `);
+    const deleted = await deleteCbfRounds(from, to);
+    console.log(`${deleted} chaves removidas\n`);
+  }
 
   const counts: Record<SeedResult, number> = {
     seeded: 0,

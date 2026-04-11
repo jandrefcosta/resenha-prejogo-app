@@ -200,18 +200,31 @@ await invalidateCbfRound(roundNumber);
 
 ---
 
-## Seed manual de rodadas encerradas
+## Aquecimento de cache (seed scripts)
 
-O script `seed-cbf.ts` permite pré-popular o Redis com rodadas finalizadas:
+Todo o cache é populado por demanda — a primeira requisição após expiração
+faz o fetch upstream. Para eliminar cold-starts, execute o orquestrador antes
+de deploys e a cada ~5 horas:
+
 ```bash
-npm run seed:cbf
-npm run seed:cbf -- --round=10
-npm run seed:cbf -- --force
+npm run seed:all          # aquece o que está frio
+npm run seed:all -- --reset   # apaga tudo e re-popula do zero
 ```
 
-Isso garante o fallback permanente mesmo antes de uma rodada ser requisitada organicamente pela aplicação.
+Scripts individuais para controle granular:
 
-Ver: [Script seed-cbf](../scripts/seed-cbf.md)
+```bash
+npm run seed:cbf           # rodadas Brasileirão (permanente)
+npm run seed:fixtures      # próximos jogos (TTL 6h)
+npm run seed:form          # forma dos times (TTL 6h)
+npm run seed:past-results  # histórico W/D/L (TTL 6h)
+```
+
+Ver documentação completa: [seed-all](../scripts/seed-all.md),
+[seed-cbf](../scripts/seed-cbf.md),
+[seed-fixtures](../scripts/seed-fixtures.md),
+[seed-form](../scripts/seed-form.md),
+[seed-past-results](../scripts/seed-past-results.md)
 
 ---
 

@@ -9,7 +9,7 @@ import { localiseRound } from '@/lib/localiseRound';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme } from '@/lib/types';
 
-// ─── CBF → Match converter ────────────────────────────────────────────────────
+// ─── Lookup maps (built once at module level) ─────────────────────────────────
 
 const clubs = clubsData as ClubTheme[];
 
@@ -23,7 +23,7 @@ const cbfIdToLogo = new Map<string, string>(
     ]),
 );
 
-/** cbfId → API-Football team ID string (used as Match.homeTeam.id / awayTeam.id) */
+/** cbfId → API-Football team ID string */
 const cbfIdToApiFootballId = new Map<string, string>(
   clubs
     .filter((c) => c.cbfId != null && c.apiFootballId != null)
@@ -37,6 +37,8 @@ const cbfIdToShort = new Map<string, string>(
     .map((c) => [String(c.cbfId), c.shortName]),
 );
 
+// ─── CBF → Match converter ────────────────────────────────────────────────────
+
 function stripState(name: string): string {
   return name.replace(/\s*-\s*[A-Z]{2}$/, '');
 }
@@ -45,20 +47,16 @@ function cbfToMatch(entry: PastEntry): Match {
   const d = entry.match;
   const [day, month, year] = d.data.split('/').map(Number);
   const [hours, minutes] = d.hora.split(':').map(Number);
-  // CBF times are Brazil time (UTC-3)
   const date = new Date(Date.UTC(year, month - 1, day, hours + 3, minutes)).toISOString();
 
   const homeApiId = cbfIdToApiFootballId.get(d.mandante.id);
   const awayApiId = cbfIdToApiFootballId.get(d.visitante.id);
-
   const homeScore = d.mandante.gols !== '' && d.mandante.gols !== null ? Number(d.mandante.gols) : null;
   const awayScore = d.visitante.gols !== '' && d.visitante.gols !== null ? Number(d.visitante.gols) : null;
 
   return {
-    // Use CBF match ID — unique per match
     id: d.idJogo,
     homeTeam: {
-      // Use API-Football ID when available so highlight logic works; fallback to cbfId
       id: homeApiId ?? d.mandante.id,
       name: stripState(d.mandante.nome),
       shortName: cbfIdToShort.get(d.mandante.id) ?? stripState(d.mandante.nome).substring(0, 3).toUpperCase(),
@@ -82,19 +80,15 @@ function cbfToMatch(entry: PastEntry): Match {
   };
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type TabId = 'past' | 'schedule';
 
 interface RoundGroup {
-  /** Unique key: `${leagueId}:${round}` */
   key: string;
-  /** Header label shown to the user */
   groupLabel: string;
-  /** Short competition name — shown on the group header for non-Série-A groups */
   competitionName: string;
   leagueId: number;
-  /** True only for the first (earliest) upcoming group across all competitions */
   isCurrent: boolean;
   matches: Match[];
 }
@@ -104,9 +98,7 @@ interface PastEntry {
   match: CbfMatchDetail;
 }
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-// ─── Shared sub-components ────────────────────────────────────────────────────
+// ─── Sub-components ───────────────────────────────────────────────────────────
 
 function CurrentRoundHeader({ label }: { label: string }) {
   return (
@@ -159,129 +151,135 @@ function MatchCardSkeleton() {
   );
 }
 
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+
+/**
+ * A match is "upcoming or live" if it hasn't passed the live window yet,
+ * or if it was postponed. This is the inclusion rule for the schedule tab.
+ */
+function isUpcomingOrLive(match: Match): boolean {
+  if (match.status === 'postponed') return true;
+  return Date.now() <= new Date(match.date).getTime() + LIVE_WINDOW_MS;
+}
+
+/**
+ * Groups an ordered list of matches into RoundGroup objects for display.
+ * Matches must already be filtered to the active competition (if any).
+ */
+function buildScheduleGroups(matches: Match[], competitionFilter: number | null): RoundGroup[] {
+  const groups: RoundGroup[] = [];
+  const seenKeys = new Set<string>();
+
+  for (const match of matches) {
+    const key = `${match.leagueId}:${match.round}`;
+    if (seenKeys.has(key)) continue;
+    seenKeys.add(key);
+
+    const localisedRound = localiseRound(match.round);
+    const groupLabel =
+      match.leagueId === 71 || competitionFilter !== null
+        ? localisedRound
+        : `${match.competitionName} · ${localisedRound}`;
+
+    groups.push({
+      key,
+      groupLabel,
+      competitionName: match.competitionName,
+      leagueId: match.leagueId,
+      isCurrent: groups.length === 0,
+      matches: matches.filter(
+        (m) => m.leagueId === match.leagueId && m.round === match.round,
+      ),
+    });
+  }
+
+  return groups;
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export function MatchSection() {
   const { club } = useTheme();
 
+  // ── Schedule state ─────────────────────────────────────────────────────────
   const [allFixtures, setAllFixtures] = useState<Record<string, Match[]> | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
-  const fetchedRef = useRef(false);
+  const [scheduleLoading, setScheduleLoading] = useState(true);
+  const [scheduleError, setScheduleError] = useState(false);
+  const fixturesFetchedRef = useRef(false);
 
   const [previews, setPreviews] = useState<Record<string, MatchPreview> | null>(null);
   const [previewsLoading, setPreviewsLoading] = useState(false);
 
-  const [activeTab, setActiveTab] = useState<TabId>('schedule');
+  // ── Past results state ─────────────────────────────────────────────────────
+  // CBF (Série A) past fixtures — requires a round number from the server
   const [pastMatches, setPastMatches] = useState<PastEntry[] | null>(null);
   const [pastLoading, setPastLoading] = useState(false);
-  const pastFetchedRef = useRef(false);
 
+  // Non-CBF past results (CONMEBOL, Copa do Brasil, API-Football)
   const [otherResults, setOtherResults] = useState<Match[] | null>(null);
   const [otherResultsLoading, setOtherResultsLoading] = useState(false);
 
-  /** Active competition filter — null means "show all" */
+  // Round number used to query CBF past fixtures — comes from the server response,
+  // not from fixtures. Kept in state so it persists while the user is on the past tab.
+  const [serieARound, setSerieARound] = useState<number>(0);
+
+  // Tracks whether past data has been fetched for the current club+tab combination
+  const pastFetchedRef = useRef(false);
+
+  // ── UI state ───────────────────────────────────────────────────────────────
+  const [activeTab, setActiveTab] = useState<TabId>('schedule');
   const [competitionFilter, setCompetitionFilter] = useState<number | null>(null);
 
-  // Fallback Série A round number — persisted across cache misses so the "Resultados"
-  // tab stays visible even when the API cache is cold between rounds.
-  const [lastKnownRound, setLastKnownRound] = useState(0);
+  // ── Fetch: upcoming fixtures (schedule tab) ────────────────────────────────
   useEffect(() => {
-    const stored = Number(localStorage.getItem('lastKnownRound') ?? 0);
-    if (stored > 0) setLastKnownRound(stored);
-  }, []);
-
-  // Load all fixtures once
-  useEffect(() => {
-    if (fetchedRef.current) return;
-    fetchedRef.current = true;
+    if (fixturesFetchedRef.current) return;
+    fixturesFetchedRef.current = true;
 
     fetch('/api/fixtures')
       .then((res) => {
-        if (!res.ok) throw new Error('fetch failed');
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
         return res.json() as Promise<Record<string, Match[]>>;
       })
       .then((data) => {
         setAllFixtures(data);
-        setLoading(false);
+        setScheduleLoading(false);
       })
       .catch(() => {
-        setError(true);
-        setLoading(false);
+        setScheduleError(true);
+        setScheduleLoading(false);
       });
   }, []);
 
-  // All upcoming matches for the selected club (across all competitions)
-  const rawMatches: Match[] = club && allFixtures ? (allFixtures[club.id] ?? []) : [];
-  const allMatches = rawMatches.filter(
-    (m) => m.status === 'postponed' || Date.now() <= new Date(m.date).getTime() + LIVE_WINDOW_MS,
+  // ── Derived: upcoming + live matches for selected club ─────────────────────
+  const rawFixtures: Match[] = club && allFixtures ? (allFixtures[club.id] ?? []) : [];
+  const upcomingMatches = rawFixtures.filter(isUpcomingOrLive);
+
+  // Competitions represented in upcoming matches
+  const upcomingLeagueIds = [...new Set(upcomingMatches.map((m) => m.leagueId))];
+
+  // Round number for CBF queries — derived from the first Série A upcoming match
+  const derivedSerieARound = Number(
+    (rawFixtures.find((m) => m.leagueId === 71)?.round ?? '').match(/(\d+)/)?.[1] ?? 0,
   );
 
-  // Which competitions does this club have upcoming matches in?
-  const activeLeagueIds = [...new Set(allMatches.map((m) => m.leagueId))];
-
-  // Matches after applying competition filter
-  const filteredMatches = competitionFilter
-    ? allMatches.filter((m) => m.leagueId === competitionFilter)
-    : allMatches;
-
-  // Série A round tracking — needed for "Resultados" tab (CBF API only covers Série A)
-  const serieAMatches = rawMatches.filter((m) => m.leagueId === 71);
-  const firstSerieARound = serieAMatches[0]?.round ?? '';
-  const derivedRoundNum = Number(firstSerieARound.match(/(\d+)/)?.[1] ?? 0);
-  const currentRoundNum = derivedRoundNum || lastKnownRound;
-
+  // Keep serieARound up-to-date whenever fixtures load (or change between rounds)
   useEffect(() => {
-    if (derivedRoundNum > 0 && derivedRoundNum !== lastKnownRound) {
-      localStorage.setItem('lastKnownRound', String(derivedRoundNum));
-      setLastKnownRound(derivedRoundNum);
+    if (derivedSerieARound > 0) setSerieARound(derivedSerieARound);
+  }, [derivedSerieARound]);
+
+  // ── Fetch: past results ────────────────────────────────────────────────────
+  function fetchPastResults(clubId: string, roundNum: number) {
+    // CBF: only if we have a round number
+    if (roundNum > 1) {
+      setPastLoading(true);
+      fetch(`/api/past-fixtures?club=${clubId}&beforeRound=${roundNum + 1}&limit=3`)
+        .then((r) => (r.ok ? (r.json() as Promise<PastEntry[]>) : Promise.reject()))
+        .then((data) => setPastMatches(data))
+        .catch(() => setPastMatches([]))
+        .finally(() => setPastLoading(false));
     }
-  }, [derivedRoundNum, lastKnownRound]);
 
-  // Reset filter when club changes
-  useEffect(() => {
-    setCompetitionFilter(null);
-  }, [club?.id]);
-
-  // Build schedule groups: group by leagueId+round, sorted chronologically
-  const scheduleGroups: RoundGroup[] = [];
-  const seenKeys = new Set<string>();
-  for (const match of filteredMatches) {
-    const key = `${match.leagueId}:${match.round}`;
-    if (!seenKeys.has(key)) {
-      seenKeys.add(key);
-      const localisedRound = localiseRound(match.round);
-      // When viewing a single competition (filter active), show only the phase/round.
-      // In "Todos" mode with multiple competitions, prefix non-Série-A with competition name
-      // so the user knows which competition each group belongs to.
-      const groupLabel = (match.leagueId === 71 || competitionFilter !== null)
-        ? localisedRound
-        : `${match.competitionName} · ${localisedRound}`;
-      scheduleGroups.push({
-        key,
-        groupLabel,
-        competitionName: match.competitionName,
-        leagueId: match.leagueId,
-        isCurrent: scheduleGroups.length === 0, // first group is always "current"
-        matches: filteredMatches.filter((m) => m.leagueId === match.leagueId && m.round === match.round),
-      });
-    }
-  }
-
-  // Fetch previews for visible upcoming matches
-  const idsKey = filteredMatches.map((m) => m.id).join(',');
-  useEffect(() => {
-    if (!idsKey) return;
-    setPreviewsLoading(true);
-    setPreviews(null);
-    fetch(`/api/previews?ids=${idsKey}`)
-      .then((r) => (r.ok ? (r.json() as Promise<Record<string, MatchPreview>>) : null))
-      .then((data) => { if (data) setPreviews(data); })
-      .catch(() => {})
-      .finally(() => setPreviewsLoading(false));
-  }, [idsKey]);
-
-  function fetchOtherResults(clubId: string) {
+    // CONMEBOL + Copa do Brasil: always fetch, round-independent
     setOtherResultsLoading(true);
     fetch(`/api/past-results?club=${clubId}`)
       .then((r) => (r.ok ? (r.json() as Promise<Match[]>) : Promise.reject()))
@@ -290,82 +288,102 @@ export function MatchSection() {
       .finally(() => setOtherResultsLoading(false));
   }
 
-  // Reset past matches when club changes
+  // Reset past state whenever the selected club changes
   useEffect(() => {
     pastFetchedRef.current = false;
     setPastMatches(null);
     setOtherResults(null);
-    if (activeTab === 'past' && club && currentRoundNum > 1) {
+    setCompetitionFilter(null);
+
+    // If the user is already on the past tab, re-fetch immediately
+    if (activeTab === 'past' && club) {
       pastFetchedRef.current = true;
-      setPastLoading(true);
-      fetch(`/api/past-fixtures?club=${club.id}&beforeRound=${currentRoundNum + 1}&limit=3`)
-        .then((r) => (r.ok ? (r.json() as Promise<PastEntry[]>) : Promise.reject()))
-        .then((data) => setPastMatches(data))
-        .catch(() => setPastMatches([]))
-        .finally(() => setPastLoading(false));
-      fetchOtherResults(club.id);
+      fetchPastResults(club.id, serieARound);
     }
+  // serieARound intentionally excluded: round updates are handled separately below
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [club?.id]);
 
-  // Lazy-fetch past matches when tab is activated
-  function handleTabChange(tab: TabId) {
-    setActiveTab(tab);
-    if (tab === 'past' && !pastFetchedRef.current && club && currentRoundNum > 1) {
-      pastFetchedRef.current = true;
+  // Re-fetch CBF past fixtures when the round number becomes available and the past
+  // tab is active but CBF data hasn't loaded yet (e.g. fixtures arrived after tab open)
+  useEffect(() => {
+    if (
+      serieARound > 1 &&
+      activeTab === 'past' &&
+      club &&
+      pastFetchedRef.current &&
+      pastMatches === null &&
+      !pastLoading
+    ) {
       setPastLoading(true);
-      fetch(`/api/past-fixtures?club=${club.id}&beforeRound=${currentRoundNum + 1}&limit=3`)
+      fetch(`/api/past-fixtures?club=${club.id}&beforeRound=${serieARound + 1}&limit=3`)
         .then((r) => (r.ok ? (r.json() as Promise<PastEntry[]>) : Promise.reject()))
         .then((data) => setPastMatches(data))
         .catch(() => setPastMatches([]))
         .finally(() => setPastLoading(false));
-      fetchOtherResults(club.id);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serieARound]);
+
+  // ── Tab change handler ─────────────────────────────────────────────────────
+  function handleTabChange(tab: TabId) {
+    setActiveTab(tab);
+    if (tab === 'past' && !pastFetchedRef.current && club) {
+      pastFetchedRef.current = true;
+      fetchPastResults(club.id, serieARound);
     }
   }
 
+  // ── Fetch: previews for all upcoming matches (not filtered) ──────────────
+  // Always fetch all matches regardless of competitionFilter — the filter is
+  // visual only. This avoids a redundant API call every time the user clicks
+  // a competition pill, since the full result already contains every subset.
+  const filteredUpcoming = competitionFilter
+    ? upcomingMatches.filter((m) => m.leagueId === competitionFilter)
+    : upcomingMatches;
+
+  const allUpcomingIdsKey = upcomingMatches.map((m) => m.id).join(',');
+  useEffect(() => {
+    if (!allUpcomingIdsKey) return;
+    setPreviewsLoading(true);
+    setPreviews(null);
+    fetch(`/api/previews?ids=${allUpcomingIdsKey}`)
+      .then((r) => (r.ok ? (r.json() as Promise<Record<string, MatchPreview>>) : null))
+      .then((data) => { if (data) setPreviews(data); })
+      .catch(() => {})
+      .finally(() => setPreviewsLoading(false));
+  }, [allUpcomingIdsKey]);
+
   if (!club) return null;
 
-  const showPastTab = currentRoundNum > 0;
-
-  const tabs = [
-    showPastTab && { id: 'past' as TabId, label: 'Resultados' },
-    { id: 'schedule' as TabId, label: 'Próximos Jogos' },
-  ].filter(Boolean) as { id: TabId; label: string }[];
-
-  // League IDs derived from past results (populated after Resultados tab loads)
+  // ── Derived: past results display ──────────────────────────────────────────
   const safeOtherResults = Array.isArray(otherResults) ? otherResults : [];
-  const resultLeagueIds: number[] = [];
-  if (pastMatches && pastMatches.length > 0) resultLeagueIds.push(71);
+
+  // League IDs from past results — fed into the unified competition pill list
+  const pastLeagueIds: number[] = [];
+  if (pastMatches && pastMatches.length > 0) pastLeagueIds.push(71);
   for (const m of safeOtherResults) {
-    if (!resultLeagueIds.includes(m.leagueId)) resultLeagueIds.push(m.leagueId);
+    if (!pastLeagueIds.includes(m.leagueId)) pastLeagueIds.push(m.leagueId);
   }
 
-  // Unified competition pills: union of upcoming + historical so the same pills
-  // appear in both tabs and persist across tab switches.
-  const unifiedLeagueIds = [...new Set([...activeLeagueIds, ...resultLeagueIds])];
-  const hasMultipleCompetitions = unifiedLeagueIds.length > 1;
-  const unifiedCompetitionOptions = unifiedLeagueIds
-    .map((id) => {
-      if (id === 71) return { leagueId: 71, label: 'Brasileirão' };
-      const sample = allMatches.find((m) => m.leagueId === id)
-        ?? safeOtherResults.find((m) => m.leagueId === id);
-      return { leagueId: id, label: sample?.competitionName ?? String(id) };
-    })
-    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
-
-  // Resultados tab derived data
   const showSerieAResults = competitionFilter === null || competitionFilter === 71;
   const showOtherResults  = competitionFilter === null || competitionFilter !== 71;
-  const filteredOtherResults = (competitionFilter !== null && competitionFilter !== 71)
-    ? safeOtherResults.filter((m) => m.leagueId === competitionFilter)
-    : safeOtherResults;
-  const resultsDoneLoading = !(showSerieAResults && pastLoading) && !(showOtherResults && otherResultsLoading && !otherResults);
-  const resultsEmpty = resultsDoneLoading
-    && !(showSerieAResults && (pastMatches?.length ?? 0) > 0)
-    && !(showOtherResults && filteredOtherResults.length > 0);
 
-  // Merge CBF + API-Football results into a single chronologically sorted list.
-  // CBF entries carry a `data` string ("DD/MM/YYYY") + `hora` ("HH:MM") — convert to ISO for comparison.
+  const filteredOtherResults =
+    competitionFilter !== null && competitionFilter !== 71
+      ? safeOtherResults.filter((m) => m.leagueId === competitionFilter)
+      : safeOtherResults;
+
+  const pastStillLoading =
+    (showSerieAResults && pastLoading) ||
+    (showOtherResults && otherResultsLoading && otherResults === null);
+
+  const resultsEmpty =
+    !pastStillLoading &&
+    !(showSerieAResults && (pastMatches?.length ?? 0) > 0) &&
+    !(showOtherResults && filteredOtherResults.length > 0);
+
+  // Merge CBF + API-Football past results, newest first
   type MergedResult =
     | { kind: 'cbf'; round: number; match: CbfMatchDetail; dateMs: number }
     | { kind: 'api'; match: Match; dateMs: number };
@@ -386,15 +404,41 @@ export function MatchSection() {
     }
   }
 
-  if (showOtherResults && Array.isArray(filteredOtherResults)) {
+  if (showOtherResults && filteredOtherResults.length > 0) {
     for (const match of filteredOtherResults) {
       mergedResults.push({ kind: 'api', match, dateMs: new Date(match.date).getTime() });
     }
   }
 
-  // Newest first
   mergedResults.sort((a, b) => b.dateMs - a.dateMs);
 
+  // ── Derived: schedule groups ───────────────────────────────────────────────
+  const scheduleGroups = buildScheduleGroups(filteredUpcoming, competitionFilter);
+
+  // ── Derived: competition pills (union of upcoming + past leagues) ──────────
+  const allLeagueIds = [...new Set([...upcomingLeagueIds, ...pastLeagueIds])];
+  const hasMultipleCompetitions = allLeagueIds.length > 1;
+
+  const competitionOptions = allLeagueIds
+    .map((id) => {
+      if (id === 71) return { leagueId: 71, label: 'Brasileirão' };
+      const sample =
+        upcomingMatches.find((m) => m.leagueId === id) ??
+        safeOtherResults.find((m) => m.leagueId === id);
+      return { leagueId: id, label: sample?.competitionName ?? String(id) };
+    })
+    .sort((a, b) => a.label.localeCompare(b.label, 'pt-BR'));
+
+  // ── Tabs ───────────────────────────────────────────────────────────────────
+  // "Resultados" is always shown — every club has Copa do Brasil history and
+  // clubs with conmebolId also have Libertadores/Sul-Americana history.
+  // The tab does not depend on fixtures loading to be visible.
+  const tabs: { id: TabId; label: string }[] = [
+    { id: 'past',     label: 'Resultados'    },
+    { id: 'schedule', label: 'Próximos Jogos' },
+  ];
+
+  // ── Render ─────────────────────────────────────────────────────────────────
   return (
     <section aria-label={`Jogos — ${club.name}`}>
       <div className="mb-6 flex items-baseline gap-2">
@@ -405,34 +449,32 @@ export function MatchSection() {
       </div>
 
       {/* Tab navigation */}
-      {!loading && !error && tabs.length > 1 && (
-        <div className="flex bg-zinc-800 rounded-xl p-1 gap-1 mb-6" role="tablist">
-          {tabs.map((tab) => {
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                role="tab"
-                aria-selected={isActive}
-                onClick={() => handleTabChange(tab.id)}
-                className="flex-1 py-2 min-h-[44px] text-xs font-semibold font-sans rounded-lg transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500 cursor-pointer"
-                style={
-                  isActive
-                    ? { backgroundColor: 'var(--club-primary)', color: 'var(--club-text-on-primary)' }
-                    : undefined
-                }
-              >
-                <span className={isActive ? '' : 'text-zinc-400 hover:text-zinc-200 transition-colors'}>
-                  {tab.label}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      )}
+      <div className="flex bg-zinc-800 rounded-xl p-1 gap-1 mb-6" role="tablist">
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <button
+              key={tab.id}
+              role="tab"
+              aria-selected={isActive}
+              onClick={() => handleTabChange(tab.id)}
+              className="flex-1 py-2 min-h-[44px] text-xs font-semibold font-sans rounded-lg transition-all duration-150 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500 cursor-pointer"
+              style={
+                isActive
+                  ? { backgroundColor: 'var(--club-primary)', color: 'var(--club-text-on-primary)' }
+                  : undefined
+              }
+            >
+              <span className={isActive ? '' : 'text-zinc-400 hover:text-zinc-200 transition-colors'}>
+                {tab.label}
+              </span>
+            </button>
+          );
+        })}
+      </div>
 
-      {/* Competition filter pills — unified across both tabs, persists on tab switch */}
-      {!loading && !error && hasMultipleCompetitions && (activeTab === 'schedule' || !pastLoading) && (
+      {/* Competition filter pills — unified across both tabs */}
+      {hasMultipleCompetitions && (activeTab === 'schedule' || !pastStillLoading) && (
         <div className="flex items-center gap-2 flex-wrap mb-5" role="group" aria-label="Filtrar por competição">
           <button
             onClick={() => setCompetitionFilter(null)}
@@ -445,7 +487,7 @@ export function MatchSection() {
           >
             Todos
           </button>
-          {unifiedCompetitionOptions.map(({ leagueId, label }) => (
+          {competitionOptions.map(({ leagueId, label }) => (
             <button
               key={leagueId}
               onClick={() => setCompetitionFilter(leagueId === competitionFilter ? null : leagueId)}
@@ -455,7 +497,11 @@ export function MatchSection() {
                   ? 'text-zinc-900'
                   : 'bg-zinc-800 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700',
               ].join(' ')}
-              style={competitionFilter === leagueId ? { backgroundColor: 'var(--club-primary)', color: 'var(--club-text-on-primary)' } : undefined}
+              style={
+                competitionFilter === leagueId
+                  ? { backgroundColor: 'var(--club-primary)', color: 'var(--club-text-on-primary)' }
+                  : undefined
+              }
             >
               {label}
             </button>
@@ -463,92 +509,24 @@ export function MatchSection() {
         </div>
       )}
 
-      {/* Loading skeleton */}
-      {loading && (
-        <div className="space-y-4" role="status" aria-label="Carregando jogos">
-          <MatchCardSkeleton />
-          <MatchCardSkeleton />
-          <MatchCardSkeleton />
-        </div>
-      )}
-
-      {error && (
-        <p className="rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-8 text-center text-sm text-zinc-400 font-sans">
-          Não foi possível carregar os jogos. Tente novamente.
-        </p>
-      )}
-
-      {/* ── Resultados — lista mesclada (CBF + API-Football), ordenada por data ── */}
-      {!loading && !error && activeTab === 'past' && (
+      {/* ── Próximos Jogos (upcoming + live) ── */}
+      {activeTab === 'schedule' && (
         <>
-          {/* Skeletons enquanto alguma das fontes ainda carrega */}
-          {(showSerieAResults && pastLoading) && (
-            <div className="space-y-4" role="status" aria-label="Carregando resultados">
+          {scheduleLoading && (
+            <div className="space-y-4" role="status" aria-label="Carregando jogos">
               <MatchCardSkeleton />
-              <MatchCardSkeleton />
-              <MatchCardSkeleton />
-            </div>
-          )}
-          {(!pastLoading) && showOtherResults && otherResultsLoading && !otherResults && (
-            <div className="space-y-4" role="status" aria-label="Carregando outros resultados">
               <MatchCardSkeleton />
               <MatchCardSkeleton />
             </div>
           )}
 
-          {/* Lista mesclada — renderizada quando pelo menos uma fonte carregou */}
-          {!pastLoading && mergedResults.length > 0 && (
-            <div className="space-y-4">
-              {mergedResults.map((entry) => {
-                if (entry.kind === 'cbf') {
-                  const matchObj = cbfToMatch(entry);
-                  return (
-                    <MatchCard
-                      key={`cbf-${entry.round}`}
-                      match={matchObj}
-                      highlightClubId={club.apiFootballId != null ? String(club.apiFootballId) : matchObj.homeTeam.id}
-                      highlightCbfId={String(club.cbfId ?? '')}
-                      cbfMatchDetail={entry.match}
-                      cbfRound={entry.round}
-                      preview={undefined}
-                      previewLoading={false}
-                      noEmailGate
-                    />
-                  );
-                }
-                // CONMEBOL sources (Libertadores leagueId=13, Sul-Americana leagueId=11) use
-                // CONMEBOL team IDs in homeTeam.id/awayTeam.id — must match with conmebolId.
-                const isConmebolSource = entry.match.leagueId === 13 || entry.match.leagueId === 11;
-                const highlightId = isConmebolSource
-                  ? (club.conmebolId != null ? String(club.conmebolId) : entry.match.homeTeam.id)
-                  : (club.apiFootballId != null ? String(club.apiFootballId) : entry.match.homeTeam.id);
-                return (
-                  <MatchCard
-                    key={`api-${entry.match.id}`}
-                    match={entry.match}
-                    highlightClubId={highlightId}
-                    preview={undefined}
-                    previewLoading={false}
-                    noEmailGate
-                  />
-                );
-              })}
-            </div>
-          )}
-
-          {/* Estado vazio */}
-          {resultsEmpty && (
+          {scheduleError && (
             <p className="rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-8 text-center text-sm text-zinc-400 font-sans">
-              Sem resultados anteriores disponíveis.
+              Não foi possível carregar os jogos. Tente novamente.
             </p>
           )}
-        </>
-      )}
 
-      {/* ── Próximos Jogos (todas as competições) ── */}
-      {!loading && !error && activeTab === 'schedule' && (
-        <>
-          {scheduleGroups.length === 0 && (
+          {!scheduleLoading && !scheduleError && scheduleGroups.length === 0 && (
             <div className="rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-8 text-center font-sans space-y-2">
               <p className="text-sm text-zinc-400">
                 Nenhum jogo encontrado para {club.name}.
@@ -558,7 +536,8 @@ export function MatchSection() {
               </p>
             </div>
           )}
-          {scheduleGroups.length > 0 && (
+
+          {!scheduleLoading && !scheduleError && scheduleGroups.length > 0 && (
             <div>
               {scheduleGroups.map((group, groupIndex) => (
                 <div key={group.key}>
@@ -581,13 +560,79 @@ export function MatchSection() {
                   </div>
                 </div>
               ))}
-              {/* Calendário incompleto — jogos futuros aparecem quando confirmados pela liga */}
-              {competitionFilter === null && allMatches.length < 4 && (
+              {competitionFilter === null && upcomingMatches.length < 4 && (
                 <p className="mt-6 text-center text-xs text-zinc-600 font-sans">
                   Restante do calendário ainda não divulgado — novos jogos aparecem automaticamente quando confirmados.
                 </p>
               )}
             </div>
+          )}
+        </>
+      )}
+
+      {/* ── Resultados (past matches, all sources) ── */}
+      {activeTab === 'past' && (
+        <>
+          {/* Loading skeletons — shown per-source while each is still loading */}
+          {showSerieAResults && pastLoading && (
+            <div className="space-y-4" role="status" aria-label="Carregando resultados do Brasileirão">
+              <MatchCardSkeleton />
+              <MatchCardSkeleton />
+              <MatchCardSkeleton />
+            </div>
+          )}
+          {showOtherResults && otherResultsLoading && otherResults === null && !pastLoading && (
+            <div className="space-y-4" role="status" aria-label="Carregando outros resultados">
+              <MatchCardSkeleton />
+              <MatchCardSkeleton />
+            </div>
+          )}
+
+          {/* Merged result list — rendered as soon as at least one source has data */}
+          {!pastLoading && mergedResults.length > 0 && (
+            <div className="space-y-4">
+              {mergedResults.map((entry) => {
+                if (entry.kind === 'cbf') {
+                  const matchObj = cbfToMatch(entry);
+                  return (
+                    <MatchCard
+                      key={`cbf-${entry.round}`}
+                      match={matchObj}
+                      highlightClubId={club.apiFootballId != null ? String(club.apiFootballId) : matchObj.homeTeam.id}
+                      highlightCbfId={String(club.cbfId ?? '')}
+                      cbfMatchDetail={entry.match}
+                      cbfRound={entry.round}
+                      preview={undefined}
+                      previewLoading={false}
+                      noEmailGate
+                    />
+                  );
+                }
+
+                // CONMEBOL sources use conmebolId for highlight; others use apiFootballId
+                const isConmebolSource = entry.match.leagueId === 13 || entry.match.leagueId === 11;
+                const highlightId = isConmebolSource
+                  ? (club.conmebolId != null ? String(club.conmebolId) : entry.match.homeTeam.id)
+                  : (club.apiFootballId != null ? String(club.apiFootballId) : entry.match.homeTeam.id);
+
+                return (
+                  <MatchCard
+                    key={`api-${entry.match.id}`}
+                    match={entry.match}
+                    highlightClubId={highlightId}
+                    preview={undefined}
+                    previewLoading={false}
+                    noEmailGate
+                  />
+                );
+              })}
+            </div>
+          )}
+
+          {resultsEmpty && (
+            <p className="rounded-xl bg-zinc-900 border border-zinc-800 px-4 py-8 text-center text-sm text-zinc-400 font-sans">
+              Sem resultados anteriores disponíveis.
+            </p>
           )}
         </>
       )}

@@ -38,9 +38,17 @@
 
 ---
 
-## Scripts
+## Scripts de manutenção
 
-- [seed-cbf](scripts/seed-cbf.md) — pré-população do Redis com rodadas encerradas
+Scripts de aquecimento de cache Redis — executar antes de deploys e periodicamente (~5h).
+
+| Script | Descrição |
+|--------|-----------|
+| [seed-all](scripts/seed-all.md) | Orquestrador — executa todos os seeds na ordem correta |
+| [seed-cbf](scripts/seed-cbf.md) | Rodadas do Brasileirão (chaves permanentes) |
+| [seed-fixtures](scripts/seed-fixtures.md) | Próximos jogos das 4 competições (TTL 6h) |
+| [seed-form](scripts/seed-form.md) | Forma dos times na temporada (TTL 6h) |
+| [seed-past-results](scripts/seed-past-results.md) | Histórico W/D/L por clube (TTL 6h) |
 
 ---
 
