@@ -7,15 +7,12 @@ import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import { COMPETITIONS } from '@/data/competitions';
 import type { Competition } from '@/data/competitions';
-import type { StandingEntry } from '@/lib/types';
+import type { StandingEntry, CopaBracketData, CopaBracketFixture } from '@/lib/types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-// Exclude mata-mata competitions (Copa do Brasil) — they have no traditional
-// standings table, so showing the tab only creates a dead-end for the user.
-const STANDINGS_COMPETITIONS = COMPETITIONS.filter(
-  (c) => c.scope === 'club' && c.format !== 'mata-mata',
-);
+// Include all club competitions — Copa do Brasil now has its own bracket view.
+const STANDINGS_COMPETITIONS = COMPETITIONS.filter((c) => c.scope === 'club');
 
 interface StandingsResponse {
   groups: StandingEntry[][];
@@ -172,6 +169,113 @@ function GroupTable({
   );
 }
 
+// ─── Copa do Brasil bracket view ─────────────────────────────────────────────
+
+function TeamLogo({ src, name }: { src: string; name: string }) {
+  const [err, setErr] = React.useState(false);
+  if (err) return null;
+  return (
+    <img src={src} alt="" width={20} height={20}
+      className="object-contain shrink-0" aria-hidden="true"
+      onError={() => setErr(true)} />
+  );
+}
+
+function FixtureRow({ fixture, highlightTeamId }: { fixture: CopaBracketFixture; highlightTeamId?: number }) {
+  const homeHighlight = highlightTeamId === fixture.home.id;
+  const awayHighlight = highlightTeamId === fixture.away.id;
+  const hasPen = fixture.homePen !== null && fixture.awayPen !== null;
+
+  const scoreColor = (isWinner: boolean | null) =>
+    isWinner === true ? 'text-white font-bold' : isWinner === false ? 'text-zinc-600' : 'text-zinc-400';
+
+  const homeWon = fixture.winner === 'home';
+  const awayWon = fixture.winner === 'away';
+
+  return (
+    <div className={[
+      'grid grid-cols-[1fr_auto_1fr] items-center gap-2 px-3 py-2.5 border-b border-zinc-800/50 last:border-0',
+      (homeHighlight || awayHighlight) ? 'bg-amber-400/5' : 'hover:bg-zinc-800/30',
+    ].join(' ')}>
+      {/* Home */}
+      <div className={['flex items-center justify-end gap-1.5 min-w-0', homeHighlight ? 'text-white' : 'text-zinc-300'].join(' ')}>
+        <span className="text-xs font-sans truncate">{fixture.home.name}</span>
+        <TeamLogo src={fixture.home.logo} name={fixture.home.name} />
+      </div>
+
+      {/* Score / status */}
+      <div className="flex items-center gap-1 shrink-0 tabular-nums font-display">
+        {fixture.status === 'scheduled' ? (
+          <span className="text-xs text-zinc-600 font-sans px-1">
+            {fixture.date
+              ? new Intl.DateTimeFormat('pt-BR', { day: '2-digit', month: 'short', timeZone: 'America/Sao_Paulo' }).format(new Date(fixture.date))
+              : '–'}
+          </span>
+        ) : fixture.status === 'live' ? (
+          <span className="text-xs text-green-400 font-bold font-sans px-1 animate-pulse">Ao vivo</span>
+        ) : (
+          <div className="flex flex-col items-center">
+            <div className="flex items-center gap-1">
+              <span className={`text-sm ${scoreColor(homeWon)}`}>{fixture.homeScore ?? '–'}</span>
+              <span className="text-zinc-600 text-xs">–</span>
+              <span className={`text-sm ${scoreColor(awayWon)}`}>{fixture.awayScore ?? '–'}</span>
+            </div>
+            {hasPen && (
+              <span className="text-[9px] text-zinc-600 font-sans leading-none">
+                ({fixture.homePen} – {fixture.awayPen} pen.)
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Away */}
+      <div className={['flex items-center gap-1.5 min-w-0', awayHighlight ? 'text-white' : 'text-zinc-300'].join(' ')}>
+        <TeamLogo src={fixture.away.logo} name={fixture.away.name} />
+        <span className="text-xs font-sans truncate">{fixture.away.name}</span>
+      </div>
+    </div>
+  );
+}
+
+function CopaBracketView({ data, highlightTeamId }: { data: CopaBracketData; highlightTeamId?: number }) {
+  // Default to the most advanced round that has scheduled fixtures, or last round
+  const defaultRound = data.rounds.findLast((r) => r.fixtures.some((f) => f.status === 'scheduled'))
+    ?? data.rounds[data.rounds.length - 1];
+  const [selectedRound, setSelectedRound] = React.useState(defaultRound?.name ?? '');
+
+  const round = data.rounds.find((r) => r.name === selectedRound) ?? data.rounds[0];
+
+  return (
+    <div className="flex flex-col flex-1 overflow-hidden">
+      {/* Round tabs */}
+      <div className="flex gap-1 px-3 py-2 border-b border-zinc-800 shrink-0 overflow-x-auto scrollbar-none">
+        {data.rounds.map((r) => {
+          const active = r.name === selectedRound;
+          const allDone = r.fixtures.every((f) => f.status === 'finished');
+          return (
+            <button key={r.name} onClick={() => setSelectedRound(r.name)}
+              className={[
+                'shrink-0 rounded-full px-3 py-1 text-[11px] font-semibold font-sans transition-colors cursor-pointer whitespace-nowrap flex items-center gap-1',
+                active ? 'bg-white/10 text-white' : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/50',
+              ].join(' ')}>
+              {r.label}
+              {allDone && <span className="text-[9px] text-zinc-600">✓</span>}
+            </button>
+          );
+        })}
+      </div>
+
+      {/* Fixtures */}
+      <div className="overflow-y-auto flex-1">
+        {round?.fixtures.map((f) => (
+          <FixtureRow key={f.fixtureId} fixture={f} highlightTeamId={highlightTeamId} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 export function StandingsModal({ onClose }: { onClose: () => void }) {
   const { club } = useTheme();
@@ -188,6 +292,11 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [status, setStatus] = useState<'loading' | 'done' | 'error'>('loading');
   const [refreshing, setRefreshing] = useState(false);
+
+  const [bracketData, setBracketData] = useState<CopaBracketData | null>(null);
+  const [bracketStatus, setBracketStatus] = useState<'idle' | 'loading' | 'done' | 'error'>('idle');
+
+  const isCopa = selectedComp.id === 'copa-brasil';
 
   function fetchStandings(force = false) {
     const compId = selectedCompRef.current.id;
@@ -209,14 +318,28 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
       .finally(() => setRefreshing(false));
   }
 
+  function fetchBracket(force = false) {
+    if (!force && bracketStatus === 'done') return;
+    setBracketStatus('loading');
+    fetch(`/api/copa-bracket${force ? '?force=1' : ''}`)
+      .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<CopaBracketData>; })
+      .then((d) => { setBracketData(d); setBracketStatus('done'); })
+      .catch(() => setBracketStatus('error'));
+  }
+
   // Initial fetch
-  useEffect(() => { fetchStandings(); }, []);
+  useEffect(() => {
+    if (isCopa) fetchBracket();
+    else fetchStandings();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Refetch when competition tab changes (skip on mount — initial fetch covers it)
   const isFirstMount = useRef(true);
   useEffect(() => {
     if (isFirstMount.current) { isFirstMount.current = false; return; }
-    fetchStandings();
+    if (selectedCompRef.current.id === 'copa-brasil') fetchBracket();
+    else fetchStandings();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedComp]);
 
@@ -271,24 +394,27 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 shrink-0">
           <div>
             <p className="text-sm font-bold text-white font-display uppercase tracking-wide">
-              Tabela de Classificação
+              {isCopa ? 'Copa do Brasil' : 'Tabela de Classificação'}
             </p>
             <p className="text-xs text-zinc-500 font-sans mt-0.5">
               Temporada 2026
-              {updatedAt && (
+              {!isCopa && updatedAt && (
                 <span className="ml-1.5 text-zinc-600">· Atualizada {formatAge(updatedAt)}</span>
+              )}
+              {isCopa && bracketData && (
+                <span className="ml-1.5 text-zinc-600">· Atualizada {formatAge(bracketData.updatedAt)}</span>
               )}
             </p>
           </div>
           <div className="flex items-center gap-1">
-            {status === 'done' && (
+            {((!isCopa && status === 'done') || (isCopa && bracketStatus === 'done')) && (
               <button
-                onClick={() => fetchStandings(true)}
-                disabled={refreshing}
+                onClick={() => isCopa ? fetchBracket(true) : fetchStandings(true)}
+                disabled={refreshing || bracketStatus === 'loading'}
                 className="h-8 w-8 flex items-center justify-center rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors cursor-pointer disabled:cursor-not-allowed disabled:opacity-50"
-                aria-label="Atualizar tabela"
+                aria-label="Atualizar"
               >
-                <ArrowPathIcon className={`w-4 h-4 shrink-0 transition-transform ${refreshing ? 'animate-spin' : ''}`} aria-hidden="true" />
+                <ArrowPathIcon className={`w-4 h-4 shrink-0 transition-transform ${(refreshing || bracketStatus === 'loading') ? 'animate-spin' : ''}`} aria-hidden="true" />
               </button>
             )}
             <button
@@ -322,8 +448,29 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
           })}
         </div>
 
-        {/* Loading */}
-        {status === 'loading' && (
+        {/* Copa do Brasil — bracket view */}
+        {isCopa && bracketStatus === 'loading' && (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <div className="space-y-2 w-full animate-pulse">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <div key={i} className="h-9 bg-zinc-800 rounded" />
+              ))}
+            </div>
+          </div>
+        )}
+        {isCopa && bracketStatus === 'error' && (
+          <div className="flex-1 flex items-center justify-center p-8">
+            <p className="text-sm text-zinc-400 font-sans text-center">
+              Não foi possível carregar os confrontos. Tente novamente.
+            </p>
+          </div>
+        )}
+        {isCopa && bracketStatus === 'done' && bracketData && (
+          <CopaBracketView data={bracketData} highlightTeamId={highlightTeamId} />
+        )}
+
+        {/* Loading (standings) */}
+        {!isCopa && status === 'loading' && (
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="space-y-2 w-full animate-pulse">
               {Array.from({ length: 8 }).map((_, i) => (
@@ -333,21 +480,11 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
           </div>
         )}
 
-        {/* Error */}
-        {status === 'error' && (
+        {/* Error (standings) */}
+        {!isCopa && status === 'error' && (
           <div className="flex-1 flex items-center justify-center p-8">
             <p className="text-sm text-zinc-400 font-sans text-center">
               Não foi possível carregar a tabela. Tente novamente.
-            </p>
-          </div>
-        )}
-
-        {/* Mata-mata: no traditional standings */}
-        {status === 'done' && format === 'mata-mata' && (
-          <div className="flex-1 flex items-center justify-center p-8">
-            <p className="text-sm text-zinc-400 font-sans text-center leading-relaxed">
-              A {selectedComp.name} usa formato mata-mata.<br />
-              A tabela de classificação não se aplica.
             </p>
           </div>
         )}

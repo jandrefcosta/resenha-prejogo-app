@@ -123,6 +123,18 @@ export interface Match {
   hadExtraTime?: boolean;
   /** True when match was played at a neutral venue */
   isNeutralVenue?: boolean;
+  /**
+   * API-Football fixture ID — present only when the primary source is API-Football.
+   * Absent for CONMEBOL-sourced matches (where match.id is a CONMEBOL internal ID).
+   * Used to safely call /api/match-events without hitting the wrong fixture.
+   */
+  apiFootballFixtureId?: number;
+  /**
+   * API-Football team IDs for home/away — needed to correctly assign goal sides
+   * when the match source uses different IDs (e.g. CONMEBOL IDs in homeTeam.id).
+   */
+  apiFootballHomeId?: number;
+  apiFootballAwayId?: number;
 }
 
 export interface StandingEntry {
@@ -308,6 +320,59 @@ export interface ConmebolTournamentData {
 }
 
 export type ConmebolMatchStatus = 'finished' | 'live' | 'post-match' | 'upcoming';
+
+// ─── Copa do Brasil bracket ───────────────────────────────────────────────────
+
+export interface CopaBracketFixture {
+  fixtureId: number;
+  date: string | null;
+  home: { id: number; name: string; logo: string };
+  away: { id: number; name: string; logo: string };
+  /** null = not yet played */
+  homeScore: number | null;
+  awayScore: number | null;
+  /** penalty score, if applicable */
+  homePen: number | null;
+  awayPen: number | null;
+  /** 'finished' | 'scheduled' | 'live' */
+  status: 'finished' | 'scheduled' | 'live';
+  winner: 'home' | 'away' | null;
+}
+
+export interface CopaBracketRound {
+  /** e.g. "Round of 32", "1/128-finals" */
+  name: string;
+  /** Display label in pt-BR */
+  label: string;
+  fixtures: CopaBracketFixture[];
+}
+
+export interface CopaBracketData {
+  rounds: CopaBracketRound[];
+  updatedAt: string;
+  ttlSeconds: number;
+}
+
+// ─── Match events (API-Football /fixtures/events) ─────────────────────────────
+
+export interface MatchGoalEvent {
+  /** Player who scored */
+  playerName: string;
+  /** Assist player name, if available */
+  assistName: string | null;
+  /** Minute of the goal */
+  minute: number;
+  /** Extra time minute, if applicable */
+  minuteExtra: number | null;
+  /** 'home' | 'away' */
+  side: 'home' | 'away';
+  /** 'Normal Goal' | 'Own Goal' | 'Penalty' */
+  type: string;
+}
+
+export interface MatchEventsData {
+  goals: MatchGoalEvent[];
+}
 
 /** State used to compute cache TTL */
 export type CbfRoundStatus = 'finished' | 'live' | 'upcoming';

@@ -3,11 +3,86 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTheme } from '@/components/ThemeProvider';
 import { MatchCard } from '@/components/MatchCard';
-import { ResultCard } from '@/components/ResultCard';
-import { SimpleResultCard } from '@/components/SimpleResultCard';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import type { Match, MatchPreview, CbfMatchDetail } from '@/lib/types';
 import { localiseRound } from '@/lib/localiseRound';
+import clubsData from '@/data/clubs.json';
+import type { ClubTheme } from '@/lib/types';
+
+// ─── CBF → Match converter ────────────────────────────────────────────────────
+
+const clubs = clubsData as ClubTheme[];
+
+/** cbfId → API-Football logo URL */
+const cbfIdToLogo = new Map<string, string>(
+  clubs
+    .filter((c) => c.cbfId != null && c.apiFootballId != null)
+    .map((c) => [
+      String(c.cbfId),
+      `https://media.api-sports.io/football/teams/${c.apiFootballId}.png`,
+    ]),
+);
+
+/** cbfId → API-Football team ID string (used as Match.homeTeam.id / awayTeam.id) */
+const cbfIdToApiFootballId = new Map<string, string>(
+  clubs
+    .filter((c) => c.cbfId != null && c.apiFootballId != null)
+    .map((c) => [String(c.cbfId), String(c.apiFootballId)]),
+);
+
+/** cbfId → shortName */
+const cbfIdToShort = new Map<string, string>(
+  clubs
+    .filter((c) => c.cbfId != null)
+    .map((c) => [String(c.cbfId), c.shortName]),
+);
+
+function stripState(name: string): string {
+  return name.replace(/\s*-\s*[A-Z]{2}$/, '');
+}
+
+function cbfToMatch(entry: PastEntry): Match {
+  const d = entry.match;
+  const [day, month, year] = d.data.split('/').map(Number);
+  const [hours, minutes] = d.hora.split(':').map(Number);
+  // CBF times are Brazil time (UTC-3)
+  const date = new Date(Date.UTC(year, month - 1, day, hours + 3, minutes)).toISOString();
+
+  const homeApiId = cbfIdToApiFootballId.get(d.mandante.id);
+  const awayApiId = cbfIdToApiFootballId.get(d.visitante.id);
+
+  const homeScore = d.mandante.gols !== '' && d.mandante.gols !== null ? Number(d.mandante.gols) : null;
+  const awayScore = d.visitante.gols !== '' && d.visitante.gols !== null ? Number(d.visitante.gols) : null;
+
+  return {
+    // Use CBF match ID — unique per match
+    id: d.idJogo,
+    homeTeam: {
+      // Use API-Football ID when available so highlight logic works; fallback to cbfId
+      id: homeApiId ?? d.mandante.id,
+      name: stripState(d.mandante.nome),
+      shortName: cbfIdToShort.get(d.mandante.id) ?? stripState(d.mandante.nome).substring(0, 3).toUpperCase(),
+      logo: cbfIdToLogo.get(d.mandante.id),
+    },
+    awayTeam: {
+      id: awayApiId ?? d.visitante.id,
+      name: stripState(d.visitante.nome),
+      shortName: cbfIdToShort.get(d.visitante.id) ?? stripState(d.visitante.nome).substring(0, 3).toUpperCase(),
+      logo: cbfIdToLogo.get(d.visitante.id),
+    },
+    date,
+    stadium: d.local ? d.local.split(' - ')[0] : null,
+    city: null,
+    competition: 'Campeonato Brasileiro Série A',
+    leagueId: 71,
+    competitionName: 'Brasileirão',
+    round: `Rodada ${entry.round}`,
+    status: 'finished',
+    score: homeScore !== null && awayScore !== null ? { home: homeScore, away: awayScore } : undefined,
+  };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 type TabId = 'past' | 'schedule';
 
@@ -424,22 +499,40 @@ export function MatchSection() {
           {/* Lista mesclada — renderizada quando pelo menos uma fonte carregou */}
           {!pastLoading && mergedResults.length > 0 && (
             <div className="space-y-4">
-              {mergedResults.map((entry) =>
-                entry.kind === 'cbf' ? (
-                  <ResultCard
-                    key={`cbf-${entry.round}`}
-                    roundN={entry.round}
-                    data={entry.match}
-                    highlightCbfId={String(club.cbfId ?? '')}
-                  />
-                ) : (
-                  <SimpleResultCard
+              {mergedResults.map((entry) => {
+                if (entry.kind === 'cbf') {
+                  const matchObj = cbfToMatch(entry);
+                  return (
+                    <MatchCard
+                      key={`cbf-${entry.round}`}
+                      match={matchObj}
+                      highlightClubId={club.apiFootballId != null ? String(club.apiFootballId) : matchObj.homeTeam.id}
+                      highlightCbfId={String(club.cbfId ?? '')}
+                      cbfMatchDetail={entry.match}
+                      cbfRound={entry.round}
+                      preview={undefined}
+                      previewLoading={false}
+                      noEmailGate
+                    />
+                  );
+                }
+                // CONMEBOL sources (Libertadores leagueId=13, Sul-Americana leagueId=11) use
+                // CONMEBOL team IDs in homeTeam.id/awayTeam.id — must match with conmebolId.
+                const isConmebolSource = entry.match.leagueId === 13 || entry.match.leagueId === 11;
+                const highlightId = isConmebolSource
+                  ? (club.conmebolId != null ? String(club.conmebolId) : entry.match.homeTeam.id)
+                  : (club.apiFootballId != null ? String(club.apiFootballId) : entry.match.homeTeam.id);
+                return (
+                  <MatchCard
                     key={`api-${entry.match.id}`}
                     match={entry.match}
-                    highlightApiFootballId={club.apiFootballId != null ? String(club.apiFootballId) : undefined}
+                    highlightClubId={highlightId}
+                    preview={undefined}
+                    previewLoading={false}
+                    noEmailGate
                   />
-                )
-              )}
+                );
+              })}
             </div>
           )}
 

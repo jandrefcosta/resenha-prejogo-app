@@ -160,8 +160,8 @@ export function SimpleResultCard({
               <img
                 src={match.homeTeam.logo}
                 alt=""
-                width={32}
-                height={32}
+                width={48}
+                height={48}
                 className="object-contain shrink-0"
                 aria-hidden="true"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
@@ -211,8 +211,8 @@ export function SimpleResultCard({
               <img
                 src={match.awayTeam.logo}
                 alt=""
-                width={32}
-                height={32}
+                width={48}
+                height={48}
                 className="object-contain shrink-0"
                 aria-hidden="true"
                 onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}

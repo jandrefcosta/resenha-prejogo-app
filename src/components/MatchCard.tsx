@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { XMarkIcon, ClockIcon, UsersIcon, DocumentTextIcon, ShareIcon } from '@heroicons/react/20/solid';
 import { SoccerBallIcon } from '@/components/SoccerBallIcon';
-import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer } from '@/lib/types';
+import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer, MatchEventsData } from '@/lib/types';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
@@ -23,7 +23,8 @@ function BroadcasterBadge({ name }: { name: string }) {
   );
 }
 
-function TeamLogo({ src, alt, size = 32 }: { src?: string; alt: string; size?: number }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function TeamLogo({ src, alt: _alt, size = 32 }: { src?: string; alt: string; size?: number }) {
   const [errored, setErrored] = useState(false);
   if (!src || errored) return null;
   return (
@@ -307,6 +308,9 @@ function H2HModalContent({ data, match }: { data: H2HData; match: Match }) {
 // ─── Players modal content ────────────────────────────────────────────────────
 
 function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Match }) {
+  const isBrasileirao = match.leagueId === 71;
+  const competitionLabel = isBrasileirao ? match.competitionName : 'Brasileirão Série A';
+
   const teams = [
     { label: match.homeTeam.name, shortName: match.homeTeam.shortName, players: data.home },
     { label: match.awayTeam.name, shortName: match.awayTeam.shortName, players: data.away },
@@ -314,6 +318,9 @@ function PlayersModalContent({ data, match }: { data: TeamPlayersData; match: Ma
 
   return (
     <>
+      <p className="text-xs text-zinc-600 font-sans mb-1">
+        Destaque no {competitionLabel} · temporada {new Date().getFullYear()}
+      </p>
       {teams.map((team) => (
         <section key={team.label}>
           <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3 font-sans">
@@ -360,12 +367,19 @@ function NonCbfFichaContent({
   hoursUntilKickoff,
   injuries,
   injuriesLoading,
+  events,
+  eventsLoading,
+  eventsSupported,
 }: {
   match: Match;
   isLive: boolean;
   hoursUntilKickoff: number;
   injuries: InjuredPlayer[];
   injuriesLoading: boolean;
+  events: MatchEventsData | null;
+  eventsLoading: boolean;
+  /** False for CONMEBOL-sourced matches where the fixture ID is not an API-Football ID */
+  eventsSupported: boolean;
 }) {
   const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
 
@@ -376,6 +390,14 @@ function NonCbfFichaContent({
     : { label: `Pré-jogo · ${hoursUntilKickoff > 24 ? `${Math.ceil(hoursUntilKickoff / 24)}d` : `${Math.round(hoursUntilKickoff)}h`}`, cls: 'text-zinc-400 border-zinc-700 bg-zinc-800' };
 
   const hasScore = isPostMatch && match.score?.home !== null && match.score?.away !== null;
+  const homeGoals = events?.goals.filter((g) => g.side === 'home') ?? [];
+  const awayGoals = events?.goals.filter((g) => g.side === 'away') ?? [];
+
+  function goalLabel(type: string): string {
+    if (type === 'Own Goal') return '(contra)';
+    if (type === 'Penalty') return '(pen.)';
+    return '';
+  }
 
   return (
     <>
@@ -384,27 +406,7 @@ function NonCbfFichaContent({
         {phaseBanner.label}
       </div>
 
-      {/* Score — available from API-Football for finished matches */}
-      <section>
-        <SectionHeader label="Resultado" />
-        {hasScore ? (
-          <div className="flex items-center justify-center gap-6 rounded-xl bg-zinc-800 py-4 px-4">
-            <p className="flex-1 text-right text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
-            <div className="flex items-center gap-3 shrink-0">
-              <span className="text-4xl font-black font-display text-white tabular-nums">{match.score!.home}</span>
-              <span className="text-xl font-black font-display text-zinc-600">–</span>
-              <span className="text-4xl font-black font-display text-white tabular-nums">{match.score!.away}</span>
-            </div>
-            <p className="flex-1 text-left text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
-          </div>
-        ) : isLive ? (
-          <Pending>Jogo em andamento — placar atualizado após o apito final</Pending>
-        ) : (
-          <Pending>Disponível após o apito final</Pending>
-        )}
-      </section>
-
-      {/* Injuries — fetched via H2H endpoint, available for all competitions */}
+      {/* 1. Desfalques — pré-jogo */}
       <section>
         <SectionHeader label="Principais Desfalques" />
         {injuriesLoading ? (
@@ -429,9 +431,62 @@ function NonCbfFichaContent({
         )}
       </section>
 
-      <p className="text-xs text-zinc-700 font-sans text-center">
-        Ficha detalhada disponível apenas para Brasileirão Série A
-      </p>
+      {/* 2. Resultado — disponível após o apito final */}
+      <section>
+        <SectionHeader label="Resultado" />
+        {hasScore ? (
+          <div className="flex items-center justify-center gap-6 rounded-xl bg-zinc-800 py-4 px-4">
+            <p className="flex-1 text-right text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="text-4xl font-black font-display text-white tabular-nums">{match.score!.home}</span>
+              <span className="text-xl font-black font-display text-zinc-600">–</span>
+              <span className="text-4xl font-black font-display text-white tabular-nums">{match.score!.away}</span>
+            </div>
+            <p className="flex-1 text-left text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
+          </div>
+        ) : isLive ? (
+          <Pending>Jogo em andamento — placar atualizado após o apito final</Pending>
+        ) : (
+          <Pending>Disponível após o apito final</Pending>
+        )}
+      </section>
+
+      {/* 3. Gols — disponível após o apito final, apenas quando a fonte suporta events */}
+      {(isPostMatch || isLive) && eventsSupported && (
+        <section>
+          <SectionHeader label="Gols" />
+          {eventsLoading ? (
+            <div className="space-y-1 animate-pulse">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-8 bg-zinc-800 rounded-lg" />
+              ))}
+            </div>
+          ) : (homeGoals.length > 0 || awayGoals.length > 0) ? (
+            <div className="space-y-1">
+              {[...homeGoals.map(g => ({ ...g, shortName: match.homeTeam.shortName })),
+                 ...awayGoals.map(g => ({ ...g, shortName: match.awayTeam.shortName }))]
+                .sort((a, b) => a.minute - b.minute)
+                .map((g, i) => (
+                  <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                    <SoccerBallIcon className="w-4 h-4 shrink-0" />
+                    <span className="font-medium text-zinc-200 flex-1">
+                      {g.playerName}
+                      {goalLabel(g.type) && (
+                        <span className="text-zinc-500 ml-1">{goalLabel(g.type)}</span>
+                      )}
+                    </span>
+                    <span className="text-zinc-500 shrink-0">{g.shortName}</span>
+                    <span className="text-zinc-600 tabular-nums shrink-0">
+                      {g.minute}{g.minuteExtra ? `+${g.minuteExtra}` : ''}&apos;
+                    </span>
+                  </div>
+                ))}
+            </div>
+          ) : (
+            <Pending>{isPostMatch ? 'Sem gols registrados' : 'Disponível após o apito final'}</Pending>
+          )}
+        </section>
+      )}
     </>
   );
 }
@@ -548,107 +603,7 @@ function CbfMatchModalContent({
         </p>
       )}
 
-      {/* ── Resultado ─────────────────────────────────────────────────────── */}
-      <section>
-        <SectionHeader label="Resultado" />
-        {hasScore ? (
-          <div className="flex items-center justify-center gap-6 rounded-xl bg-zinc-800 py-4 px-4">
-            <p className="flex-1 text-right text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
-            <div className="flex flex-col items-center gap-0.5 shrink-0">
-              <div className="flex items-center gap-3">
-                <span className="text-4xl font-black font-display text-white tabular-nums">{data!.mandante.gols}</span>
-                <span className="text-xl font-black font-display text-zinc-600">–</span>
-                <span className="text-4xl font-black font-display text-white tabular-nums">{data!.visitante.gols}</span>
-              </div>
-              <span className="flex items-center gap-0.5 text-[9px] font-semibold text-zinc-600 font-sans uppercase tracking-wide">
-                <SoccerBallIcon className="w-2.5 h-2.5 shrink-0" /> Gols
-              </span>
-            </div>
-            <p className="flex-1 text-left text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
-          </div>
-        ) : (
-          <Pending>
-            {isLive ? 'Jogo em andamento — placar não disponível aqui' : 'Disponível após o apito final'}
-          </Pending>
-        )}
-      </section>
-
-      {/* ── Gols ──────────────────────────────────────────────────────────── */}
-      <section>
-        <SectionHeader label="Gols" />
-        {(homeGoals.length > 0 || awayGoals.length > 0) ? (
-          <div className="space-y-1">
-            {[...homeGoals.map(g => ({ ...g, short: match.homeTeam.shortName })),
-               ...awayGoals.map(g => ({ ...g, short: match.awayTeam.shortName }))].map((g, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
-                <SoccerBallIcon className="w-4 h-4 shrink-0" />
-                <span className="font-medium text-zinc-200 flex-1">{g.atletaApelido || g.atletaNome}</span>
-                <span className="text-zinc-500">{g.short}</span>
-                <span className="text-zinc-600 tabular-nums">{g.minutos}&apos;</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Pending>{isPostMatch ? 'Sem gols registrados' : 'Disponível após o apito final'}</Pending>
-        )}
-      </section>
-
-      {/* ── Cartões ───────────────────────────────────────────────────────── */}
-      <section>
-        <SectionHeader label="Cartões" />
-        {(homeCards.length > 0 || awayCards.length > 0) ? (
-          <div className="space-y-1">
-            {[...homeCards, ...awayCards].map((c, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
-                <span className={`inline-block w-2.5 h-3.5 rounded-sm shrink-0 ${CARD_COLORS[c.resultado] ?? 'bg-zinc-500'}`} aria-hidden="true" />
-                <span className="font-medium text-zinc-200 flex-1">{c.atletaApelido || c.atletaNome}</span>
-                <span className="text-zinc-500 shrink-0">
-                  {c.clubeId === data!.mandante.id ? match.homeTeam.shortName : match.awayTeam.shortName}
-                </span>
-                <span className="text-zinc-600 shrink-0">{CARD_LABELS[c.resultado] ?? c.resultado}</span>
-                <span className="text-zinc-600 tabular-nums shrink-0">{c.minutos}&apos;</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Pending>{isPostMatch ? 'Sem cartões registrados' : 'Disponível após o apito final'}</Pending>
-        )}
-      </section>
-
-      {/* ── Escalação ─────────────────────────────────────────────────────── */}
-      <section>
-        <SectionHeader label="Escalação" />
-        {(homeStarters.length > 0 || awayStarters.length > 0) ? (
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: match.homeTeam.shortName, players: homeStarters },
-              { label: match.awayTeam.shortName, players: awayStarters },
-            ].map(({ label, players }) => (
-              <div key={label}>
-                <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}</p>
-                <div className="space-y-0.5">
-                  {players.map((p) => (
-                    <div key={p.id} className="flex items-center gap-1.5 text-xs font-sans">
-                      <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.numeroCamisa}</span>
-                      <span className="text-zinc-300 truncate">{p.apelido.replace(/^\d+\s+-\s+/, '')}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Pending>
-            {isPostMatch
-              ? 'Escalação não publicada'
-              : isLive
-              ? 'Sendo confirmada'
-              : 'Publicada ~48h antes do jogo'}
-          </Pending>
-        )}
-      </section>
-
-      {/* ── Arbitragem ────────────────────────────────────────────────────── */}
+      {/* ── 1. Arbitragem — confirmada ~48h antes ─────────────────────────── */}
       <section>
         <SectionHeader label="Arbitragem" />
         {refName || mainRef ? (
@@ -682,7 +637,40 @@ function CbfMatchModalContent({
         )}
       </section>
 
-      {/* ── Principais Desfalques ──────────────────────────────────────── */}
+      {/* ── 2. Escalação — publicada ~48h antes ───────────────────────────── */}
+      <section>
+        <SectionHeader label="Escalação" />
+        {(homeStarters.length > 0 || awayStarters.length > 0) ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: match.homeTeam.shortName, players: homeStarters },
+              { label: match.awayTeam.shortName, players: awayStarters },
+            ].map(({ label, players }) => (
+              <div key={label}>
+                <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}</p>
+                <div className="space-y-0.5">
+                  {players.map((p) => (
+                    <div key={p.id} className="flex items-center gap-1.5 text-xs font-sans">
+                      <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.numeroCamisa}</span>
+                      <span className="text-zinc-300 truncate">{p.apelido.replace(/^\d+\s+-\s+/, '')}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Pending>
+            {isPostMatch
+              ? 'Escalação não publicada'
+              : isLive
+              ? 'Sendo confirmada'
+              : 'Publicada ~48h antes do jogo'}
+          </Pending>
+        )}
+      </section>
+
+      {/* ── 3. Desfalques — pré-jogo ──────────────────────────────────────── */}
       <section>
         <SectionHeader label="Principais Desfalques" />
         {injuriesLoading ? (
@@ -706,6 +694,73 @@ function CbfMatchModalContent({
           <Pending>Sem desfalques confirmados</Pending>
         )}
       </section>
+
+      {/* ── 4. Resultado — após o apito final ─────────────────────────────── */}
+      <section>
+        <SectionHeader label="Resultado" />
+        {hasScore ? (
+          <div className="flex items-center justify-center gap-6 rounded-xl bg-zinc-800 py-4 px-4">
+            <p className="flex-1 text-right text-xs text-zinc-400 font-sans truncate">{match.homeTeam.name}</p>
+            <div className="flex flex-col items-center gap-0.5 shrink-0">
+              <div className="flex items-center gap-3">
+                <span className="text-4xl font-black font-display text-white tabular-nums">{data!.mandante.gols}</span>
+                <span className="text-xl font-black font-display text-zinc-600">–</span>
+                <span className="text-4xl font-black font-display text-white tabular-nums">{data!.visitante.gols}</span>
+              </div>
+              <span className="flex items-center gap-0.5 text-[9px] font-semibold text-zinc-600 font-sans uppercase tracking-wide">
+                <SoccerBallIcon className="w-2.5 h-2.5 shrink-0" /> Gols
+              </span>
+            </div>
+            <p className="flex-1 text-left text-xs text-zinc-400 font-sans truncate">{match.awayTeam.name}</p>
+          </div>
+        ) : (
+          <Pending>
+            {isLive ? 'Jogo em andamento — placar não disponível aqui' : 'Disponível após o apito final'}
+          </Pending>
+        )}
+      </section>
+
+      {/* ── 5. Gols — após o apito final ──────────────────────────────────── */}
+      <section>
+        <SectionHeader label="Gols" />
+        {(homeGoals.length > 0 || awayGoals.length > 0) ? (
+          <div className="space-y-1">
+            {[...homeGoals.map(g => ({ ...g, short: match.homeTeam.shortName })),
+               ...awayGoals.map(g => ({ ...g, short: match.awayTeam.shortName }))].map((g, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <SoccerBallIcon className="w-4 h-4 shrink-0" />
+                <span className="font-medium text-zinc-200 flex-1">{g.atletaApelido || g.atletaNome}</span>
+                <span className="text-zinc-500">{g.short}</span>
+                <span className="text-zinc-600 tabular-nums">{g.minutos}&apos;</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Pending>{isPostMatch ? 'Sem gols registrados' : 'Disponível após o apito final'}</Pending>
+        )}
+      </section>
+
+      {/* ── 6. Cartões — após o apito final ───────────────────────────────── */}
+      <section>
+        <SectionHeader label="Cartões" />
+        {(homeCards.length > 0 || awayCards.length > 0) ? (
+          <div className="space-y-1">
+            {[...homeCards, ...awayCards].map((c, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className={`inline-block w-2.5 h-3.5 rounded-sm shrink-0 ${CARD_COLORS[c.resultado] ?? 'bg-zinc-500'}`} aria-hidden="true" />
+                <span className="font-medium text-zinc-200 flex-1">{c.atletaApelido || c.atletaNome}</span>
+                <span className="text-zinc-500 shrink-0">
+                  {c.clubeId === data!.mandante.id ? match.homeTeam.shortName : match.awayTeam.shortName}
+                </span>
+                <span className="text-zinc-600 shrink-0">{CARD_LABELS[c.resultado] ?? c.resultado}</span>
+                <span className="text-zinc-600 tabular-nums shrink-0">{c.minutos}&apos;</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Pending>{isPostMatch ? 'Sem cartões registrados' : 'Disponível após o apito final'}</Pending>
+        )}
+      </section>
     </>
   );
 }
@@ -713,12 +768,10 @@ function CbfMatchModalContent({
 // ─── Inline form strip ────────────────────────────────────────────────────────
 
 function FormStrip({ homeForm, awayForm, loading }: { homeForm: string[]; awayForm: string[]; loading: boolean }) {
-
   const noData = !loading && homeForm.length === 0 && awayForm.length === 0;
-  if (noData) return null;
 
   return (
-    <div className="mt-3 flex items-center justify-between gap-2">
+    <div className="mt-3 flex items-center justify-between gap-2 min-h-[20px]">
       {loading ? (
         <>
           <div className="flex gap-1 animate-pulse">
@@ -728,6 +781,8 @@ function FormStrip({ homeForm, awayForm, loading }: { homeForm: string[]; awayFo
             {Array.from({ length: 5 }).map((_, i) => <div key={i} className="w-5 h-5 bg-zinc-800 rounded" />)}
           </div>
         </>
+      ) : noData ? (
+        <span className="text-xs text-zinc-700 font-sans italic">forma indisponível</span>
       ) : (
         <>
           <div className="flex gap-1">
@@ -766,23 +821,38 @@ type FetchStatus = 'idle' | 'loading' | 'done' | 'not_found' | 'error';
 export function MatchCard({
   match,
   highlightClubId,
+  highlightCbfId,
   preview,
   previewLoading,
   noEmailGate = false,
+  cbfMatchDetail,
+  cbfRound,
 }: {
   match: Match;
+  /** API-Football team ID string — used for form/highlight in upcoming mode */
   highlightClubId: string;
+  /** CBF team ID string — used for outcome badge in finished Brasileirão cards */
+  highlightCbfId?: string;
   preview?: MatchPreview;
   previewLoading: boolean;
   noEmailGate?: boolean;
+  /** Pre-fetched CBF match detail (finished Brasileirão matches) — skips the CBF fetch in Ficha modal */
+  cbfMatchDetail?: CbfMatchDetail;
+  /** Brasileirão round number — used for the round badge in finished mode */
+  cbfRound?: number;
 }) {
+  const isFinishedMode = match.status === 'finished';
+
   const [activeModal, setActiveModal] = useState<ActiveModal>(null);
   const [h2hData, setH2hData] = useState<H2HData | null>(null);
   const [h2hStatus, setH2hStatus] = useState<FetchStatus>('idle');
   const [playersData, setPlayersData] = useState<TeamPlayersData | null>(null);
   const [playersStatus, setPlayersStatus] = useState<FetchStatus>('idle');
-  const [fichaData, setFichaData] = useState<CbfMatchDetail | null>(null);
-  const [fichaStatus, setFichaStatus] = useState<FetchStatus>('idle');
+  // If cbfMatchDetail is pre-loaded, seed fichaData and fichaStatus immediately
+  const [fichaData, setFichaData] = useState<CbfMatchDetail | null>(cbfMatchDetail ?? null);
+  const [fichaStatus, setFichaStatus] = useState<FetchStatus>(cbfMatchDetail ? 'done' : 'idle');
+  const [eventsData, setEventsData] = useState<MatchEventsData | null>(null);
+  const [eventsStatus, setEventsStatus] = useState<FetchStatus>('idle');
 
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailGateOpen, setEmailGateOpen] = useState(false);
@@ -843,10 +913,41 @@ export function MatchCard({
         .then((d) => { setH2hData(d); setH2hStatus('done'); })
         .catch(() => setH2hStatus('error'));
     }
+    // CBF data already pre-loaded (finished Brasileirão card from Resultados tab)
+    if (fichaStatus === 'done') return;
     if (fichaStatus !== 'idle') return;
     // Non-Série-A: CBF does not cover this competition — skip the CBF fetch entirely
     if (match.leagueId !== 71) {
       setFichaStatus('not_found');
+      // Fetch goal events only when we have a confirmed API-Football fixture ID.
+      // CONMEBOL-sourced matches (leagueId 13/11) use a CONMEBOL internal match ID —
+      // but past-results enriches them with apiFootballFixtureId when a cross-reference
+      // is found. Copa do Brasil (73) always has a valid API-Football fixture ID (match.id).
+      const isConmebolSource = match.leagueId === 13 || match.leagueId === 11;
+      const fixtureId = isConmebolSource
+        ? (match.apiFootballFixtureId != null ? String(match.apiFootballFixtureId) : null)
+        : match.id;
+      const homeId = isConmebolSource
+        ? (match.apiFootballHomeId != null ? String(match.apiFootballHomeId) : null)
+        : match.homeTeam.id;
+      const awayId = isConmebolSource
+        ? (match.apiFootballAwayId != null ? String(match.apiFootballAwayId) : null)
+        : match.awayTeam.id;
+
+      const canFetchEvents = match.status === 'finished' && fixtureId != null && homeId != null && awayId != null;
+      if (eventsStatus === 'idle' && canFetchEvents) {
+        setEventsStatus('loading');
+        const eventsParams = new URLSearchParams({
+          fixture: fixtureId!,
+          home:    homeId!,
+          away:    awayId!,
+          finished: '1',
+        });
+        fetch(`/api/match-events?${eventsParams}`)
+          .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<MatchEventsData>; })
+          .then((d) => { setEventsData(d); setEventsStatus('done'); })
+          .catch(() => setEventsStatus('error'));
+      }
       return;
     }
     setFichaStatus('loading');
@@ -876,11 +977,65 @@ export function MatchCard({
   // Hours until kickoff — used for ficha availability labelling (negative = past)
   const hoursUntilKickoff = (kickoffMs - nowMs) / 3_600_000;
   const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
+
+  // ── Finished-mode derived values ──────────────────────────────────────────
+  const hasScore = isFinishedMode && match.score !== undefined &&
+    match.score.home !== null && match.score.away !== null;
+  const homeGoals = hasScore ? match.score!.home! : null;
+  const awayGoals = hasScore ? match.score!.away! : null;
+
+  // Outcome badge for finished cards — tries API-Football ID first, then CBF ID
+  type OutcomeKey = 'W' | 'D' | 'L';
+  const OUTCOME_BADGE: Record<OutcomeKey, { label: string; bg: string }> = {
+    W: { label: 'V', bg: 'bg-green-600' },
+    D: { label: 'E', bg: 'bg-amber-500' },
+    L: { label: 'D', bg: 'bg-red-700' },
+  };
+
+  function deriveOutcome(): OutcomeKey | null {
+    if (!isFinishedMode) return null;
+    // CONMEBOL matches carry an explicit winner field
+    if (match.winner) {
+      const isHome = match.homeTeam.id === highlightClubId;
+      const isAway = match.awayTeam.id === highlightClubId;
+      if (!isHome && !isAway) return null;
+      if (match.winner === 'draw') return 'D';
+      if ((match.winner === 'home' && isHome) || (match.winner === 'away' && isAway)) return 'W';
+      return 'L';
+    }
+    // Brasileirão — score-based, matched by API-Football ID (highlightClubId)
+    if (hasScore) {
+      const isHome = match.homeTeam.id === highlightClubId;
+      const isAway = match.awayTeam.id === highlightClubId;
+      if (!isHome && !isAway) return null;
+      if (homeGoals === awayGoals) return 'D';
+      if (isHome) return homeGoals! > awayGoals! ? 'W' : 'L';
+      return awayGoals! > homeGoals! ? 'W' : 'L';
+    }
+    // CBF data pre-loaded — derive from cbfMatchDetail
+    if (cbfMatchDetail && highlightCbfId) {
+      const hg = Number(cbfMatchDetail.mandante.gols);
+      const ag = Number(cbfMatchDetail.visitante.gols);
+      if (isNaN(hg) || isNaN(ag)) return null;
+      const isHome = cbfMatchDetail.mandante.id === highlightCbfId;
+      const isAway = cbfMatchDetail.visitante.id === highlightCbfId;
+      if (!isHome && !isAway) return null;
+      if (hg === ag) return 'D';
+      if (isHome) return hg > ag ? 'W' : 'L';
+      return ag > hg ? 'W' : 'L';
+    }
+    return null;
+  }
+  const outcome = deriveOutcome();
+
+  // Round label for header badge
+  const roundLabel = cbfRound ? `Rodada ${cbfRound}` : match.round;
+
   // Label shown inside the Ficha button to communicate what's available.
   // Non-Série-A competitions are not covered by CBF, so pre-match hints differ.
   const fichaHint = live
     ? 'Ao vivo'
-    : isPostMatch
+    : isPostMatch || isFinishedMode
     ? 'Resultado'
     : match.leagueId === 71
     ? hoursUntilKickoff <= 48 ? 'Árbitro' : '48h antes'
@@ -891,7 +1046,12 @@ export function MatchCard({
       <article className="rounded-2xl border border-zinc-800 bg-zinc-900 overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-2 bg-zinc-800/60">
-          <span className="text-xs font-medium text-zinc-400 truncate font-sans">{match.competitionName}</span>
+          <span className="text-xs font-medium text-zinc-400 truncate font-sans">
+            {match.competitionName}
+            {match.isNeutralVenue && (
+              <span className="ml-1.5 text-zinc-600">(campo neutro)</span>
+            )}
+          </span>
           <div className="ml-2 flex-none flex items-center gap-2">
             {live && (
               <span className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold text-green-400 border border-green-400/30 bg-green-400/10 font-sans">
@@ -899,84 +1059,149 @@ export function MatchCard({
                 Ao Vivo
               </span>
             )}
+            {isFinishedMode && outcome && (
+              <span className={`inline-flex items-center justify-center w-5 h-5 rounded text-[10px] font-bold font-display text-white ${OUTCOME_BADGE[outcome].bg}`}>
+                {OUTCOME_BADGE[outcome].label}
+              </span>
+            )}
             <span className="rounded-full px-3 py-0.5 text-xs font-bold font-display tracking-wide"
               style={{ backgroundColor: 'var(--club-primary)', color: 'var(--club-text-on-primary)' }}>
-              {match.round}
+              {roundLabel}
             </span>
           </div>
         </div>
 
         <div className="p-4">
-          {/* Teams */}
+          {/* Teams + score/VS */}
           <div className="flex items-center gap-3">
             <div className={['flex-1 flex items-center justify-end gap-2',
               homeIsHighlighted ? 'text-white font-bold' : 'text-zinc-300 font-medium'].join(' ')}>
               <div className="text-right">
-                <span className="block text-xl leading-tight font-display tracking-wide">{match.homeTeam.name}</span>
-                <span className="text-xs text-zinc-500 font-sans">{match.homeTeam.shortName}</span>
+                <span className="block text-xl leading-tight font-display tracking-wide">{match.homeTeam.shortName}</span>
+                <span className="text-xs text-zinc-500 font-sans">{match.homeTeam.name}</span>
               </div>
-              <TeamLogo src={match.homeTeam.logo} alt={match.homeTeam.name} size={32} />
+              <TeamLogo src={match.homeTeam.logo} alt={match.homeTeam.name} size={isFinishedMode ? 48 : 32} />
             </div>
-            <div className="flex-none px-1">
-              <span className="text-sm font-black text-zinc-500 tracking-widest font-display">VS</span>
-            </div>
-            <div className={['flex-1 flex items-center gap-2',
-              awayIsHighlighted ? 'text-white font-bold' : 'text-zinc-300 font-medium'].join(' ')}>
-              <TeamLogo src={match.awayTeam.logo} alt={match.awayTeam.name} size={32} />
-              <div>
-                <span className="block text-xl leading-tight font-display tracking-wide">{match.awayTeam.name}</span>
-                <span className="text-xs text-zinc-500 font-sans">{match.awayTeam.shortName}</span>
-              </div>
-            </div>
-          </div>
 
-          {/* Date / Venue */}
-          <div className={`mt-4 grid gap-3 text-sm ${hasVenue ? 'grid-cols-2' : 'grid-cols-1'}`}>
-            <div className="rounded-lg bg-zinc-800 px-3 py-2.5">
-              <p className="text-xs text-zinc-500 mb-0.5 font-sans">Data &amp; Hora</p>
-              <p className="font-semibold text-white capitalize font-display tracking-wide">{formatDate(match.date)}</p>
-              {live ? (
-                <p className="flex items-center gap-1.5 text-green-400 text-sm font-bold font-sans">
-                  <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" aria-hidden="true" />
-                  Em andamento
-                </p>
+            {/* Centre: placar no modo finished, VS no modo upcoming */}
+            <div className="flex-none px-1 text-center">
+              {isFinishedMode ? (
+                hasScore ? (
+                  <>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-2xl font-black font-display text-white tabular-nums">{homeGoals}</span>
+                      <span className="text-base font-black font-display text-zinc-600">–</span>
+                      <span className="text-2xl font-black font-display text-white tabular-nums">{awayGoals}</span>
+                    </div>
+                    {match.hadExtraTime && !match.scoreDetail?.pen && (
+                      <div className="text-[10px] font-bold font-display text-zinc-500 tracking-widest mt-0.5">AET</div>
+                    )}
+                    {match.scoreDetail?.pen && (
+                      <div className="text-[11px] font-bold font-display text-zinc-400 mt-0.5">
+                        ({match.scoreDetail.pen.home} – {match.scoreDetail.pen.away} pên.)
+                      </div>
+                    )}
+                  </>
+                ) : cbfMatchDetail && cbfMatchDetail.mandante.gols !== '' ? (
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-2xl font-black font-display text-white tabular-nums">{cbfMatchDetail.mandante.gols}</span>
+                    <span className="text-base font-black font-display text-zinc-600">–</span>
+                    <span className="text-2xl font-black font-display text-white tabular-nums">{cbfMatchDetail.visitante.gols}</span>
+                  </div>
+                ) : (
+                  <span className="text-sm font-black text-zinc-500 tracking-widest font-display">? – ?</span>
+                )
               ) : (
-                <p className="text-zinc-300 text-sm font-sans">{formatTime(match.date)} · Brasília</p>
+                <span className="text-sm font-black text-zinc-500 tracking-widest font-display">VS</span>
               )}
             </div>
-            {hasVenue && (
-              <div className="rounded-lg bg-zinc-800 px-3 py-2.5">
-                <p className="text-xs text-zinc-500 mb-0.5 font-sans">Local</p>
-                {match.stadium && <p className="font-semibold text-white font-display tracking-wide">{match.stadium}</p>}
-                {match.city && <p className="text-zinc-300 text-xs font-sans">{match.city}</p>}
+
+            <div className={['flex-1 flex items-center gap-2',
+              awayIsHighlighted ? 'text-white font-bold' : 'text-zinc-300 font-medium'].join(' ')}>
+              <TeamLogo src={match.awayTeam.logo} alt={match.awayTeam.name} size={isFinishedMode ? 48 : 32} />
+              <div>
+                <span className="block text-xl leading-tight font-display tracking-wide">{match.awayTeam.shortName}</span>
+                <span className="text-xs text-zinc-500 font-sans">{match.awayTeam.name}</span>
               </div>
-            )}
+            </div>
           </div>
 
-          {/* Broadcasters */}
-          <div className="mt-3 flex items-center gap-2 flex-wrap min-h-[22px]">
-            <span className="text-xs text-zinc-500 font-sans">Onde assistir:</span>
-            {previewLoading && (
-              <span className="inline-block h-4 w-24 rounded bg-zinc-700 animate-pulse" aria-hidden="true" />
-            )}
-            {!previewLoading && broadcasters.length > 0 && broadcasters.map((b: string) => <BroadcasterBadge key={b} name={b} />)}
-            {!previewLoading && broadcasters.length === 0 && (
-              <span className="text-xs text-zinc-600 font-sans italic">
-                {outsideSearchWindow
-                  ? 'disponível em breve'
-                  : daysUntilRender >= 2
-                    ? 'grade ainda não publicada'
-                    : 'transmissão não confirmada'}
-              </span>
-            )}
-          </div>
+          {/* Score breakdown (HT / aggregate) — finished mode only */}
+          {isFinishedMode && match.scoreDetail?.ht && (
+            <div className="flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px] font-sans text-zinc-500 mt-1">
+              <span>Intervalo {match.scoreDetail.ht.home}–{match.scoreDetail.ht.away}</span>
+              {match.scoreDetail.aggregate && (
+                <span>· Agregado {match.scoreDetail.aggregate.home}–{match.scoreDetail.aggregate.away}</span>
+              )}
+            </div>
+          )}
 
-          {/* Form strip */}
-          <FormStrip
-            homeForm={preview?.homeForm ?? []}
-            awayForm={preview?.awayForm ?? []}
-            loading={previewLoading}
-          />
+          {/* Date + Venue row — compact in finished mode */}
+          {isFinishedMode ? (
+            <div className="mt-2 flex items-center gap-2 text-xs font-sans text-zinc-500 flex-wrap">
+              <span className="capitalize">{formatDate(match.date)}</span>
+              {(match.stadium || match.city) && (
+                <>
+                  <span aria-hidden="true">·</span>
+                  <span className="truncate">{match.stadium ?? match.city}</span>
+                </>
+              )}
+            </div>
+          ) : (
+            <>
+              {/* Date / Venue grid — upcoming mode */}
+              <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
+                <div className="rounded-lg bg-zinc-800 px-3 py-2.5">
+                  <p className="text-xs text-zinc-500 mb-0.5 font-sans">Data &amp; Hora</p>
+                  <p className="font-semibold text-white capitalize font-display tracking-wide">{formatDate(match.date)}</p>
+                  {live ? (
+                    <p className="flex items-center gap-1.5 text-green-400 text-sm font-bold font-sans">
+                      <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse shrink-0" aria-hidden="true" />
+                      Em andamento
+                    </p>
+                  ) : (
+                    <p className="text-zinc-300 text-sm font-sans">{formatTime(match.date)} · Brasília</p>
+                  )}
+                </div>
+                <div className="rounded-lg bg-zinc-800 px-3 py-2.5">
+                  <p className="text-xs text-zinc-500 mb-0.5 font-sans">Local</p>
+                  {hasVenue ? (
+                    <>
+                      {match.stadium && <p className="font-semibold text-white font-display tracking-wide">{match.stadium}</p>}
+                      {match.city && <p className="text-zinc-300 text-xs font-sans">{match.city}</p>}
+                    </>
+                  ) : (
+                    <p className="text-zinc-600 text-xs font-sans italic">indisponível</p>
+                  )}
+                </div>
+              </div>
+
+              {/* Broadcasters */}
+              <div className="mt-3 flex items-center gap-2 flex-wrap min-h-[22px]">
+                <span className="text-xs text-zinc-500 font-sans">Onde assistir:</span>
+                {previewLoading && (
+                  <span className="inline-block h-4 w-24 rounded bg-zinc-700 animate-pulse" aria-hidden="true" />
+                )}
+                {!previewLoading && broadcasters.length > 0 && broadcasters.map((b: string) => <BroadcasterBadge key={b} name={b} />)}
+                {!previewLoading && broadcasters.length === 0 && (
+                  <span className="text-xs text-zinc-600 font-sans italic">
+                    {outsideSearchWindow
+                      ? 'disponível em breve'
+                      : daysUntilRender >= 2
+                        ? 'grade ainda não publicada'
+                        : 'transmissão não confirmada'}
+                  </span>
+                )}
+              </div>
+
+              {/* Form strip */}
+              <FormStrip
+                homeForm={preview?.homeForm ?? []}
+                awayForm={preview?.awayForm ?? []}
+                loading={previewLoading}
+              />
+            </>
+          )}
 
           {/* Action buttons */}
           <div className="mt-4 pt-4 border-t border-zinc-800 grid grid-cols-4 gap-2">
@@ -1015,16 +1240,18 @@ export function MatchCard({
             </button>
           </div>
 
-          {/* Referee */}
-          <div className="mt-3 flex items-center gap-2 text-xs font-sans">
-            <span className="text-zinc-500">Arbitragem:</span>
-            {fichaData?.arbitros?.find((a) => a.funcao === 'Arbitro')?.nome
-              ? <span className="text-zinc-300">{fichaData.arbitros.find((a) => a.funcao === 'Arbitro')!.nome}</span>
-              : match.referee
-                ? <span className="text-zinc-300">{match.referee}</span>
-                : <span className="text-zinc-600 italic">a confirmar</span>
-            }
-          </div>
+          {/* Referee — only in upcoming mode */}
+          {!isFinishedMode && (
+            <div className="mt-3 flex items-center gap-2 text-xs font-sans">
+              <span className="text-zinc-500">Arbitragem:</span>
+              {fichaData?.arbitros?.find((a) => a.funcao === 'Arbitro')?.nome
+                ? <span className="text-zinc-300">{fichaData.arbitros.find((a) => a.funcao === 'Arbitro')!.nome}</span>
+                : match.referee
+                  ? <span className="text-zinc-300">{match.referee}</span>
+                  : <span className="text-zinc-600 italic">a confirmar</span>
+              }
+            </div>
+          )}
         </div>
       </article>
 
@@ -1100,6 +1327,14 @@ export function MatchCard({
               hoursUntilKickoff={hoursUntilKickoff}
               injuries={h2hData?.injuries ?? []}
               injuriesLoading={h2hStatus === 'loading'}
+              events={eventsData}
+              eventsLoading={eventsStatus === 'loading'}
+              eventsSupported={
+                // Copa do Brasil e outros via API-Football: sempre disponível
+                // CONMEBOL source: disponível somente se o cross-reference encontrou o fixture ID
+                (match.leagueId !== 13 && match.leagueId !== 11) ||
+                match.apiFootballFixtureId != null
+              }
             />
           )}
           {fichaStatus === 'not_found' && match.leagueId === 71 && (

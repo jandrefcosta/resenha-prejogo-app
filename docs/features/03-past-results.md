@@ -2,9 +2,9 @@
 
 ## O que faz
 
-Exibe os resultados de partidas encerradas do clube selecionado em **todas as competições**: dados oficiais da CBF para o Brasileirão Série A (placar, gols, cartões, escalações, árbitros) e dados básicos da API-Football para as demais competições (Libertadores, Copa do Brasil, Sul-Americana).
+Exibe os resultados de partidas encerradas do clube selecionado em **todas as competições** usando um único card interativo (`MatchCard` no modo `finished`), com acesso completo à Ficha do Jogo (gols, escalação, árbitros, confronto direto, destaques da temporada).
 
-A lista é mesclada e ordenada cronologicamente (mais recente primeiro).
+A lista é mesclada de duas fontes e ordenada cronologicamente (mais recente primeiro).
 
 ---
 
@@ -13,11 +13,10 @@ A lista é mesclada e ordenada cronologicamente (mais recente primeiro).
 1. O usuário clica na aba **"Resultados"** no `MatchSection`.
 2. Duas fontes são buscadas em paralelo:
    - **CBF** (`/api/past-fixtures`) — últimas 3 rodadas do Brasileirão do clube
-   - **API-Football** (`/api/past-results`) — últimos jogos encerrados nas demais competições
+   - **API-Football / CONMEBOL** (`/api/past-results`) — últimos jogos encerrados nas demais competições
 3. Os resultados são mesclados e exibidos ordenados por data.
-4. Para resultados do Brasileirão: card `ResultCard` com dados oficiais completos e botão "Ficha".
-5. Para resultados das demais competições: card `SimpleResultCard` com placar, data e estádio.
-6. Pills de filtro (quando o clube participa de mais de uma competição) permitem focar em uma competição específica.
+4. Todos os cards usam `MatchCard` no modo `finished` — com placar, badge V/D/E e botões de modal completos.
+5. Pills de filtro (quando o clube participa de mais de uma competição) permitem focar em uma competição específica.
 
 ---
 
@@ -35,9 +34,36 @@ Os pills são **unificados** com a aba "Próximos Jogos" — derivados da união
 | Componente | Arquivo | Responsabilidade |
 |------------|---------|-----------------|
 | `MatchSection` | `src/components/MatchSection.tsx` | Gerencia aba Resultados, merge CBF + API-Football, pills de filtro |
-| `ResultCard` | `src/components/ResultCard.tsx` | Card de resultado do Brasileirão (dados CBF completos) |
-| `SimpleResultCard` | `src/components/SimpleResultCard.tsx` | Card de resultado de outras competições (dados API-Football) |
-| `FichaResultModal` | dentro de `ResultCard.tsx` | Modal com escalação, substituições e árbitros (Série A only) |
+| `MatchCard` | `src/components/MatchCard.tsx` | Card unificado — modo `finished` para resultados, modo `upcoming` para próximos jogos |
+| `cbfToMatch()` | dentro de `MatchSection.tsx` | Converte `CbfMatchDetail + round` → `Match` compatível com `MatchCard` |
+
+> **Nota:** `ResultCard` e `SimpleResultCard` existem no codebase mas não são mais utilizados — substituídos pelo `MatchCard` unificado.
+
+---
+
+## Modo `finished` do `MatchCard`
+
+Quando `match.status === 'finished'`, o `MatchCard` exibe:
+
+- **Header:** badge V/D/E + round label
+- **Times:** logos 48px, nomes, placar central (com indicador AET / pênaltis quando aplicável)
+- **Data/local:** linha compacta (sem grid)
+- **Sem:** broadcasters, form strip, árbitro inline
+- **Botões:** Confronto, Jogadores, Ficha, Enviar — todos presentes e funcionais
+
+### Ficha em modo finished — por competição
+
+| Competição | Abertura da Ficha | Gols | Escalação | Cartões |
+|---|---|---|---|---|
+| Brasileirão | Instantânea (CBF pré-carregado) | ✓ CBF | ✓ CBF | ✓ CBF |
+| Copa do Brasil | Fetch `/api/match-events` | ✓ API-Football | Desfalques | — |
+| Libertadores (CONMEBOL + cross-ref) | Fetch `/api/match-events` | ✓ API-Football | Desfalques | — |
+| Libertadores (sem cross-ref) | Imediato | Seção oculta | Desfalques | — |
+| Sul-Americana (CONMEBOL + cross-ref) | Fetch `/api/match-events` | ✓ API-Football | Desfalques | — |
+
+### Pré-carregamento de dados CBF (Brasileirão)
+
+Para cards do Brasileirão na aba Resultados, o `CbfMatchDetail` já foi buscado por `/api/past-fixtures`. O `MatchSection` passa esse dado via prop `cbfMatchDetail` ao `MatchCard`, que o usa para inicializar `fichaData` e `fichaStatus = 'done'` — a Ficha abre instantaneamente sem fetch adicional.
 
 ---
 
@@ -49,8 +75,8 @@ type MergedResult =
   | { kind: 'api'; match: Match; dateMs: number };
 ```
 
-- Entradas CBF: data convertida de `"DD/MM/YYYY" + "HH:MM"` para timestamp UTC
-- Entradas API-Football: data já em ISO 8601
+- Entradas CBF: data convertida de `"DD/MM/YYYY" + "HH:MM"` (UTC-3) para timestamp UTC via `cbfToMatch()`
+- Entradas API-Football / CONMEBOL: data já em ISO 8601
 - Lista final ordenada por `dateMs` decrescente (mais recente primeiro)
 
 ---
@@ -82,37 +108,51 @@ Array<{ round: number; match: CbfMatchDetail }>
 
 | | |
 |-|-|
-| **Fonte** | API-Football v3 — `?last=5` por competição+time, em paralelo |
-| **Cache** | Redis `finished:{competition.id}:{teamApiId}` — 30 min |
+| **Fonte primária** | CONMEBOL API — Libertadores e Sul-Americana para clubes com `conmebolId` |
+| **Fonte secundária** | API-Football v3 — Copa do Brasil; fallback e cross-reference quando CONMEBOL é fonte primária |
+| **Cache** | CONMEBOL: `conmebol:tournament:{id}` (TTL dinâmico); API-Football finished: `finished:{competition.id}:{teamApiId}` 6h |
 
 **Resposta:**
 ```typescript
 Match[]   // ordenados do mais recente para o mais antigo
 ```
 
+**Enriquecimento CONMEBOL → API-Football (cross-reference):**
+
+Para matches CONMEBOL, o `past-results` também busca os fixtures API-Football correspondentes e tenta fazer o cruzamento por data + times, adicionando os campos:
+
+```typescript
+apiFootballFixtureId?: number   // fixture ID da API-Football — necessário para /api/match-events
+apiFootballHomeId?: number      // API-Football team ID do mandante
+apiFootballAwayId?: number      // API-Football team ID do visitante
+```
+
+O cruzamento usa a chave `"YYYY-MM-DD:homeApiId:awayApiId"` com tolerância de ±1 dia (diferenças de fuso). Quando encontrado, a Ficha pode buscar gols via `/api/match-events`.
+
 ---
 
-## Dados exibidos por card
+## Dados exibidos por fonte
 
-### `ResultCard` (Brasileirão — CBF)
+### Brasileirão (CBF)
 
 | Dado | Disponibilidade |
 |------|----------------|
-| Placar final | Após encerramento |
-| Gols (marcador, minuto, tipo) | Após publicação CBF |
-| Cartões (tipo, jogador, minuto) | Após publicação CBF |
+| Placar final | `cbfMatchDetail.mandante.gols` / `visitante.gols` |
+| Gols (marcador, minuto) | Após publicação CBF |
+| Cartões | Após publicação CBF |
 | Escalação titular + banco | Após publicação CBF |
-| Substituições | Após publicação CBF |
 | Árbitros | Após publicação CBF |
 
-### `SimpleResultCard` (demais competições — API-Football)
+### Outras competições (API-Football / CONMEBOL)
 
 | Dado | Disponibilidade |
 |------|----------------|
-| Placar final | Após encerramento |
-| Competição e rodada | Sempre |
-| Data e estádio | Sempre |
-| Indicador W/D/L | Quando há placar e clube destacado |
+| Placar final | `match.score` |
+| AET / pênaltis | `match.scoreDetail` (CONMEBOL source) |
+| Agregado | `match.scoreDetail.aggregate` (CONMEBOL source) |
+| Gols com autores | Quando `apiFootballFixtureId` disponível (cross-ref) |
+| Badge V/D/E | `match.winner` (CONMEBOL) ou `match.score` (API-Football) |
+| Indicador campo neutro | `match.isNeutralVenue` (CONMEBOL source) |
 
 ---
 
@@ -142,13 +182,14 @@ MatchSection (aba Resultados)
   │    ├─ getCbfRound(N-1) → Redis [primary] → Redis [stale] → CBF API
   │    ├─ getCbfRound(N-2) → ...
   │    └─ getCbfRound(N-3) → ...
-  │         ↓ filtra por cbfId do clube
-  │    ResultCard × M
+  │         ↓ filtra por cbfId do clube → cbfToMatch() → Match
+  │    MatchCard(finished, cbfMatchDetail=...) × M
   │
-  └─ GET /api/past-results?club=X                          [API-Football]
-       ├─ getFinishedFixturesByClub(Libertadores) → Redis → API-Football
-       ├─ getFinishedFixturesByClub(Copa do Brasil) → ...
-       └─ getFinishedFixturesByClub(Sul-Americana) → ...
-            ↓ merge + sort por data
-       SimpleResultCard × K
+  └─ GET /api/past-results?club=X                          [API-Football + CONMEBOL]
+       ├─ getConmebolFinishedByTeam(Libertadores) → Redis → CONMEBOL API
+       ├─ getConmebolFinishedByTeam(Sul-Americana) → ...
+       ├─ getFinishedFixturesByClub(Copa do Brasil) → Redis → API-Football
+       └─ cross-reference CONMEBOL ↔ API-Football por data+times
+            ↓ enriquece com apiFootballFixtureId quando encontrado
+       MatchCard(finished) × K
 ```
