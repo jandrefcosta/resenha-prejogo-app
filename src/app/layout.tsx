@@ -7,6 +7,7 @@ import { InitialLoader } from '@/components/InitialLoader';
 import './globals.css';
 
 const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID ?? '';
+const GA_MEASUREMENT_ID = process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID ?? '';
 
 const barlow = Barlow({
   variable: '--font-barlow',
@@ -74,6 +75,21 @@ export default function RootLayout({
           {children}
         </ThemeProvider>
         <Analytics />
+        {GA_MEASUREMENT_ID && (
+          <>
+            <Script
+              src={`https://www.googletagmanager.com/gtag/js?id=${GA_MEASUREMENT_ID}`}
+              strategy="afterInteractive"
+            />
+            <Script
+              id="google-analytics"
+              strategy="afterInteractive"
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${GA_MEASUREMENT_ID}');`,
+              }}
+            />
+          </>
+        )}
         {CLARITY_PROJECT_ID && (
           <Script
             id="microsoft-clarity"
