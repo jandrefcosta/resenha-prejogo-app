@@ -46,7 +46,7 @@ Os pills são **unificados** com a aba "Próximos Jogos" — derivados da união
 Quando `match.status === 'finished'`, o `MatchCard` exibe:
 
 - **Header:** badge V/D/E + round label
-- **Times:** logos 48px, nomes, placar central (com indicador AET / pênaltis quando aplicável)
+- **Times:** logos 48px, nomes, placar central (com indicador AET / pênaltis quando aplicável); "placar indisponível" em itálico se sem dados
 - **Data/local:** linha compacta (sem grid)
 - **Sem:** broadcasters, form strip, árbitro inline
 - **Botões:** Confronto, Jogadores, Ficha, Enviar — todos presentes e funcionais

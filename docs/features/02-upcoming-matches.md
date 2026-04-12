@@ -69,12 +69,12 @@ Head-to-head entre os dois times — chamado on-demand ao expandir o card.
 | Dado | Fonte | Disponibilidade |
 |------|-------|----------------|
 | Data e hora | API-Football | Sempre |
-| Estádio e cidade | API-Football | Sempre |
+| Estádio e cidade | API-Football | Sempre ("indisponível" em itálico se nulo) |
 | Transmissão | Gemini + Google | Depende de publicação (até 14 dias antes) |
-| Forma (últimos 5) | API-Football | Sempre |
+| Forma (últimos 5) | API-Football | Sempre ("forma indisponível" se sem dados) |
 | H2H | API-Football | On-demand ao expandir |
-| Lesionados | API-Football | On-demand ao expandir |
-| Árbitro (Série A) | CBF | Pré-match (≤48h) |
+| Desfalques | API-Football | On-demand (via Ficha/H2H); suprimidos pós-jogo se vazios |
+| Árbitro (Série A) | CBF | Pré-match (≤48h); "a confirmar" se ainda não publicado |
 
 ---
 

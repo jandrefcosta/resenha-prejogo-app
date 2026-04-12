@@ -407,30 +407,32 @@ function NonCbfFichaContent({
         {phaseBanner.label}
       </div>
 
-      {/* 1. Desfalques — pré-jogo */}
-      <section>
-        <SectionHeader label="Principais Desfalques" />
-        {injuriesLoading ? (
-          <div className="space-y-1 animate-pulse">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-8 bg-zinc-800 rounded-lg" />
-            ))}
-          </div>
-        ) : injuries.length > 0 ? (
-          <div className="space-y-1">
-            {injuries.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
-                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" aria-hidden="true" />
-                <span className="text-zinc-200 flex-1 truncate">{p.name}</span>
-                <span className="text-zinc-500 shrink-0">{p.teamName}</span>
-                <span className="text-zinc-600 shrink-0">{translateInjuryReason(p.reason) || translateInjuryType(p.type)}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Pending>Sem desfalques confirmados</Pending>
-        )}
-      </section>
+      {/* 1. Desfalques — pré-jogo e ao vivo; pós-jogo só se houver dados */}
+      {(!isPostMatch || injuries.length > 0) && (
+        <section>
+          <SectionHeader label={isPostMatch ? 'Desfalques do Jogo' : 'Principais Desfalques'} />
+          {injuriesLoading ? (
+            <div className="space-y-1 animate-pulse">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-8 bg-zinc-800 rounded-lg" />
+              ))}
+            </div>
+          ) : injuries.length > 0 ? (
+            <div className="space-y-1">
+              {injuries.map((p, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                  <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" aria-hidden="true" />
+                  <span className="text-zinc-200 flex-1 truncate">{p.name}</span>
+                  <span className="text-zinc-500 shrink-0">{p.teamName}</span>
+                  <span className="text-zinc-600 shrink-0">{translateInjuryReason(p.reason) || translateInjuryType(p.type)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Pending>Sem desfalques confirmados</Pending>
+          )}
+        </section>
+      )}
 
       {/* 2. Resultado — disponível após o apito final */}
       <section>
@@ -831,9 +833,11 @@ function CbfMatchModalContent({
         ) : (
           <Pending>
             {isPostMatch
-              ? ((matchDocsLoading ?? false) ? 'Carregando súmula…' : 'Escalação não publicada')
+              ? ((matchDocsLoading ?? false) ? 'Carregando súmula…' : 'Escalação não publicada pelo CBF')
               : isLive
-              ? 'Sendo confirmada'
+              ? (data ? 'Escalação ainda não confirmada pelo CBF' : 'Aguardando dados do CBF…')
+              : refereeLikelyConfirmed
+              ? 'Escalação ainda não publicada pelo CBF'
               : 'Publicada ~48h antes do jogo'}
           </Pending>
         )}
@@ -857,30 +861,32 @@ function CbfMatchModalContent({
         </section>
       )}
 
-      {/* ── 3. Desfalques — pré-jogo ──────────────────────────────────────── */}
-      <section>
-        <SectionHeader label="Principais Desfalques" />
-        {injuriesLoading ? (
-          <div className="space-y-1 animate-pulse">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-8 bg-zinc-800 rounded-lg" />
-            ))}
-          </div>
-        ) : injuries.length > 0 ? (
-          <div className="space-y-1">
-            {injuries.map((p, i) => (
-              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
-                <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" aria-hidden="true" />
-                <span className="text-zinc-200 flex-1 truncate">{p.name}</span>
-                <span className="text-zinc-500 shrink-0">{p.teamName}</span>
-                <span className="text-zinc-600 shrink-0">{translateInjuryReason(p.reason) || translateInjuryType(p.type)}</span>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <Pending>Sem desfalques confirmados</Pending>
-        )}
-      </section>
+      {/* ── 3. Desfalques — pré-jogo e ao vivo; pós-jogo só se houver dados ── */}
+      {(!isPostMatch || injuries.length > 0) && (
+        <section>
+          <SectionHeader label={isPostMatch ? 'Desfalques do Jogo' : 'Principais Desfalques'} />
+          {injuriesLoading ? (
+            <div className="space-y-1 animate-pulse">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <div key={i} className="h-8 bg-zinc-800 rounded-lg" />
+              ))}
+            </div>
+          ) : injuries.length > 0 ? (
+            <div className="space-y-1">
+              {injuries.map((p, i) => (
+                <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                  <span className="h-1.5 w-1.5 rounded-full bg-zinc-500 shrink-0" aria-hidden="true" />
+                  <span className="text-zinc-200 flex-1 truncate">{p.name}</span>
+                  <span className="text-zinc-500 shrink-0">{p.teamName}</span>
+                  <span className="text-zinc-600 shrink-0">{translateInjuryReason(p.reason) || translateInjuryType(p.type)}</span>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <Pending>Sem desfalques confirmados</Pending>
+          )}
+        </section>
+      )}
 
       {/* ── 4. Resultado — após o apito final ─────────────────────────────── */}
       <section>
@@ -902,7 +908,7 @@ function CbfMatchModalContent({
           </div>
         ) : (
           <Pending>
-            {isLive ? 'Jogo em andamento — placar não disponível aqui' : 'Disponível após o apito final'}
+            {isLive ? 'Placar sendo atualizado pelo CBF…' : 'Disponível após o apito final'}
           </Pending>
         )}
       </section>
@@ -923,7 +929,9 @@ function CbfMatchModalContent({
             ))}
           </div>
         ) : (
-          <Pending>{isPostMatch ? 'Sem gols registrados' : 'Disponível após o apito final'}</Pending>
+          <Pending>
+            {isLive ? 'Atualizando…' : isPostMatch ? 'Sem gols registrados' : 'Disponível após o apito final'}
+          </Pending>
         )}
       </section>
 
@@ -945,7 +953,9 @@ function CbfMatchModalContent({
             ))}
           </div>
         ) : (
-          <Pending>{isPostMatch ? 'Sem cartões registrados' : 'Disponível após o apito final'}</Pending>
+          <Pending>
+            {isLive ? 'Atualizando…' : isPostMatch ? 'Sem cartões registrados' : 'Disponível após o apito final'}
+          </Pending>
         )}
       </section>
 
@@ -1351,7 +1361,7 @@ export function MatchCard({
                     <span className="text-2xl font-black font-display text-white tabular-nums">{cbfMatchDetail.visitante.gols}</span>
                   </div>
                 ) : (
-                  <span className="text-sm font-black text-zinc-500 tracking-widest font-display">? – ?</span>
+                  <span className="text-xs text-zinc-600 font-sans italic">placar indisponível</span>
                 )
               ) : (
                 <span className="text-sm font-black text-zinc-500 tracking-widest font-display">VS</span>

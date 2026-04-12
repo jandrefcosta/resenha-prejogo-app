@@ -1,11 +1,11 @@
 # Graph Report - .  (2026-04-12)
 
 ## Corpus Check
-- 102 files · ~104,910 words
+- 102 files · ~112,212 words
 - Verdict: corpus is large enough that graph structure adds value.
 
 ## Summary
-- 1850 nodes · 3704 edges · 271 communities detected
+- 1849 nodes · 3703 edges · 272 communities detected
 - Extraction: 100% EXTRACTED · 0% INFERRED · 0% AMBIGUOUS
 - Token cost: 0 input · 0 output
 
@@ -281,6 +281,7 @@
 - [[_COMMUNITY_Community 268|Community 268]]
 - [[_COMMUNITY_Community 269|Community 269]]
 - [[_COMMUNITY_Community 270|Community 270]]
+- [[_COMMUNITY_Community 271|Community 271]]
 
 ## God Nodes (most connected - your core abstractions)
 1. `rv()` - 73 edges
@@ -317,8 +318,8 @@
 ## Communities
 
 ### Community 0 - "Community 0"
-Cohesion: 0.01
-Nodes (267): __(), AA(), ac(), Ad(), aE(), ar(), AS(), av() (+259 more)
+Cohesion: 0.02
+Nodes (263): __(), AA(), ac(), Ad(), aE(), ar(), AS(), av() (+255 more)
 
 ### Community 1 - "Community 1"
 Cohesion: 0.01
@@ -333,24 +334,24 @@ Cohesion: 0.04
 Nodes (19): be(), ce, ct(), de, _e(), Ee(), fe(), ge() (+11 more)
 
 ### Community 4 - "Community 4"
-Cohesion: 0.05
-Nodes (7): DE(), La(), On(), or, Ri(), rv(), rx
+Cohesion: 0.04
+Nodes (10): DE(), fs(), La(), o_, On(), or, Ri(), rv() (+2 more)
 
 ### Community 5 - "Community 5"
-Cohesion: 0.13
-Nodes (10): a_, Ah, gc(), k0(), l_, mc(), qt, r() (+2 more)
+Cohesion: 0.1
+Nodes (6): Bo(), ds(), Fv(), oc, Ui, ZT()
 
 ### Community 6 - "Community 6"
-Cohesion: 0.09
-Nodes (6): Bo(), ds(), Fv(), oc, Ui, ZT()
+Cohesion: 0.08
+Nodes (19): apiHeaders(), computeStats(), computeTtl(), conmebolToMatch(), fetchEvents(), fetchH2H(), fetchInjuries(), fetchRound() (+11 more)
 
 ### Community 7 - "Community 7"
 Cohesion: 0.06
-Nodes (14): c0(), e_(), e0(), eE, fr, ix(), j_(), kx() (+6 more)
+Nodes (12): b0, c0(), e_(), e0(), eE, fr, j_(), kx() (+4 more)
 
 ### Community 8 - "Community 8"
-Cohesion: 0.08
-Nodes (19): apiHeaders(), computeStats(), computeTtl(), conmebolToMatch(), fetchEvents(), fetchH2H(), fetchInjuries(), fetchRound() (+11 more)
+Cohesion: 0.14
+Nodes (9): a_, Ah, gc(), k0(), l_, mc(), qt, s_ (+1 more)
 
 ### Community 9 - "Community 9"
 Cohesion: 0.14
@@ -361,28 +362,28 @@ Cohesion: 0.11
 Nodes (2): _2, E2
 
 ### Community 11 - "Community 11"
+Cohesion: 0.06
+Nodes (13): _0, aT(), b_(), Ka, ll(), nl(), Rb(), rE() (+5 more)
+
+### Community 12 - "Community 12"
 Cohesion: 0.1
 Nodes (6): eA(), m0, mt, nd(), $t(), tA()
 
-### Community 12 - "Community 12"
+### Community 13 - "Community 13"
 Cohesion: 0.26
 Nodes (3): NS, sd(), Wn()
-
-### Community 13 - "Community 13"
-Cohesion: 0.08
-Nodes (11): _0, aT(), b_(), Ka, ll(), nl(), rE(), v_() (+3 more)
 
 ### Community 14 - "Community 14"
 Cohesion: 0.19
 Nodes (19): boletimKey(), downloadPdf(), extractPlayers(), isTeamMatch(), parseBoletim(), parseBrl(), parseCards(), parseGoals() (+11 more)
 
 ### Community 15 - "Community 15"
-Cohesion: 0.11
-Nodes (0): 
-
-### Community 16 - "Community 16"
 Cohesion: 0.27
 Nodes (17): af(), ef(), ff(), Ja(), lf(), mt(), nf(), of() (+9 more)
+
+### Community 16 - "Community 16"
+Cohesion: 0.11
+Nodes (0): 
 
 ### Community 17 - "Community 17"
 Cohesion: 0.27
@@ -401,68 +402,68 @@ Cohesion: 0.36
 Nodes (8): acceptStale(), cacheKey(), competitionSlug(), computeTtl(), getConmebolFinishedByTeam(), getConmebolTournament(), inferStatus(), staleKey()
 
 ### Community 21 - "Community 21"
+Cohesion: 0.36
+Nodes (2): pr(), S2
+
+### Community 22 - "Community 22"
 Cohesion: 0.52
 Nodes (6): main(), parseArgs(), printSummary(), seedConmebolTournament(), seedFinishedForClub(), sleep()
 
-### Community 22 - "Community 22"
+### Community 23 - "Community 23"
 Cohesion: 0.43
 Nodes (4): applyClubTheme(), getLuminance(), mixWithBlack(), mixWithWhite()
 
-### Community 23 - "Community 23"
+### Community 24 - "Community 24"
 Cohesion: 0.48
 Nodes (5): fetchLeagueFixtures(), getFixturesByClub(), mapFixture(), normaliseRound(), toMatchTeam()
 
-### Community 24 - "Community 24"
+### Community 25 - "Community 25"
 Cohesion: 0.57
 Nodes (6): buildNameMap(), cacheKey(), getCbfSerieACards(), normaliseName(), parseStandings(), toMap()
 
-### Community 25 - "Community 25"
+### Community 26 - "Community 26"
 Cohesion: 0.6
 Nodes (5): main(), pad(), parseArgs(), seedRound(), sleep()
 
-### Community 26 - "Community 26"
+### Community 27 - "Community 27"
 Cohesion: 0.6
 Nodes (5): fetchAndCache(), main(), parseArgs(), seedCompetition(), sleep()
 
-### Community 27 - "Community 27"
+### Community 28 - "Community 28"
 Cohesion: 0.6
 Nodes (5): deleteAll(), deleteCbfRounds(), deleteFixtures(), deleteForm(), deletePastResults()
 
-### Community 28 - "Community 28"
+### Community 29 - "Community 29"
 Cohesion: 0.33
 Nodes (0): 
 
-### Community 29 - "Community 29"
+### Community 30 - "Community 30"
 Cohesion: 0.4
 Nodes (1): T0
 
-### Community 30 - "Community 30"
+### Community 31 - "Community 31"
 Cohesion: 0.4
 Nodes (1): A0
 
-### Community 31 - "Community 31"
+### Community 32 - "Community 32"
 Cohesion: 0.7
 Nodes (4): main(), parseArgs(), seedClubForm(), sleep()
 
-### Community 32 - "Community 32"
+### Community 33 - "Community 33"
 Cohesion: 0.7
 Nodes (4): main(), parseArgs(), processMatch(), sleep()
 
-### Community 33 - "Community 33"
+### Community 34 - "Community 34"
 Cohesion: 0.5
 Nodes (2): closeModal(), handleSelect()
 
-### Community 34 - "Community 34"
+### Community 35 - "Community 35"
 Cohesion: 0.6
 Nodes (3): dismiss(), handleClose(), handleSelectClub()
 
-### Community 35 - "Community 35"
+### Community 36 - "Community 36"
 Cohesion: 0.5
 Nodes (2): stripState(), teamShort()
-
-### Community 36 - "Community 36"
-Cohesion: 0.4
-Nodes (0): 
 
 ### Community 37 - "Community 37"
 Cohesion: 0.4
@@ -473,64 +474,64 @@ Cohesion: 0.4
 Nodes (0): 
 
 ### Community 39 - "Community 39"
-Cohesion: 0.6
-Nodes (3): apiHeaders(), fetchForm(), getTeamForm()
-
-### Community 40 - "Community 40"
 Cohesion: 0.4
 Nodes (0): 
 
+### Community 40 - "Community 40"
+Cohesion: 0.6
+Nodes (3): apiHeaders(), fetchForm(), getTeamForm()
+
 ### Community 41 - "Community 41"
-Cohesion: 0.5
+Cohesion: 0.4
 Nodes (0): 
 
 ### Community 42 - "Community 42"
 Cohesion: 0.5
-Nodes (1): ic
+Nodes (0): 
 
 ### Community 43 - "Community 43"
 Cohesion: 0.5
-Nodes (1): Nr
+Nodes (1): ic
 
 ### Community 44 - "Community 44"
+Cohesion: 0.5
+Nodes (1): Nr
+
+### Community 45 - "Community 45"
 Cohesion: 0.83
 Nodes (3): main(), parseArgs(), run()
 
-### Community 45 - "Community 45"
+### Community 46 - "Community 46"
 Cohesion: 0.67
 Nodes (2): hasFlag(), hasReset()
 
-### Community 46 - "Community 46"
+### Community 47 - "Community 47"
 Cohesion: 0.67
 Nodes (2): getClientIp(), POST()
-
-### Community 47 - "Community 47"
-Cohesion: 0.5
-Nodes (0): 
 
 ### Community 48 - "Community 48"
 Cohesion: 0.5
 Nodes (0): 
 
 ### Community 49 - "Community 49"
+Cohesion: 0.5
+Nodes (0): 
+
+### Community 50 - "Community 50"
 Cohesion: 0.83
 Nodes (3): buildSystemPrompt(), getBroadcastersForFixture(), parseBroadcasters()
 
-### Community 50 - "Community 50"
+### Community 51 - "Community 51"
 Cohesion: 0.67
 Nodes (1): Xo
 
-### Community 51 - "Community 51"
+### Community 52 - "Community 52"
 Cohesion: 0.67
 Nodes (0): 
-
-### Community 52 - "Community 52"
-Cohesion: 1.0
-Nodes (2): DELETE(), isAuthorised()
 
 ### Community 53 - "Community 53"
-Cohesion: 0.67
-Nodes (0): 
+Cohesion: 1.0
+Nodes (2): DELETE(), isAuthorised()
 
 ### Community 54 - "Community 54"
 Cohesion: 0.67
@@ -549,16 +550,16 @@ Cohesion: 0.67
 Nodes (0): 
 
 ### Community 58 - "Community 58"
-Cohesion: 1.0
-Nodes (2): hashEmail(), registerOrUpdateUser()
+Cohesion: 0.67
+Nodes (0): 
 
 ### Community 59 - "Community 59"
 Cohesion: 1.0
-Nodes (2): openFichaModal(), openResultadosTab()
+Nodes (2): hashEmail(), registerOrUpdateUser()
 
 ### Community 60 - "Community 60"
 Cohesion: 1.0
-Nodes (0): 
+Nodes (2): openFichaModal(), openResultadosTab()
 
 ### Community 61 - "Community 61"
 Cohesion: 1.0
@@ -706,1124 +707,1128 @@ Nodes (0):
 
 ### Community 97 - "Community 97"
 Cohesion: 1.0
-Nodes (1): Next.js Agent Rules
+Nodes (0): 
 
 ### Community 98 - "Community 98"
 Cohesion: 1.0
-Nodes (1): Graphify Configuration
+Nodes (1): Next.js Agent Rules
 
 ### Community 99 - "Community 99"
 Cohesion: 1.0
-Nodes (1): Resenha PrÃ©-Jogo Product
+Nodes (1): Graphify Configuration
 
 ### Community 100 - "Community 100"
 Cohesion: 1.0
-Nodes (1): Campeonato Brasileiro SÃ©rie A
+Nodes (1): Resenha PrÃ©-Jogo Product
 
 ### Community 101 - "Community 101"
 Cohesion: 1.0
-Nodes (1): Next.js 16
+Nodes (1): Campeonato Brasileiro SÃ©rie A
 
 ### Community 102 - "Community 102"
 Cohesion: 1.0
-Nodes (1): React 19
+Nodes (1): Next.js 16
 
 ### Community 103 - "Community 103"
 Cohesion: 1.0
-Nodes (1): TypeScript 5
+Nodes (1): React 19
 
 ### Community 104 - "Community 104"
 Cohesion: 1.0
-Nodes (1): Tailwind CSS 4
+Nodes (1): TypeScript 5
 
 ### Community 105 - "Community 105"
 Cohesion: 1.0
-Nodes (1): Upstash Redis
+Nodes (1): Tailwind CSS 4
 
 ### Community 106 - "Community 106"
 Cohesion: 1.0
-Nodes (1): Google Gemini 2.5 Flash
+Nodes (1): Upstash Redis
 
 ### Community 107 - "Community 107"
 Cohesion: 1.0
-Nodes (1): API-Football v3
+Nodes (1): Google Gemini 2.5 Flash
 
 ### Community 108 - "Community 108"
 Cohesion: 1.0
-Nodes (1): CBF API
+Nodes (1): API-Football v3
 
 ### Community 109 - "Community 109"
 Cohesion: 1.0
-Nodes (1): Vercel
+Nodes (1): CBF API
 
 ### Community 110 - "Community 110"
 Cohesion: 1.0
-Nodes (1): Anthropic Claude Haiku
+Nodes (1): Vercel
 
 ### Community 111 - "Community 111"
 Cohesion: 1.0
-Nodes (1): Cache Warmup Seeds
+Nodes (1): Anthropic Claude Haiku
 
 ### Community 112 - "Community 112"
 Cohesion: 1.0
-Nodes (1): Documentation Index
+Nodes (1): Cache Warmup Seeds
 
 ### Community 113 - "Community 113"
 Cohesion: 1.0
-Nodes (1): Feature: Club Selection & Theme
+Nodes (1): Documentation Index
 
 ### Community 114 - "Community 114"
 Cohesion: 1.0
-Nodes (1): ThemeProvider Component
+Nodes (1): Feature: Club Selection & Theme
 
 ### Community 115 - "Community 115"
 Cohesion: 1.0
-Nodes (1): ClubSelector Component
+Nodes (1): ThemeProvider Component
 
 ### Community 116 - "Community 116"
 Cohesion: 1.0
-Nodes (1): HeroClubName Component
+Nodes (1): ClubSelector Component
 
 ### Community 117 - "Community 117"
 Cohesion: 1.0
-Nodes (1): InitialLoader Component
+Nodes (1): HeroClubName Component
 
 ### Community 118 - "Community 118"
 Cohesion: 1.0
-Nodes (1): clubs.json Static Data
+Nodes (1): InitialLoader Component
 
 ### Community 119 - "Community 119"
 Cohesion: 1.0
-Nodes (1): ClubTheme Data Structure
+Nodes (1): clubs.json Static Data
 
 ### Community 120 - "Community 120"
 Cohesion: 1.0
-Nodes (1): CSS Theme Variables
+Nodes (1): ClubTheme Data Structure
 
 ### Community 121 - "Community 121"
 Cohesion: 1.0
-Nodes (1): localStorage Persistence
+Nodes (1): CSS Theme Variables
 
 ### Community 122 - "Community 122"
 Cohesion: 1.0
-Nodes (1): Feature: Upcoming Matches
+Nodes (1): localStorage Persistence
 
 ### Community 123 - "Community 123"
 Cohesion: 1.0
-Nodes (1): MatchSection Component
+Nodes (1): Feature: Upcoming Matches
 
 ### Community 124 - "Community 124"
 Cohesion: 1.0
-Nodes (1): MatchCard Component
+Nodes (1): MatchSection Component
 
 ### Community 125 - "Community 125"
 Cohesion: 1.0
-Nodes (1): API: GET /api/fixtures
+Nodes (1): MatchCard Component
 
 ### Community 126 - "Community 126"
 Cohesion: 1.0
-Nodes (1): API: GET /api/previews
+Nodes (1): API: GET /api/fixtures
 
 ### Community 127 - "Community 127"
 Cohesion: 1.0
-Nodes (1): API: GET /api/h2h
+Nodes (1): API: GET /api/previews
 
 ### Community 128 - "Community 128"
 Cohesion: 1.0
-Nodes (1): Competition Filter Pills
+Nodes (1): API: GET /api/h2h
 
 ### Community 129 - "Community 129"
 Cohesion: 1.0
-Nodes (1): Multi-Competition Support
+Nodes (1): Competition Filter Pills
 
 ### Community 130 - "Community 130"
 Cohesion: 1.0
-Nodes (1): Feature: Past Results
+Nodes (1): Multi-Competition Support
 
 ### Community 131 - "Community 131"
 Cohesion: 1.0
-Nodes (1): API: GET /api/past-fixtures
+Nodes (1): Feature: Past Results
 
 ### Community 132 - "Community 132"
 Cohesion: 1.0
-Nodes (1): API: GET /api/past-results
+Nodes (1): API: GET /api/past-fixtures
 
 ### Community 133 - "Community 133"
 Cohesion: 1.0
-Nodes (1): Merged Results (CBF + API-Football)
+Nodes (1): API: GET /api/past-results
 
 ### Community 134 - "Community 134"
 Cohesion: 1.0
-Nodes (1): CbfMatchDetail Data Type
+Nodes (1): Merged Results (CBF + API-Football)
 
 ### Community 135 - "Community 135"
 Cohesion: 1.0
-Nodes (1): CONMEBOL to API-Football Cross-Reference
+Nodes (1): CbfMatchDetail Data Type
 
 ### Community 136 - "Community 136"
 Cohesion: 1.0
-Nodes (1): Stale-While-Error Cache Strategy
+Nodes (1): CONMEBOL to API-Football Cross-Reference
 
 ### Community 137 - "Community 137"
 Cohesion: 1.0
-Nodes (1): Feature: Standings
+Nodes (1): Stale-While-Error Cache Strategy
 
 ### Community 138 - "Community 138"
 Cohesion: 1.0
-Nodes (1): StandingsModal Component
+Nodes (1): Feature: Standings
 
 ### Community 139 - "Community 139"
 Cohesion: 1.0
-Nodes (1): API: GET /api/standings
+Nodes (1): StandingsModal Component
 
 ### Community 140 - "Community 140"
 Cohesion: 1.0
-Nodes (1): StandingEntry Data Type
+Nodes (1): API: GET /api/standings
 
 ### Community 141 - "Community 141"
 Cohesion: 1.0
-Nodes (1): Table Zone Classification
+Nodes (1): StandingEntry Data Type
 
 ### Community 142 - "Community 142"
 Cohesion: 1.0
-Nodes (1): Smart TTL (match-window aware)
+Nodes (1): Table Zone Classification
 
 ### Community 143 - "Community 143"
 Cohesion: 1.0
-Nodes (1): Feature: Where to Watch (Broadcasters)
+Nodes (1): Smart TTL (match-window aware)
 
 ### Community 144 - "Community 144"
 Cohesion: 1.0
-Nodes (1): API: GET /api/broadcasters
+Nodes (1): Feature: Where to Watch (Broadcasters)
 
 ### Community 145 - "Community 145"
 Cohesion: 1.0
-Nodes (1): Gemini Google Search Grounding
+Nodes (1): API: GET /api/broadcasters
 
 ### Community 146 - "Community 146"
 Cohesion: 1.0
-Nodes (1): Broadcaster Engine (anthropic/gemini)
+Nodes (1): Gemini Google Search Grounding
 
 ### Community 147 - "Community 147"
 Cohesion: 1.0
-Nodes (1): Feature: Ficha do Jogo (Match Sheet)
+Nodes (1): Broadcaster Engine (anthropic/gemini)
 
 ### Community 148 - "Community 148"
 Cohesion: 1.0
-Nodes (1): CbfMatchModalContent Component
+Nodes (1): Feature: Ficha do Jogo (Match Sheet)
 
 ### Community 149 - "Community 149"
 Cohesion: 1.0
-Nodes (1): NonCbfFichaContent Component
+Nodes (1): CbfMatchModalContent Component
 
 ### Community 150 - "Community 150"
 Cohesion: 1.0
-Nodes (1): API: GET /api/cbf/round/{round}
+Nodes (1): NonCbfFichaContent Component
 
 ### Community 151 - "Community 151"
 Cohesion: 1.0
-Nodes (1): CbfGoal Data Type
+Nodes (1): API: GET /api/cbf/round/{round}
 
 ### Community 152 - "Community 152"
 Cohesion: 1.0
-Nodes (1): CbfCard Data Type
+Nodes (1): CbfGoal Data Type
 
 ### Community 153 - "Community 153"
 Cohesion: 1.0
-Nodes (1): CbfAthlete Data Type
+Nodes (1): CbfCard Data Type
 
 ### Community 154 - "Community 154"
 Cohesion: 1.0
-Nodes (1): Feature: Round Overview
+Nodes (1): CbfAthlete Data Type
 
 ### Community 155 - "Community 155"
 Cohesion: 1.0
-Nodes (1): RoundModal Component
+Nodes (1): Feature: Round Overview
 
 ### Community 156 - "Community 156"
 Cohesion: 1.0
-Nodes (1): API: GET /api/round
+Nodes (1): RoundModal Component
 
 ### Community 157 - "Community 157"
 Cohesion: 1.0
-Nodes (1): Feature: Sharing
+Nodes (1): API: GET /api/round
 
 ### Community 158 - "Community 158"
 Cohesion: 1.0
-Nodes (1): Web Share API
+Nodes (1): Feature: Sharing
 
 ### Community 159 - "Community 159"
 Cohesion: 1.0
-Nodes (1): WhatsApp Desktop Fallback
+Nodes (1): Web Share API
 
 ### Community 160 - "Community 160"
 Cohesion: 1.0
-Nodes (1): Rationale: Web Share API over wa.me link
+Nodes (1): WhatsApp Desktop Fallback
 
 ### Community 161 - "Community 161"
 Cohesion: 1.0
-Nodes (1): Feature: Onboarding
+Nodes (1): Rationale: Web Share API over wa.me link
 
 ### Community 162 - "Community 162"
 Cohesion: 1.0
-Nodes (1): OnboardingModal Component
+Nodes (1): Feature: Onboarding
 
 ### Community 163 - "Community 163"
 Cohesion: 1.0
-Nodes (1): useFocusTrap Hook
+Nodes (1): OnboardingModal Component
 
 ### Community 164 - "Community 164"
 Cohesion: 1.0
-Nodes (1): Feature: Email Capture
+Nodes (1): useFocusTrap Hook
 
 ### Community 165 - "Community 165"
 Cohesion: 1.0
-Nodes (1): EmailCaptureModal Component
+Nodes (1): Feature: Email Capture
 
 ### Community 166 - "Community 166"
 Cohesion: 1.0
-Nodes (1): API: POST /api/identity
+Nodes (1): EmailCaptureModal Component
 
 ### Community 167 - "Community 167"
 Cohesion: 1.0
-Nodes (1): UserIdentity Data Model
+Nodes (1): API: POST /api/identity
 
 ### Community 168 - "Community 168"
 Cohesion: 1.0
-Nodes (1): sc_uid Cookie (httpOnly UUID)
+Nodes (1): UserIdentity Data Model
 
 ### Community 169 - "Community 169"
 Cohesion: 1.0
-Nodes (1): Feature: Suggestions & Feedback
+Nodes (1): sc_uid Cookie (httpOnly UUID)
 
 ### Community 170 - "Community 170"
 Cohesion: 1.0
-Nodes (1): SuggestionModal Component
+Nodes (1): Feature: Suggestions & Feedback
 
 ### Community 171 - "Community 171"
 Cohesion: 1.0
-Nodes (1): API: POST /api/suggestions
+Nodes (1): SuggestionModal Component
 
 ### Community 172 - "Community 172"
 Cohesion: 1.0
-Nodes (1): Rate Limiting (Upstash Ratelimit)
+Nodes (1): API: POST /api/suggestions
 
 ### Community 173 - "Community 173"
 Cohesion: 1.0
-Nodes (1): Planning: Admin Area
+Nodes (1): Rate Limiting (Upstash Ratelimit)
 
 ### Community 174 - "Community 174"
 Cohesion: 1.0
-Nodes (1): Admin Authentication (sc_admin cookie)
+Nodes (1): Planning: Admin Area
 
 ### Community 175 - "Community 175"
 Cohesion: 1.0
-Nodes (1): Admin Cache Management Panel
+Nodes (1): Admin Authentication (sc_admin cookie)
 
 ### Community 176 - "Community 176"
 Cohesion: 1.0
-Nodes (1): Admin Seed Panel
+Nodes (1): Admin Cache Management Panel
 
 ### Community 177 - "Community 177"
 Cohesion: 1.0
-Nodes (1): Admin Clubs Panel
+Nodes (1): Admin Seed Panel
 
 ### Community 178 - "Community 178"
 Cohesion: 1.0
-Nodes (1): Admin Logs Panel
+Nodes (1): Admin Clubs Panel
 
 ### Community 179 - "Community 179"
 Cohesion: 1.0
-Nodes (1): Planning: BolÃ£o Copa do Mundo
+Nodes (1): Admin Logs Panel
 
 ### Community 180 - "Community 180"
 Cohesion: 1.0
-Nodes (1): BolÃ£o Data Model
+Nodes (1): Planning: BolÃ£o Copa do Mundo
 
 ### Community 181 - "Community 181"
 Cohesion: 1.0
-Nodes (1): Prediction Data Model
+Nodes (1): BolÃ£o Data Model
 
 ### Community 182 - "Community 182"
 Cohesion: 1.0
-Nodes (1): BolÃ£o Scoring Rules
+Nodes (1): Prediction Data Model
 
 ### Community 183 - "Community 183"
 Cohesion: 1.0
-Nodes (1): BolÃ£o Leaderboard (Redis Sorted Set)
+Nodes (1): BolÃ£o Scoring Rules
 
 ### Community 184 - "Community 184"
 Cohesion: 1.0
-Nodes (1): PIN-based Email Authentication
+Nodes (1): BolÃ£o Leaderboard (Redis Sorted Set)
 
 ### Community 185 - "Community 185"
 Cohesion: 1.0
-Nodes (1): Rationale: Redis over SQL for BolÃ£o
+Nodes (1): PIN-based Email Authentication
 
 ### Community 186 - "Community 186"
 Cohesion: 1.0
-Nodes (1): Rationale: PIN Auth over OAuth
+Nodes (1): Rationale: Redis over SQL for BolÃ£o
 
 ### Community 187 - "Community 187"
 Cohesion: 1.0
-Nodes (1): Planning: Copa 2026 Implementation
+Nodes (1): Rationale: PIN Auth over OAuth
 
 ### Community 188 - "Community 188"
 Cohesion: 1.0
-Nodes (1): SeleÃ§Ã£o Brasileira ClubTheme
+Nodes (1): Planning: Copa 2026 Implementation
 
 ### Community 189 - "Community 189"
 Cohesion: 1.0
-Nodes (1): CopaMatchSection Component
+Nodes (1): SeleÃ§Ã£o Brasileira ClubTheme
 
 ### Community 190 - "Community 190"
 Cohesion: 1.0
-Nodes (1): GroupStandingsModal Component
+Nodes (1): CopaMatchSection Component
 
 ### Community 191 - "Community 191"
 Cohesion: 1.0
-Nodes (1): CopaPhaseHeader Component
+Nodes (1): GroupStandingsModal Component
 
 ### Community 192 - "Community 192"
 Cohesion: 1.0
-Nodes (1): API: GET /api/copa/fixtures
+Nodes (1): CopaPhaseHeader Component
 
 ### Community 193 - "Community 193"
 Cohesion: 1.0
-Nodes (1): API: GET /api/copa/standings
+Nodes (1): API: GET /api/copa/fixtures
 
 ### Community 194 - "Community 194"
 Cohesion: 1.0
-Nodes (1): Planning: Multi-Competition Architecture
+Nodes (1): API: GET /api/copa/standings
 
 ### Community 195 - "Community 195"
 Cohesion: 1.0
-Nodes (1): Competition Data Model
+Nodes (1): Planning: Multi-Competition Architecture
 
 ### Community 196 - "Community 196"
 Cohesion: 1.0
-Nodes (1): Separate Page per Competition Architecture
+Nodes (1): Competition Data Model
 
 ### Community 197 - "Community 197"
 Cohesion: 1.0
-Nodes (1): Default Highlight Team (CenÃ¡rio C UX)
+Nodes (1): Separate Page per Competition Architecture
 
 ### Community 198 - "Community 198"
 Cohesion: 1.0
-Nodes (1): Rationale: Separate Pages over Competition Selector
+Nodes (1): Default Highlight Team (CenÃ¡rio C UX)
 
 ### Community 199 - "Community 199"
 Cohesion: 1.0
-Nodes (1): Rationale: CenÃ¡rio C UX (Brazil default, optional selector)
+Nodes (1): Rationale: Separate Pages over Competition Selector
 
 ### Community 200 - "Community 200"
 Cohesion: 1.0
-Nodes (1): Roadmap Consolidado
+Nodes (1): Rationale: CenÃ¡rio C UX (Brazil default, optional selector)
 
 ### Community 201 - "Community 201"
 Cohesion: 1.0
-Nodes (1): Fase 0 â€” Foundation
+Nodes (1): Roadmap Consolidado
 
 ### Community 202 - "Community 202"
 Cohesion: 1.0
-Nodes (1): Fase 1 â€” CompetiÃ§Ãµes de Clubes
+Nodes (1): Fase 0 â€” Foundation
 
 ### Community 203 - "Community 203"
 Cohesion: 1.0
-Nodes (1): Fase 2 â€” PÃ¡gina Copa do Mundo 2026
+Nodes (1): Fase 1 â€” CompetiÃ§Ãµes de Clubes
 
 ### Community 204 - "Community 204"
 Cohesion: 1.0
-Nodes (1): Fase 3 â€” BolÃ£o da Copa do Mundo
+Nodes (1): Fase 2 â€” PÃ¡gina Copa do Mundo 2026
 
 ### Community 205 - "Community 205"
 Cohesion: 1.0
-Nodes (1): StandingsModal Multi-CompetiÃ§Ã£o (pendente)
+Nodes (1): Fase 3 â€” BolÃ£o da Copa do Mundo
 
 ### Community 206 - "Community 206"
 Cohesion: 1.0
-Nodes (1): RoundModal Multi-CompetiÃ§Ã£o (pendente)
+Nodes (1): StandingsModal Multi-CompetiÃ§Ã£o (pendente)
 
 ### Community 207 - "Community 207"
 Cohesion: 1.0
-Nodes (1): PÃ¡gina Copa do Mundo 2026 (/copa-2026)
+Nodes (1): RoundModal Multi-CompetiÃ§Ã£o (pendente)
 
 ### Community 208 - "Community 208"
 Cohesion: 1.0
-Nodes (1): Auth PIN por E-mail (BolÃ£o)
+Nodes (1): PÃ¡gina Copa do Mundo 2026 (/copa-2026)
 
 ### Community 209 - "Community 209"
 Cohesion: 1.0
-Nodes (1): Proposta TÃ©cnica v2 â€” MÃºltiplas CompetiÃ§Ãµes
+Nodes (1): Auth PIN por E-mail (BolÃ£o)
 
 ### Community 210 - "Community 210"
 Cohesion: 1.0
-Nodes (1): Fontes de Dados por CompetiÃ§Ã£o (v2)
+Nodes (1): Proposta TÃ©cnica v2 â€” MÃºltiplas CompetiÃ§Ãµes
 
 ### Community 211 - "Community 211"
 Cohesion: 1.0
-Nodes (1): EstratÃ©gia de Cache Atual (v2 doc)
+Nodes (1): Fontes de Dados por CompetiÃ§Ã£o (v2)
 
 ### Community 212 - "Community 212"
 Cohesion: 1.0
-Nodes (1): Riscos Ativos (v2)
+Nodes (1): EstratÃ©gia de Cache Atual (v2 doc)
 
 ### Community 213 - "Community 213"
 Cohesion: 1.0
-Nodes (1): VisÃ£o Geral do Produto â€” Resenha PrÃ©-Jogo
+Nodes (1): Riscos Ativos (v2)
 
 ### Community 214 - "Community 214"
 Cohesion: 1.0
-Nodes (1): Stack TecnolÃ³gico do Produto
+Nodes (1): VisÃ£o Geral do Produto â€” Resenha PrÃ©-Jogo
 
 ### Community 215 - "Community 215"
 Cohesion: 1.0
-Nodes (1): DecisÃµes de Produto
+Nodes (1): Stack TecnolÃ³gico do Produto
 
 ### Community 216 - "Community 216"
 Cohesion: 1.0
-Nodes (1): Funcionalidades Principais
+Nodes (1): DecisÃµes de Produto
 
 ### Community 217 - "Community 217"
 Cohesion: 1.0
-Nodes (1): Script seed-all (Orquestrador de Cache)
+Nodes (1): Funcionalidades Principais
 
 ### Community 218 - "Community 218"
 Cohesion: 1.0
-Nodes (1): Script seed-cbf (Rodadas BrasileirÃ£o)
+Nodes (1): Script seed-all (Orquestrador de Cache)
 
 ### Community 219 - "Community 219"
 Cohesion: 1.0
-Nodes (1): Script seed-fixtures (PrÃ³ximos Jogos)
+Nodes (1): Script seed-cbf (Rodadas BrasileirÃ£o)
 
 ### Community 220 - "Community 220"
 Cohesion: 1.0
-Nodes (1): Script seed-form (Forma dos Times)
+Nodes (1): Script seed-fixtures (PrÃ³ximos Jogos)
 
 ### Community 221 - "Community 221"
 Cohesion: 1.0
-Nodes (1): Script seed-past-results (HistÃ³rico W/D/L)
+Nodes (1): Script seed-form (Forma dos Times)
 
 ### Community 222 - "Community 222"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/fixtures
+Nodes (1): Script seed-past-results (HistÃ³rico W/D/L)
 
 ### Community 223 - "Community 223"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/round
+Nodes (1): API Route: GET /api/fixtures
 
 ### Community 224 - "Community 224"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/past-results
+Nodes (1): API Route: GET /api/round
 
 ### Community 225 - "Community 225"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/previews
+Nodes (1): API Route: GET /api/past-results
 
 ### Community 226 - "Community 226"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/broadcasters
+Nodes (1): API Route: GET /api/previews
 
 ### Community 227 - "Community 227"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/form
+Nodes (1): API Route: GET /api/broadcasters
 
 ### Community 228 - "Community 228"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/h2h
+Nodes (1): API Route: GET /api/form
 
 ### Community 229 - "Community 229"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/players
+Nodes (1): API Route: GET /api/h2h
 
 ### Community 230 - "Community 230"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/standings
+Nodes (1): API Route: GET /api/players
 
 ### Community 231 - "Community 231"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/past-fixtures (CBF)
+Nodes (1): API Route: GET /api/standings
 
 ### Community 232 - "Community 232"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/cbf/round/[round]
+Nodes (1): API Route: GET /api/past-fixtures (CBF)
 
 ### Community 233 - "Community 233"
 Cohesion: 1.0
-Nodes (1): API Route: POST /api/identity
+Nodes (1): API Route: GET /api/cbf/round/[round]
 
 ### Community 234 - "Community 234"
 Cohesion: 1.0
-Nodes (1): API Route: POST /api/suggestions
+Nodes (1): API Route: POST /api/identity
 
 ### Community 235 - "Community 235"
 Cohesion: 1.0
-Nodes (1): API Route: GET /api/debug/fixtures
+Nodes (1): API Route: POST /api/suggestions
 
 ### Community 236 - "Community 236"
 Cohesion: 1.0
-Nodes (1): Arquitetura TÃ©cnica â€” VisÃ£o Geral
+Nodes (1): API Route: GET /api/debug/fixtures
 
 ### Community 237 - "Community 237"
 Cohesion: 1.0
-Nodes (1): Stack TÃ©cnico Detalhado
+Nodes (1): Arquitetura TÃ©cnica â€” VisÃ£o Geral
 
 ### Community 238 - "Community 238"
 Cohesion: 1.0
-Nodes (1): Estrutura de Pastas do Projeto
+Nodes (1): Stack TÃ©cnico Detalhado
 
 ### Community 239 - "Community 239"
 Cohesion: 1.0
-Nodes (1): CompetiÃ§Ãµes Suportadas (competitions.ts)
+Nodes (1): Estrutura de Pastas do Projeto
 
 ### Community 240 - "Community 240"
 Cohesion: 1.0
-Nodes (1): Fluxo de Dados Principal
+Nodes (1): CompetiÃ§Ãµes Suportadas (competitions.ts)
 
 ### Community 241 - "Community 241"
 Cohesion: 1.0
-Nodes (1): Modelo de RenderizaÃ§Ã£o Next.js
+Nodes (1): Fluxo de Dados Principal
 
 ### Community 242 - "Community 242"
 Cohesion: 1.0
-Nodes (1): VariÃ¡veis de Ambiente
+Nodes (1): Modelo de RenderizaÃ§Ã£o Next.js
 
 ### Community 243 - "Community 243"
 Cohesion: 1.0
-Nodes (1): EstratÃ©gia de Cache em Camadas
+Nodes (1): VariÃ¡veis de Ambiente
 
 ### Community 244 - "Community 244"
 Cohesion: 1.0
-Nodes (1): Cache L1 â€” Next.js unstable_cache
+Nodes (1): EstratÃ©gia de Cache em Camadas
 
 ### Community 245 - "Community 245"
 Cohesion: 1.0
-Nodes (1): Cache L2 â€” Upstash Redis
+Nodes (1): Cache L1 â€” Next.js unstable_cache
 
 ### Community 246 - "Community 246"
 Cohesion: 1.0
-Nodes (1): Stale-While-Error CBF
+Nodes (1): Cache L2 â€” Upstash Redis
 
 ### Community 247 - "Community 247"
 Cohesion: 1.0
-Nodes (1): Stale-While-Error CONMEBOL
+Nodes (1): Stale-While-Error CBF
 
 ### Community 248 - "Community 248"
 Cohesion: 1.0
-Nodes (1): InferÃªncia de Status da Rodada CBF
+Nodes (1): Stale-While-Error CONMEBOL
 
 ### Community 249 - "Community 249"
 Cohesion: 1.0
-Nodes (1): Rationale: Cache Agressivo Reduz Custo de APIs
+Nodes (1): InferÃªncia de Status da Rodada CBF
 
 ### Community 250 - "Community 250"
 Cohesion: 1.0
-Nodes (1): Fonte de Dados: API-Football v3
+Nodes (1): Rationale: Cache Agressivo Reduz Custo de APIs
 
 ### Community 251 - "Community 251"
 Cohesion: 1.0
-Nodes (1): Fonte de Dados: CBF API (gweb.cbf.com.br)
+Nodes (1): Fonte de Dados: API-Football v3
 
 ### Community 252 - "Community 252"
 Cohesion: 1.0
-Nodes (1): Fonte de Dados: Google Gemini (Broadcasters)
+Nodes (1): Fonte de Dados: CBF API (gweb.cbf.com.br)
 
 ### Community 253 - "Community 253"
 Cohesion: 1.0
-Nodes (1): Dados EstÃ¡ticos: clubs.json
+Nodes (1): Fonte de Dados: Google Gemini (Broadcasters)
 
 ### Community 254 - "Community 254"
 Cohesion: 1.0
-Nodes (1): CatÃ¡logo de Chaves Redis
+Nodes (1): Dados EstÃ¡ticos: clubs.json
 
 ### Community 255 - "Community 255"
 Cohesion: 1.0
-Nodes (1): Redis Key: fixtures:{competition}:{season}
+Nodes (1): CatÃ¡logo de Chaves Redis
 
 ### Community 256 - "Community 256"
 Cohesion: 1.0
-Nodes (1): Redis Key: finished:{competition}:{teamApiId}
+Nodes (1): Redis Key: fixtures:{competition}:{season}
 
 ### Community 257 - "Community 257"
 Cohesion: 1.0
-Nodes (1): Redis Key: standings:{leagueId}:v2
+Nodes (1): Redis Key: finished:{competition}:{teamApiId}
 
 ### Community 258 - "Community 258"
 Cohesion: 1.0
-Nodes (1): Redis Key: broadcasters:{fixtureId}
+Nodes (1): Redis Key: standings:{leagueId}:v2
 
 ### Community 259 - "Community 259"
 Cohesion: 1.0
-Nodes (1): Redis Key: form:{teamId}:{leagueId}:{season}
+Nodes (1): Redis Key: broadcasters:{fixtureId}
 
 ### Community 260 - "Community 260"
 Cohesion: 1.0
-Nodes (1): Redis Key: h2h:{min}-{max}:{leagueId}
+Nodes (1): Redis Key: form:{teamId}:{leagueId}:{season}
 
 ### Community 261 - "Community 261"
 Cohesion: 1.0
-Nodes (1): Redis Key: cbf:round:{N} + cbf:round:{N}:stale
+Nodes (1): Redis Key: h2h:{min}-{max}:{leagueId}
 
 ### Community 262 - "Community 262"
 Cohesion: 1.0
-Nodes (1): Redis Key: conmebol:tournament:{id} + :stale
+Nodes (1): Redis Key: cbf:round:{N} + cbf:round:{N}:stale
 
 ### Community 263 - "Community 263"
 Cohesion: 1.0
-Nodes (1): Redis Key: identity:{uuid}
+Nodes (1): Redis Key: conmebol:tournament:{id} + :stale
 
 ### Community 264 - "Community 264"
 Cohesion: 1.0
-Nodes (1): Redis Key: suggestions (lista permanente)
+Nodes (1): Redis Key: identity:{uuid}
 
 ### Community 265 - "Community 265"
 Cohesion: 1.0
-Nodes (1): Playwright Logo SVG
+Nodes (1): Redis Key: suggestions (lista permanente)
 
 ### Community 266 - "Community 266"
 Cohesion: 1.0
-Nodes (1): File Icon SVG (public)
+Nodes (1): Playwright Logo SVG
 
 ### Community 267 - "Community 267"
 Cohesion: 1.0
-Nodes (1): Globe Icon SVG (public)
+Nodes (1): File Icon SVG (public)
 
 ### Community 268 - "Community 268"
 Cohesion: 1.0
-Nodes (1): Next.js Logo SVG (public)
+Nodes (1): Globe Icon SVG (public)
 
 ### Community 269 - "Community 269"
 Cohesion: 1.0
-Nodes (1): Vercel Logo SVG (public)
+Nodes (1): Next.js Logo SVG (public)
 
 ### Community 270 - "Community 270"
+Cohesion: 1.0
+Nodes (1): Vercel Logo SVG (public)
+
+### Community 271 - "Community 271"
 Cohesion: 1.0
 Nodes (1): Window/Browser Icon SVG (public)
 
 ## Knowledge Gaps
 - **175 isolated node(s):** `g2`, `Next.js Agent Rules`, `Graphify Configuration`, `Resenha PrÃ©-Jogo Product`, `Campeonato Brasileiro SÃ©rie A` (+170 more)
   These have ≤1 connection - possible missing edges or undocumented components.
-- **Thin community `Community 60`** (2 nodes): `register()`, `instrumentation.ts`
+- **Thin community `Community 61`** (2 nodes): `register()`, `instrumentation.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 61`** (2 nodes): `main()`, `check-status-urls.ts`
+- **Thin community `Community 62`** (2 nodes): `main()`, `check-status-urls.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 62`** (2 nodes): `main()`, `debug-boletim-text.ts`
+- **Thin community `Community 63`** (2 nodes): `main()`, `debug-boletim-text.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 63`** (2 nodes): `main()`, `debug-pdf.ts`
+- **Thin community `Community 64`** (2 nodes): `main()`, `debug-pdf.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 64`** (2 nodes): `main()`, `diagnose-match-docs.ts`
+- **Thin community `Community 65`** (2 nodes): `main()`, `diagnose-match-docs.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 65`** (2 nodes): `robots()`, `robots.ts`
+- **Thin community `Community 66`** (2 nodes): `robots()`, `robots.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 66`** (2 nodes): `sitemap()`, `sitemap.ts`
+- **Thin community `Community 67`** (2 nodes): `sitemap()`, `sitemap.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 67`** (2 nodes): `CopaLayout()`, `layout.tsx`
+- **Thin community `Community 68`** (2 nodes): `CopaLayout()`, `layout.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 68`** (2 nodes): `handleSubmit()`, `EmailCaptureModal.tsx`
+- **Thin community `Community 69`** (2 nodes): `handleSubmit()`, `EmailCaptureModal.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 69`** (2 nodes): `SoccerBallIcon()`, `SoccerBallIcon.tsx`
+- **Thin community `Community 70`** (2 nodes): `SoccerBallIcon()`, `SoccerBallIcon.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 70`** (2 nodes): `CopaPhaseHeader()`, `CopaPhaseHeader.tsx`
+- **Thin community `Community 71`** (2 nodes): `CopaPhaseHeader()`, `CopaPhaseHeader.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 71`** (2 nodes): `CopaThemeApplier()`, `CopaThemeApplier.tsx`
+- **Thin community `Community 72`** (2 nodes): `CopaThemeApplier()`, `CopaThemeApplier.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 72`** (2 nodes): `localiseRound()`, `localiseRound.ts`
+- **Thin community `Community 73`** (2 nodes): `localiseRound()`, `localiseRound.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 73`** (2 nodes): `getFinishedMatchSource()`, `matchDataSource.ts`
+- **Thin community `Community 74`** (2 nodes): `getFinishedMatchSource()`, `matchDataSource.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 74`** (2 nodes): `getClientIp()`, `rateLimiter.ts`
+- **Thin community `Community 75`** (2 nodes): `getClientIp()`, `rateLimiter.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 75`** (2 nodes): `useScrollLock.ts`, `useScrollLock()`
+- **Thin community `Community 76`** (2 nodes): `useScrollLock.ts`, `useScrollLock()`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 76`** (1 nodes): `instrumentation-client.ts`
+- **Thin community `Community 77`** (1 nodes): `instrumentation-client.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 77`** (1 nodes): `next-env.d.ts`
+- **Thin community `Community 78`** (1 nodes): `next-env.d.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 78`** (1 nodes): `next.config.ts`
+- **Thin community `Community 79`** (1 nodes): `next.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 79`** (1 nodes): `playwright.config.ts`
+- **Thin community `Community 80`** (1 nodes): `playwright.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 80`** (1 nodes): `sentry.edge.config.ts`
+- **Thin community `Community 81`** (1 nodes): `sentry.edge.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 81`** (1 nodes): `sentry.server.config.ts`
+- **Thin community `Community 82`** (1 nodes): `sentry.server.config.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 82`** (1 nodes): `global-error.tsx`
+- **Thin community `Community 83`** (1 nodes): `global-error.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 83`** (1 nodes): `opengraph-image.tsx`
-  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 84`** (1 nodes): `page.tsx`
+- **Thin community `Community 84`** (1 nodes): `opengraph-image.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 - **Thin community `Community 85`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 86`** (1 nodes): `HeroClubName.tsx`
+- **Thin community `Community 86`** (1 nodes): `page.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 87`** (1 nodes): `SuggestionModal.tsx`
+- **Thin community `Community 87`** (1 nodes): `HeroClubName.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 88`** (1 nodes): `national-teams.ts`
+- **Thin community `Community 88`** (1 nodes): `SuggestionModal.tsx`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 89`** (1 nodes): `broadcasterColors.ts`
+- **Thin community `Community 89`** (1 nodes): `national-teams.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 90`** (1 nodes): `cbfDocTypes.ts`
+- **Thin community `Community 90`** (1 nodes): `broadcasterColors.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 91`** (1 nodes): `matchConstants.ts`
+- **Thin community `Community 91`** (1 nodes): `cbfDocTypes.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 92`** (1 nodes): `types.ts`
+- **Thin community `Community 92`** (1 nodes): `matchConstants.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 93`** (1 nodes): `club-selector.spec.ts`
+- **Thin community `Community 93`** (1 nodes): `types.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 94`** (1 nodes): `match-section.spec.ts`
+- **Thin community `Community 94`** (1 nodes): `club-selector.spec.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 95`** (1 nodes): `mobile.spec.ts`
+- **Thin community `Community 95`** (1 nodes): `match-section.spec.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 96`** (1 nodes): `mocks.ts`
+- **Thin community `Community 96`** (1 nodes): `mobile.spec.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 97`** (1 nodes): `Next.js Agent Rules`
+- **Thin community `Community 97`** (1 nodes): `mocks.ts`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 98`** (1 nodes): `Graphify Configuration`
+- **Thin community `Community 98`** (1 nodes): `Next.js Agent Rules`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 99`** (1 nodes): `Resenha PrÃ©-Jogo Product`
+- **Thin community `Community 99`** (1 nodes): `Graphify Configuration`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 100`** (1 nodes): `Campeonato Brasileiro SÃ©rie A`
+- **Thin community `Community 100`** (1 nodes): `Resenha PrÃ©-Jogo Product`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 101`** (1 nodes): `Next.js 16`
+- **Thin community `Community 101`** (1 nodes): `Campeonato Brasileiro SÃ©rie A`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 102`** (1 nodes): `React 19`
+- **Thin community `Community 102`** (1 nodes): `Next.js 16`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 103`** (1 nodes): `TypeScript 5`
+- **Thin community `Community 103`** (1 nodes): `React 19`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 104`** (1 nodes): `Tailwind CSS 4`
+- **Thin community `Community 104`** (1 nodes): `TypeScript 5`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 105`** (1 nodes): `Upstash Redis`
+- **Thin community `Community 105`** (1 nodes): `Tailwind CSS 4`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 106`** (1 nodes): `Google Gemini 2.5 Flash`
+- **Thin community `Community 106`** (1 nodes): `Upstash Redis`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 107`** (1 nodes): `API-Football v3`
+- **Thin community `Community 107`** (1 nodes): `Google Gemini 2.5 Flash`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 108`** (1 nodes): `CBF API`
+- **Thin community `Community 108`** (1 nodes): `API-Football v3`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 109`** (1 nodes): `Vercel`
+- **Thin community `Community 109`** (1 nodes): `CBF API`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 110`** (1 nodes): `Anthropic Claude Haiku`
+- **Thin community `Community 110`** (1 nodes): `Vercel`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 111`** (1 nodes): `Cache Warmup Seeds`
+- **Thin community `Community 111`** (1 nodes): `Anthropic Claude Haiku`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 112`** (1 nodes): `Documentation Index`
+- **Thin community `Community 112`** (1 nodes): `Cache Warmup Seeds`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 113`** (1 nodes): `Feature: Club Selection & Theme`
+- **Thin community `Community 113`** (1 nodes): `Documentation Index`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 114`** (1 nodes): `ThemeProvider Component`
+- **Thin community `Community 114`** (1 nodes): `Feature: Club Selection & Theme`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 115`** (1 nodes): `ClubSelector Component`
+- **Thin community `Community 115`** (1 nodes): `ThemeProvider Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 116`** (1 nodes): `HeroClubName Component`
+- **Thin community `Community 116`** (1 nodes): `ClubSelector Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 117`** (1 nodes): `InitialLoader Component`
+- **Thin community `Community 117`** (1 nodes): `HeroClubName Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 118`** (1 nodes): `clubs.json Static Data`
+- **Thin community `Community 118`** (1 nodes): `InitialLoader Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 119`** (1 nodes): `ClubTheme Data Structure`
+- **Thin community `Community 119`** (1 nodes): `clubs.json Static Data`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 120`** (1 nodes): `CSS Theme Variables`
+- **Thin community `Community 120`** (1 nodes): `ClubTheme Data Structure`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 121`** (1 nodes): `localStorage Persistence`
+- **Thin community `Community 121`** (1 nodes): `CSS Theme Variables`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 122`** (1 nodes): `Feature: Upcoming Matches`
+- **Thin community `Community 122`** (1 nodes): `localStorage Persistence`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 123`** (1 nodes): `MatchSection Component`
+- **Thin community `Community 123`** (1 nodes): `Feature: Upcoming Matches`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 124`** (1 nodes): `MatchCard Component`
+- **Thin community `Community 124`** (1 nodes): `MatchSection Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 125`** (1 nodes): `API: GET /api/fixtures`
+- **Thin community `Community 125`** (1 nodes): `MatchCard Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 126`** (1 nodes): `API: GET /api/previews`
+- **Thin community `Community 126`** (1 nodes): `API: GET /api/fixtures`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 127`** (1 nodes): `API: GET /api/h2h`
+- **Thin community `Community 127`** (1 nodes): `API: GET /api/previews`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 128`** (1 nodes): `Competition Filter Pills`
+- **Thin community `Community 128`** (1 nodes): `API: GET /api/h2h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 129`** (1 nodes): `Multi-Competition Support`
+- **Thin community `Community 129`** (1 nodes): `Competition Filter Pills`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 130`** (1 nodes): `Feature: Past Results`
+- **Thin community `Community 130`** (1 nodes): `Multi-Competition Support`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 131`** (1 nodes): `API: GET /api/past-fixtures`
+- **Thin community `Community 131`** (1 nodes): `Feature: Past Results`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 132`** (1 nodes): `API: GET /api/past-results`
+- **Thin community `Community 132`** (1 nodes): `API: GET /api/past-fixtures`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 133`** (1 nodes): `Merged Results (CBF + API-Football)`
+- **Thin community `Community 133`** (1 nodes): `API: GET /api/past-results`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 134`** (1 nodes): `CbfMatchDetail Data Type`
+- **Thin community `Community 134`** (1 nodes): `Merged Results (CBF + API-Football)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 135`** (1 nodes): `CONMEBOL to API-Football Cross-Reference`
+- **Thin community `Community 135`** (1 nodes): `CbfMatchDetail Data Type`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 136`** (1 nodes): `Stale-While-Error Cache Strategy`
+- **Thin community `Community 136`** (1 nodes): `CONMEBOL to API-Football Cross-Reference`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 137`** (1 nodes): `Feature: Standings`
+- **Thin community `Community 137`** (1 nodes): `Stale-While-Error Cache Strategy`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 138`** (1 nodes): `StandingsModal Component`
+- **Thin community `Community 138`** (1 nodes): `Feature: Standings`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 139`** (1 nodes): `API: GET /api/standings`
+- **Thin community `Community 139`** (1 nodes): `StandingsModal Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 140`** (1 nodes): `StandingEntry Data Type`
+- **Thin community `Community 140`** (1 nodes): `API: GET /api/standings`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 141`** (1 nodes): `Table Zone Classification`
+- **Thin community `Community 141`** (1 nodes): `StandingEntry Data Type`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 142`** (1 nodes): `Smart TTL (match-window aware)`
+- **Thin community `Community 142`** (1 nodes): `Table Zone Classification`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 143`** (1 nodes): `Feature: Where to Watch (Broadcasters)`
+- **Thin community `Community 143`** (1 nodes): `Smart TTL (match-window aware)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 144`** (1 nodes): `API: GET /api/broadcasters`
+- **Thin community `Community 144`** (1 nodes): `Feature: Where to Watch (Broadcasters)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 145`** (1 nodes): `Gemini Google Search Grounding`
+- **Thin community `Community 145`** (1 nodes): `API: GET /api/broadcasters`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 146`** (1 nodes): `Broadcaster Engine (anthropic/gemini)`
+- **Thin community `Community 146`** (1 nodes): `Gemini Google Search Grounding`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 147`** (1 nodes): `Feature: Ficha do Jogo (Match Sheet)`
+- **Thin community `Community 147`** (1 nodes): `Broadcaster Engine (anthropic/gemini)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 148`** (1 nodes): `CbfMatchModalContent Component`
+- **Thin community `Community 148`** (1 nodes): `Feature: Ficha do Jogo (Match Sheet)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 149`** (1 nodes): `NonCbfFichaContent Component`
+- **Thin community `Community 149`** (1 nodes): `CbfMatchModalContent Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 150`** (1 nodes): `API: GET /api/cbf/round/{round}`
+- **Thin community `Community 150`** (1 nodes): `NonCbfFichaContent Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 151`** (1 nodes): `CbfGoal Data Type`
+- **Thin community `Community 151`** (1 nodes): `API: GET /api/cbf/round/{round}`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 152`** (1 nodes): `CbfCard Data Type`
+- **Thin community `Community 152`** (1 nodes): `CbfGoal Data Type`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 153`** (1 nodes): `CbfAthlete Data Type`
+- **Thin community `Community 153`** (1 nodes): `CbfCard Data Type`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 154`** (1 nodes): `Feature: Round Overview`
+- **Thin community `Community 154`** (1 nodes): `CbfAthlete Data Type`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 155`** (1 nodes): `RoundModal Component`
+- **Thin community `Community 155`** (1 nodes): `Feature: Round Overview`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 156`** (1 nodes): `API: GET /api/round`
+- **Thin community `Community 156`** (1 nodes): `RoundModal Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 157`** (1 nodes): `Feature: Sharing`
+- **Thin community `Community 157`** (1 nodes): `API: GET /api/round`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 158`** (1 nodes): `Web Share API`
+- **Thin community `Community 158`** (1 nodes): `Feature: Sharing`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 159`** (1 nodes): `WhatsApp Desktop Fallback`
+- **Thin community `Community 159`** (1 nodes): `Web Share API`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 160`** (1 nodes): `Rationale: Web Share API over wa.me link`
+- **Thin community `Community 160`** (1 nodes): `WhatsApp Desktop Fallback`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 161`** (1 nodes): `Feature: Onboarding`
+- **Thin community `Community 161`** (1 nodes): `Rationale: Web Share API over wa.me link`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 162`** (1 nodes): `OnboardingModal Component`
+- **Thin community `Community 162`** (1 nodes): `Feature: Onboarding`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 163`** (1 nodes): `useFocusTrap Hook`
+- **Thin community `Community 163`** (1 nodes): `OnboardingModal Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 164`** (1 nodes): `Feature: Email Capture`
+- **Thin community `Community 164`** (1 nodes): `useFocusTrap Hook`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 165`** (1 nodes): `EmailCaptureModal Component`
+- **Thin community `Community 165`** (1 nodes): `Feature: Email Capture`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 166`** (1 nodes): `API: POST /api/identity`
+- **Thin community `Community 166`** (1 nodes): `EmailCaptureModal Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 167`** (1 nodes): `UserIdentity Data Model`
+- **Thin community `Community 167`** (1 nodes): `API: POST /api/identity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 168`** (1 nodes): `sc_uid Cookie (httpOnly UUID)`
+- **Thin community `Community 168`** (1 nodes): `UserIdentity Data Model`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 169`** (1 nodes): `Feature: Suggestions & Feedback`
+- **Thin community `Community 169`** (1 nodes): `sc_uid Cookie (httpOnly UUID)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 170`** (1 nodes): `SuggestionModal Component`
+- **Thin community `Community 170`** (1 nodes): `Feature: Suggestions & Feedback`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 171`** (1 nodes): `API: POST /api/suggestions`
+- **Thin community `Community 171`** (1 nodes): `SuggestionModal Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 172`** (1 nodes): `Rate Limiting (Upstash Ratelimit)`
+- **Thin community `Community 172`** (1 nodes): `API: POST /api/suggestions`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 173`** (1 nodes): `Planning: Admin Area`
+- **Thin community `Community 173`** (1 nodes): `Rate Limiting (Upstash Ratelimit)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 174`** (1 nodes): `Admin Authentication (sc_admin cookie)`
+- **Thin community `Community 174`** (1 nodes): `Planning: Admin Area`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 175`** (1 nodes): `Admin Cache Management Panel`
+- **Thin community `Community 175`** (1 nodes): `Admin Authentication (sc_admin cookie)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 176`** (1 nodes): `Admin Seed Panel`
+- **Thin community `Community 176`** (1 nodes): `Admin Cache Management Panel`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 177`** (1 nodes): `Admin Clubs Panel`
+- **Thin community `Community 177`** (1 nodes): `Admin Seed Panel`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 178`** (1 nodes): `Admin Logs Panel`
+- **Thin community `Community 178`** (1 nodes): `Admin Clubs Panel`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 179`** (1 nodes): `Planning: BolÃ£o Copa do Mundo`
+- **Thin community `Community 179`** (1 nodes): `Admin Logs Panel`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 180`** (1 nodes): `BolÃ£o Data Model`
+- **Thin community `Community 180`** (1 nodes): `Planning: BolÃ£o Copa do Mundo`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 181`** (1 nodes): `Prediction Data Model`
+- **Thin community `Community 181`** (1 nodes): `BolÃ£o Data Model`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 182`** (1 nodes): `BolÃ£o Scoring Rules`
+- **Thin community `Community 182`** (1 nodes): `Prediction Data Model`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 183`** (1 nodes): `BolÃ£o Leaderboard (Redis Sorted Set)`
+- **Thin community `Community 183`** (1 nodes): `BolÃ£o Scoring Rules`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 184`** (1 nodes): `PIN-based Email Authentication`
+- **Thin community `Community 184`** (1 nodes): `BolÃ£o Leaderboard (Redis Sorted Set)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 185`** (1 nodes): `Rationale: Redis over SQL for BolÃ£o`
+- **Thin community `Community 185`** (1 nodes): `PIN-based Email Authentication`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 186`** (1 nodes): `Rationale: PIN Auth over OAuth`
+- **Thin community `Community 186`** (1 nodes): `Rationale: Redis over SQL for BolÃ£o`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 187`** (1 nodes): `Planning: Copa 2026 Implementation`
+- **Thin community `Community 187`** (1 nodes): `Rationale: PIN Auth over OAuth`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 188`** (1 nodes): `SeleÃ§Ã£o Brasileira ClubTheme`
+- **Thin community `Community 188`** (1 nodes): `Planning: Copa 2026 Implementation`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 189`** (1 nodes): `CopaMatchSection Component`
+- **Thin community `Community 189`** (1 nodes): `SeleÃ§Ã£o Brasileira ClubTheme`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 190`** (1 nodes): `GroupStandingsModal Component`
+- **Thin community `Community 190`** (1 nodes): `CopaMatchSection Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 191`** (1 nodes): `CopaPhaseHeader Component`
+- **Thin community `Community 191`** (1 nodes): `GroupStandingsModal Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 192`** (1 nodes): `API: GET /api/copa/fixtures`
+- **Thin community `Community 192`** (1 nodes): `CopaPhaseHeader Component`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 193`** (1 nodes): `API: GET /api/copa/standings`
+- **Thin community `Community 193`** (1 nodes): `API: GET /api/copa/fixtures`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 194`** (1 nodes): `Planning: Multi-Competition Architecture`
+- **Thin community `Community 194`** (1 nodes): `API: GET /api/copa/standings`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 195`** (1 nodes): `Competition Data Model`
+- **Thin community `Community 195`** (1 nodes): `Planning: Multi-Competition Architecture`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 196`** (1 nodes): `Separate Page per Competition Architecture`
+- **Thin community `Community 196`** (1 nodes): `Competition Data Model`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 197`** (1 nodes): `Default Highlight Team (CenÃ¡rio C UX)`
+- **Thin community `Community 197`** (1 nodes): `Separate Page per Competition Architecture`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 198`** (1 nodes): `Rationale: Separate Pages over Competition Selector`
+- **Thin community `Community 198`** (1 nodes): `Default Highlight Team (CenÃ¡rio C UX)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 199`** (1 nodes): `Rationale: CenÃ¡rio C UX (Brazil default, optional selector)`
+- **Thin community `Community 199`** (1 nodes): `Rationale: Separate Pages over Competition Selector`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 200`** (1 nodes): `Roadmap Consolidado`
+- **Thin community `Community 200`** (1 nodes): `Rationale: CenÃ¡rio C UX (Brazil default, optional selector)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 201`** (1 nodes): `Fase 0 â€” Foundation`
+- **Thin community `Community 201`** (1 nodes): `Roadmap Consolidado`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 202`** (1 nodes): `Fase 1 â€” CompetiÃ§Ãµes de Clubes`
+- **Thin community `Community 202`** (1 nodes): `Fase 0 â€” Foundation`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 203`** (1 nodes): `Fase 2 â€” PÃ¡gina Copa do Mundo 2026`
+- **Thin community `Community 203`** (1 nodes): `Fase 1 â€” CompetiÃ§Ãµes de Clubes`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 204`** (1 nodes): `Fase 3 â€” BolÃ£o da Copa do Mundo`
+- **Thin community `Community 204`** (1 nodes): `Fase 2 â€” PÃ¡gina Copa do Mundo 2026`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 205`** (1 nodes): `StandingsModal Multi-CompetiÃ§Ã£o (pendente)`
+- **Thin community `Community 205`** (1 nodes): `Fase 3 â€” BolÃ£o da Copa do Mundo`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 206`** (1 nodes): `RoundModal Multi-CompetiÃ§Ã£o (pendente)`
+- **Thin community `Community 206`** (1 nodes): `StandingsModal Multi-CompetiÃ§Ã£o (pendente)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 207`** (1 nodes): `PÃ¡gina Copa do Mundo 2026 (/copa-2026)`
+- **Thin community `Community 207`** (1 nodes): `RoundModal Multi-CompetiÃ§Ã£o (pendente)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 208`** (1 nodes): `Auth PIN por E-mail (BolÃ£o)`
+- **Thin community `Community 208`** (1 nodes): `PÃ¡gina Copa do Mundo 2026 (/copa-2026)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 209`** (1 nodes): `Proposta TÃ©cnica v2 â€” MÃºltiplas CompetiÃ§Ãµes`
+- **Thin community `Community 209`** (1 nodes): `Auth PIN por E-mail (BolÃ£o)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 210`** (1 nodes): `Fontes de Dados por CompetiÃ§Ã£o (v2)`
+- **Thin community `Community 210`** (1 nodes): `Proposta TÃ©cnica v2 â€” MÃºltiplas CompetiÃ§Ãµes`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 211`** (1 nodes): `EstratÃ©gia de Cache Atual (v2 doc)`
+- **Thin community `Community 211`** (1 nodes): `Fontes de Dados por CompetiÃ§Ã£o (v2)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 212`** (1 nodes): `Riscos Ativos (v2)`
+- **Thin community `Community 212`** (1 nodes): `EstratÃ©gia de Cache Atual (v2 doc)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 213`** (1 nodes): `VisÃ£o Geral do Produto â€” Resenha PrÃ©-Jogo`
+- **Thin community `Community 213`** (1 nodes): `Riscos Ativos (v2)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 214`** (1 nodes): `Stack TecnolÃ³gico do Produto`
+- **Thin community `Community 214`** (1 nodes): `VisÃ£o Geral do Produto â€” Resenha PrÃ©-Jogo`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 215`** (1 nodes): `DecisÃµes de Produto`
+- **Thin community `Community 215`** (1 nodes): `Stack TecnolÃ³gico do Produto`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 216`** (1 nodes): `Funcionalidades Principais`
+- **Thin community `Community 216`** (1 nodes): `DecisÃµes de Produto`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 217`** (1 nodes): `Script seed-all (Orquestrador de Cache)`
+- **Thin community `Community 217`** (1 nodes): `Funcionalidades Principais`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 218`** (1 nodes): `Script seed-cbf (Rodadas BrasileirÃ£o)`
+- **Thin community `Community 218`** (1 nodes): `Script seed-all (Orquestrador de Cache)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 219`** (1 nodes): `Script seed-fixtures (PrÃ³ximos Jogos)`
+- **Thin community `Community 219`** (1 nodes): `Script seed-cbf (Rodadas BrasileirÃ£o)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 220`** (1 nodes): `Script seed-form (Forma dos Times)`
+- **Thin community `Community 220`** (1 nodes): `Script seed-fixtures (PrÃ³ximos Jogos)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 221`** (1 nodes): `Script seed-past-results (HistÃ³rico W/D/L)`
+- **Thin community `Community 221`** (1 nodes): `Script seed-form (Forma dos Times)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 222`** (1 nodes): `API Route: GET /api/fixtures`
+- **Thin community `Community 222`** (1 nodes): `Script seed-past-results (HistÃ³rico W/D/L)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 223`** (1 nodes): `API Route: GET /api/round`
+- **Thin community `Community 223`** (1 nodes): `API Route: GET /api/fixtures`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 224`** (1 nodes): `API Route: GET /api/past-results`
+- **Thin community `Community 224`** (1 nodes): `API Route: GET /api/round`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 225`** (1 nodes): `API Route: GET /api/previews`
+- **Thin community `Community 225`** (1 nodes): `API Route: GET /api/past-results`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 226`** (1 nodes): `API Route: GET /api/broadcasters`
+- **Thin community `Community 226`** (1 nodes): `API Route: GET /api/previews`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 227`** (1 nodes): `API Route: GET /api/form`
+- **Thin community `Community 227`** (1 nodes): `API Route: GET /api/broadcasters`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 228`** (1 nodes): `API Route: GET /api/h2h`
+- **Thin community `Community 228`** (1 nodes): `API Route: GET /api/form`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 229`** (1 nodes): `API Route: GET /api/players`
+- **Thin community `Community 229`** (1 nodes): `API Route: GET /api/h2h`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 230`** (1 nodes): `API Route: GET /api/standings`
+- **Thin community `Community 230`** (1 nodes): `API Route: GET /api/players`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 231`** (1 nodes): `API Route: GET /api/past-fixtures (CBF)`
+- **Thin community `Community 231`** (1 nodes): `API Route: GET /api/standings`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 232`** (1 nodes): `API Route: GET /api/cbf/round/[round]`
+- **Thin community `Community 232`** (1 nodes): `API Route: GET /api/past-fixtures (CBF)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 233`** (1 nodes): `API Route: POST /api/identity`
+- **Thin community `Community 233`** (1 nodes): `API Route: GET /api/cbf/round/[round]`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 234`** (1 nodes): `API Route: POST /api/suggestions`
+- **Thin community `Community 234`** (1 nodes): `API Route: POST /api/identity`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 235`** (1 nodes): `API Route: GET /api/debug/fixtures`
+- **Thin community `Community 235`** (1 nodes): `API Route: POST /api/suggestions`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 236`** (1 nodes): `Arquitetura TÃ©cnica â€” VisÃ£o Geral`
+- **Thin community `Community 236`** (1 nodes): `API Route: GET /api/debug/fixtures`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 237`** (1 nodes): `Stack TÃ©cnico Detalhado`
+- **Thin community `Community 237`** (1 nodes): `Arquitetura TÃ©cnica â€” VisÃ£o Geral`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 238`** (1 nodes): `Estrutura de Pastas do Projeto`
+- **Thin community `Community 238`** (1 nodes): `Stack TÃ©cnico Detalhado`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 239`** (1 nodes): `CompetiÃ§Ãµes Suportadas (competitions.ts)`
+- **Thin community `Community 239`** (1 nodes): `Estrutura de Pastas do Projeto`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 240`** (1 nodes): `Fluxo de Dados Principal`
+- **Thin community `Community 240`** (1 nodes): `CompetiÃ§Ãµes Suportadas (competitions.ts)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 241`** (1 nodes): `Modelo de RenderizaÃ§Ã£o Next.js`
+- **Thin community `Community 241`** (1 nodes): `Fluxo de Dados Principal`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 242`** (1 nodes): `VariÃ¡veis de Ambiente`
+- **Thin community `Community 242`** (1 nodes): `Modelo de RenderizaÃ§Ã£o Next.js`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 243`** (1 nodes): `EstratÃ©gia de Cache em Camadas`
+- **Thin community `Community 243`** (1 nodes): `VariÃ¡veis de Ambiente`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 244`** (1 nodes): `Cache L1 â€” Next.js unstable_cache`
+- **Thin community `Community 244`** (1 nodes): `EstratÃ©gia de Cache em Camadas`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 245`** (1 nodes): `Cache L2 â€” Upstash Redis`
+- **Thin community `Community 245`** (1 nodes): `Cache L1 â€” Next.js unstable_cache`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 246`** (1 nodes): `Stale-While-Error CBF`
+- **Thin community `Community 246`** (1 nodes): `Cache L2 â€” Upstash Redis`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 247`** (1 nodes): `Stale-While-Error CONMEBOL`
+- **Thin community `Community 247`** (1 nodes): `Stale-While-Error CBF`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 248`** (1 nodes): `InferÃªncia de Status da Rodada CBF`
+- **Thin community `Community 248`** (1 nodes): `Stale-While-Error CONMEBOL`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 249`** (1 nodes): `Rationale: Cache Agressivo Reduz Custo de APIs`
+- **Thin community `Community 249`** (1 nodes): `InferÃªncia de Status da Rodada CBF`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 250`** (1 nodes): `Fonte de Dados: API-Football v3`
+- **Thin community `Community 250`** (1 nodes): `Rationale: Cache Agressivo Reduz Custo de APIs`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 251`** (1 nodes): `Fonte de Dados: CBF API (gweb.cbf.com.br)`
+- **Thin community `Community 251`** (1 nodes): `Fonte de Dados: API-Football v3`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 252`** (1 nodes): `Fonte de Dados: Google Gemini (Broadcasters)`
+- **Thin community `Community 252`** (1 nodes): `Fonte de Dados: CBF API (gweb.cbf.com.br)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 253`** (1 nodes): `Dados EstÃ¡ticos: clubs.json`
+- **Thin community `Community 253`** (1 nodes): `Fonte de Dados: Google Gemini (Broadcasters)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 254`** (1 nodes): `CatÃ¡logo de Chaves Redis`
+- **Thin community `Community 254`** (1 nodes): `Dados EstÃ¡ticos: clubs.json`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 255`** (1 nodes): `Redis Key: fixtures:{competition}:{season}`
+- **Thin community `Community 255`** (1 nodes): `CatÃ¡logo de Chaves Redis`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 256`** (1 nodes): `Redis Key: finished:{competition}:{teamApiId}`
+- **Thin community `Community 256`** (1 nodes): `Redis Key: fixtures:{competition}:{season}`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 257`** (1 nodes): `Redis Key: standings:{leagueId}:v2`
+- **Thin community `Community 257`** (1 nodes): `Redis Key: finished:{competition}:{teamApiId}`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 258`** (1 nodes): `Redis Key: broadcasters:{fixtureId}`
+- **Thin community `Community 258`** (1 nodes): `Redis Key: standings:{leagueId}:v2`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 259`** (1 nodes): `Redis Key: form:{teamId}:{leagueId}:{season}`
+- **Thin community `Community 259`** (1 nodes): `Redis Key: broadcasters:{fixtureId}`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 260`** (1 nodes): `Redis Key: h2h:{min}-{max}:{leagueId}`
+- **Thin community `Community 260`** (1 nodes): `Redis Key: form:{teamId}:{leagueId}:{season}`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 261`** (1 nodes): `Redis Key: cbf:round:{N} + cbf:round:{N}:stale`
+- **Thin community `Community 261`** (1 nodes): `Redis Key: h2h:{min}-{max}:{leagueId}`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 262`** (1 nodes): `Redis Key: conmebol:tournament:{id} + :stale`
+- **Thin community `Community 262`** (1 nodes): `Redis Key: cbf:round:{N} + cbf:round:{N}:stale`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 263`** (1 nodes): `Redis Key: identity:{uuid}`
+- **Thin community `Community 263`** (1 nodes): `Redis Key: conmebol:tournament:{id} + :stale`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 264`** (1 nodes): `Redis Key: suggestions (lista permanente)`
+- **Thin community `Community 264`** (1 nodes): `Redis Key: identity:{uuid}`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 265`** (1 nodes): `Playwright Logo SVG`
+- **Thin community `Community 265`** (1 nodes): `Redis Key: suggestions (lista permanente)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 266`** (1 nodes): `File Icon SVG (public)`
+- **Thin community `Community 266`** (1 nodes): `Playwright Logo SVG`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 267`** (1 nodes): `Globe Icon SVG (public)`
+- **Thin community `Community 267`** (1 nodes): `File Icon SVG (public)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 268`** (1 nodes): `Next.js Logo SVG (public)`
+- **Thin community `Community 268`** (1 nodes): `Globe Icon SVG (public)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 269`** (1 nodes): `Vercel Logo SVG (public)`
+- **Thin community `Community 269`** (1 nodes): `Next.js Logo SVG (public)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
-- **Thin community `Community 270`** (1 nodes): `Window/Browser Icon SVG (public)`
+- **Thin community `Community 270`** (1 nodes): `Vercel Logo SVG (public)`
+  Too small to be a meaningful cluster - may be noise or needs more connections extracted.
+- **Thin community `Community 271`** (1 nodes): `Window/Browser Icon SVG (public)`
   Too small to be a meaningful cluster - may be noise or needs more connections extracted.
 
 ## Suggested Questions
@@ -1838,7 +1843,7 @@ _Questions this graph is uniquely positioned to answer:_
 - **What connects `g2`, `Next.js Agent Rules`, `Graphify Configuration` to the rest of the system?**
   _175 weakly-connected nodes found - possible documentation gaps or missing edges._
 - **Should `Community 0` be split into smaller, more focused modules?**
-  _Cohesion score 0.01 - nodes in this community are weakly interconnected._
+  _Cohesion score 0.02 - nodes in this community are weakly interconnected._
 - **Should `Community 1` be split into smaller, more focused modules?**
   _Cohesion score 0.01 - nodes in this community are weakly interconnected._
 - **Should `Community 2` be split into smaller, more focused modules?**

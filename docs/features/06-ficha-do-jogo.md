@@ -25,7 +25,7 @@ Exibe os detalhes de uma partida. O conteúdo varia conforme a competição e o 
 
 1. O usuário clica em **"Ficha"** em um `MatchCard` de partida não-Série-A.
 2. Nenhum fetch CBF é feito — a ficha exibe o `NonCbfFichaContent`.
-3. Conteúdo: placar atual (do `match.score`) + lesionados (já carregados via H2H).
+3. Conteúdo: placar (do `match.score`) + gols (via `/api/match-events` quando disponível) + desfalques (carregados via H2H, suprimidos pós-jogo se vazios).
 4. Sem escalação, cartões ou árbitros (dados não disponíveis fora da CBF).
 
 ---
@@ -34,43 +34,48 @@ Exibe os detalhes de uma partida. O conteúdo varia conforme a competição e o 
 
 ### Pré-jogo distante (>48h antes do kickoff)
 
-| Seção | Estado |
-|-------|--------|
-| Resultado | Pendente |
-| Gols | Pendente |
-| Cartões | Pendente |
-| Escalação | Pendente ("Disponível ~48h antes") |
-| Árbitros | Pendente ("Disponível próximo ao jogo") |
+| Seção | Estado | Mensagem exibida |
+|-------|--------|-----------------|
+| Resultado | Pendente | "Disponível após o apito final" |
+| Gols | Pendente | "Disponível após o apito final" |
+| Cartões | Pendente | "Disponível após o apito final" |
+| Escalação | Pendente | "Publicada ~48h antes do jogo" |
+| Árbitros | Pendente | "Confirmada ~48h antes do jogo" |
+| Desfalques | Visível | Lista de lesionados/suspensos (ou "Sem desfalques confirmados") |
 
 ### Pré-jogo próximo (≤48h antes do kickoff)
 
-| Seção | Estado |
-|-------|--------|
-| Escalação | Pode estar disponível (CBF publica ~48h antes) |
-| Árbitros | Pode estar disponível |
+| Seção | Estado | Mensagem exibida |
+|-------|--------|-----------------|
+| Escalação | Pode estar disponível | "Escalação ainda não publicada pelo CBF" se ausente |
+| Árbitros | Pode estar disponível | "Não publicada pelo CBF" se ausente |
+| Desfalques | Visível | Lista ou "Sem desfalques confirmados" |
 
 ### Ao vivo (kickoff → kickoff + 115min)
 
-| Seção | Estado |
-|-------|--------|
-| Resultado | Parcial (placar em tempo real) |
-| Gols | Parcial (atualizado a cada 5min) |
-| Escalação | Disponível |
+| Seção | Estado | Mensagem exibida |
+|-------|--------|-----------------|
+| Resultado | Parcial | "Placar sendo atualizado pelo CBF…" se ainda não disponível |
+| Gols | Parcial | "Atualizando…" se sem dados |
+| Cartões | Parcial | "Atualizando…" se sem dados |
+| Escalação | Disponível | "Escalação ainda não confirmada pelo CBF" ou "Aguardando dados do CBF…" se ausente |
+| Desfalques | Visível | Lista ou "Sem desfalques confirmados" |
 
 ### Encerrado (>kickoff + 115min)
 
 Todas as seções disponíveis com dados definitivos. Documentos oficiais (súmula + boletim financeiro) são baixados, parseados e cacheados permanentemente no Redis.
 
-| Seção | Fonte | Estado |
-|-------|-------|--------|
-| Resultado | CBF API | Disponível |
-| Gols | CBF API | Disponível |
-| Cartões | CBF API | Disponível |
-| Escalação | CBF API (`atletas`) ou Súmula PDF (fallback) | Disponível |
-| Árbitros | CBF API | Disponível |
-| Substituições | Súmula PDF (`cbf:match:{id}:sumula`) | Disponível quando publicada |
-| Público e Renda | Boletim Financeiro PDF (`cbf:match:{id}:boletim`) | **Indisponível** — PDFs de boletim da CBF são image-based (sem camada de texto); parser retorna nulos; seção mostra estado pendente |
-| Documentos Oficiais | `match.documentos` (CBF API) | Links diretos para PDFs da CBF |
+| Seção | Fonte | Estado | Mensagem se ausente |
+|-------|-------|--------|---------------------|
+| Resultado | CBF API | Disponível | "Disponível após o apito final" |
+| Gols | CBF API | Disponível | "Sem gols registrados" |
+| Cartões | CBF API | Disponível | "Sem cartões registrados" |
+| Escalação | CBF API (`atletas`) ou Súmula PDF (fallback) | Disponível | "Escalação não publicada pelo CBF" |
+| Árbitros | CBF API | Disponível | "Não publicada pelo CBF" |
+| Substituições | Súmula PDF (`cbf:match:{id}:sumula`) | Disponível quando publicada | Seção omitida se vazia |
+| Desfalques | API-Football (H2H) | **Omitido** se vazio | Seção suprimida pós-jogo sem dados; exibida como "Desfalques do Jogo" quando há dados |
+| Público e Renda | Boletim Financeiro PDF (`cbf:match:{id}:boletim`) | **Indisponível** — PDFs de boletim da CBF são image-based (sem camada de texto); parser retorna nulos | "Disponíveis algumas horas após o jogo" |
+| Documentos Oficiais | `match.documentos` (CBF API) | Links diretos para PDFs da CBF | "Documentos disponíveis algumas horas após o jogo" |
 
 ---
 
