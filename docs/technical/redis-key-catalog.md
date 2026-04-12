@@ -150,6 +150,38 @@ Cada torneio usa **duas chaves** — primária (TTL dinâmico) e stale (backup, 
 
 **Nota:** `ConmebolTournamentData` contém todos os jogos do torneio. A filtragem por time (`getConmebolFinishedByTeam`) é feita em memória — não há chave Redis por time.
 
+## Documentos Oficiais CBF (Série A — jogos encerrados)
+
+Três chaves por jogo. Preenchidas pelo `processMatchDocuments` (lazy, na primeira abertura da ficha) ou pelo seed `npm run seed:match-docs`.
+
+| Chave | TTL | Tipo | Conteúdo |
+|-------|-----|------|---------|
+| `cbf:match:{idJogo}:docs:status` | Permanente (found) / 2h (not found) | JSON | `CbfDocStatus` — sentinela com URLs resolvidas e timestamp |
+| `cbf:match:{idJogo}:sumula` | Permanente | JSON | `CbfSumulaData` — escalação, substituições, árbitros, gols, cartões |
+| `cbf:match:{idJogo}:boletim` | Permanente | JSON | `CbfBoletimData` — público e renda (valores always null — PDF image-based) |
+
+**Nota:** `idJogo` é o ID do jogo na CBF API (ex: `831889`), não o ID do documento PDF (ex: `1421`). A resolução de URL mapeia um para o outro via `match.documentos[]` ou HEAD-test de URLs construídas.
+
+**Nota:** O boletim financeiro da CBF é gerado como PDF image-based (sem camada de texto). O parser retorna sempre nulos em `publico` e `renda`. A funcionalidade está presente mas incompleta — aguardando solução de OCR.
+
+**Volume (Série A 2026):** ~90 chaves por tipo após seed completo da temporada.
+
+### Comandos úteis
+
+```bash
+# Ver todas as chaves de documentos
+KEYS cbf:match:*
+
+# Contar súmulas cacheadas
+KEYS cbf:match:*:sumula | wc -l
+
+# Checar sentinela de um jogo
+GET cbf:match:831889:docs:status
+
+# Invalidar documentos de um jogo (força re-parse)
+DEL cbf:match:831889:docs:status cbf:match:831889:sumula cbf:match:831889:boletim
+```
+
 ---
 
 ## Identidade de Usuário
@@ -209,6 +241,12 @@ TTL cbf:round:10
 
 # Checar TTL de stale (-1 = permanente, -2 = não existe)
 TTL cbf:round:10:stale
+
+# Ver chaves de documentos oficiais
+KEYS cbf:match:*
+
+# Invalidar documentos de um jogo específico
+DEL cbf:match:831889:docs:status cbf:match:831889:sumula cbf:match:831889:boletim
 
 # Ver sugestões recebidas
 LRANGE suggestions 0 -1

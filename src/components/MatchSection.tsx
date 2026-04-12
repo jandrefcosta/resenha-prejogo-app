@@ -5,6 +5,7 @@ import { useTheme } from '@/components/ThemeProvider';
 import { MatchCard } from '@/components/MatchCard';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import type { Match, MatchPreview, CbfMatchDetail } from '@/lib/types';
+import type { CbfMatchDocsResult } from '@/lib/cbfDocTypes';
 import { localiseRound } from '@/lib/localiseRound';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme } from '@/lib/types';
@@ -214,6 +215,7 @@ export function MatchSection() {
   // CBF (Série A) past fixtures — requires a round number from the server
   const [pastMatches, setPastMatches] = useState<PastEntry[] | null>(null);
   const [pastLoading, setPastLoading] = useState(false);
+  const [pastMatchDocs, setPastMatchDocs] = useState<Record<string, CbfMatchDocsResult>>({});
 
   // Non-CBF past results (CONMEBOL, Copa do Brasil, API-Football)
   const [otherResults, setOtherResults] = useState<Match[] | null>(null);
@@ -266,6 +268,22 @@ export function MatchSection() {
   useEffect(() => {
     if (derivedSerieARound > 0) setSerieARound(derivedSerieARound);
   }, [derivedSerieARound]);
+
+  // Prefetch match-docs for finished Série A matches so renda shows on card face
+  useEffect(() => {
+    if (!pastMatches || pastMatches.length === 0) return;
+    pastMatches.forEach((entry) => {
+      const id = entry.match.idJogo;
+      if (!id || pastMatchDocs[id] !== undefined) return;
+      fetch(`/api/cbf/match-docs?matchId=${encodeURIComponent(id)}&round=${entry.round}`)
+        .then((r) => (r.ok ? (r.json() as Promise<CbfMatchDocsResult>) : null))
+        .then((data) => {
+          if (data) setPastMatchDocs((prev) => ({ ...prev, [id]: data }));
+        })
+        .catch(() => {}); // silent — card face simply won’t show renda
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pastMatches]);
 
   // ── Fetch: past results ────────────────────────────────────────────────────
   function fetchPastResults(clubId: string, roundNum: number) {
@@ -602,6 +620,7 @@ export function MatchSection() {
                       highlightCbfId={String(club.cbfId ?? '')}
                       cbfMatchDetail={entry.match}
                       cbfRound={entry.round}
+                      prefetchedMatchDocs={pastMatchDocs[entry.match.idJogo]}
                       preview={undefined}
                       previewLoading={false}
                       noEmailGate

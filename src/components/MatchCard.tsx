@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { XMarkIcon, ClockIcon, UsersIcon, DocumentTextIcon, ShareIcon } from '@heroicons/react/20/solid';
 import { SoccerBallIcon } from '@/components/SoccerBallIcon';
 import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer, MatchEventsData } from '@/lib/types';
+import type { CbfMatchDocsResult } from '@/lib/cbfDocTypes';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
@@ -533,6 +534,105 @@ function SectionHeader({ label }: { label: string }) {
   );
 }
 
+// ─── Boletim section ─────────────────────────────────────────────────────────
+
+function formatPublico(n: number | null | undefined): string {
+  if (n == null) return '–';
+  return new Intl.NumberFormat('pt-BR').format(n);
+}
+
+function formatRenda(n: number | null | undefined): string {
+  if (n == null) return '–';
+  if (n >= 1_000_000) return `R$ ${(n / 1_000_000).toFixed(2).replace('.', ',')}M`;
+  if (n >= 1_000)     return `R$ ${(n / 1_000).toFixed(1).replace('.', ',')}K`;
+  return `R$ ${new Intl.NumberFormat('pt-BR').format(n)}`;
+}
+
+/**
+ * Displays attendance and revenue data from the Boletim Financeiro.
+ * Shown only for finished Série A matches — data is unique to CBF documents.
+ */
+function BoletimSection({ docs, loading }: { docs: CbfMatchDocsResult | null | undefined; loading: boolean }) {
+  // loading === true → fetch in flight
+  // docs.available === false → not published yet
+  // docs.boletim exists → data available
+
+  const boletim = docs?.boletim;
+
+  return (
+    <section>
+      <SectionHeader label="Público e Renda" />
+      {loading ? (
+        <div className="space-y-1 animate-pulse">
+          <div className="h-10 bg-zinc-800 rounded-lg" />
+        </div>
+      ) : (() => {
+        const items = boletim
+          ? ([
+              ['Público Pagante', formatPublico(boletim.publico.pagante)],
+              ['Público Total',   formatPublico(boletim.publico.geral)],
+              ['Renda Bruta',     formatRenda(boletim.renda.bruta)],
+              ['Renda Líquida',   formatRenda(boletim.renda.liquida)],
+            ] as [string, string][]).filter(([, v]) => v !== '–')
+          : [];
+        return items.length > 0 ? (
+          <div className="grid grid-cols-2 gap-2">
+            {items.map(([label, value]) => (
+              <div
+                key={label}
+                className="flex flex-col rounded-lg bg-zinc-800/50 px-3 py-2.5 text-xs font-sans"
+              >
+                <span className="text-zinc-500 mb-0.5">{label}</span>
+                <span className="text-zinc-100 font-semibold tabular-nums">{value}</span>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Pending>Disponíveis algumas horas após o jogo</Pending>
+        );
+      })()}
+    </section>
+  );
+}
+
+/**
+ * Section showing official CBF document links (PDFs) for a finished match.
+ * Uses the `documentos` field from the CBF internal API, which contains
+ * direct links to conteudo.cbf.com.br PDFs when published.
+ */
+function OfficialDocumentsSection({ documentos }: { documentos: Array<{ url: string; title: string }> }) {
+  const links = documentos.filter((d) => d.url?.startsWith('http'));
+
+  return (
+    <section>
+      <SectionHeader label="Documentos Oficiais" />
+      {links.length > 0 ? (
+        <div className="flex flex-wrap gap-2">
+          {links.map((doc) => (
+            <a
+              key={doc.url}
+              href={doc.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/50 px-3 py-2 text-xs font-medium font-sans text-zinc-300 hover:text-white hover:border-zinc-600 hover:bg-zinc-800 transition-colors"
+            >
+              <DocumentTextIcon className="w-3.5 h-3.5 shrink-0 text-zinc-500" aria-hidden="true" />
+              {doc.title}
+            </a>
+          ))}
+        </div>
+      ) : (
+        <Pending>Documentos disponíveis algumas horas após o jogo</Pending>
+      )}
+    </section>
+  );
+}
+
+/** Looks up a player's apelido in the súmula player pool by shirt number. */
+function findSumulaPlayerName(numero: number, pool: { numero: number; apelido: string }[]): string {
+  return pool.find((p) => p.numero === numero)?.apelido ?? `#${numero}`;
+}
+
 /**
  * Ficha modal content with explicit availability stages.
  *
@@ -549,6 +649,8 @@ function CbfMatchModalContent({
   hoursUntilKickoff,
   injuries,
   injuriesLoading,
+  matchDocs,
+  matchDocsLoading,
 }: {
   data: CbfMatchDetail | null;
   match: Match;
@@ -556,6 +658,8 @@ function CbfMatchModalContent({
   hoursUntilKickoff: number; // negative = kickoff already passed
   injuries: InjuredPlayer[];
   injuriesLoading: boolean;
+  matchDocs?: CbfMatchDocsResult | null;
+  matchDocsLoading?: boolean;
 }) {
   const isPostMatch = hoursUntilKickoff < -(LIVE_WINDOW_MS / 3_600_000);
   const refereeLikelyConfirmed = hoursUntilKickoff <= 48;
@@ -567,8 +671,73 @@ function CbfMatchModalContent({
   const awayGoals  = data?.gols.filter((g) => g.clubeId === data.visitante.id) ?? [];
   const homeCards  = data?.cartoes.filter((c) => c.clubeId === data.mandante.id) ?? [];
   const awayCards  = data?.cartoes.filter((c) => c.clubeId === data.visitante.id) ?? [];
-  const homeStarters = data?.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando) ?? [];
-  const awayStarters = data?.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando) ?? [];
+  const homeAtletas = data?.mandante.atletas ?? [];
+  const awayAtletas = data?.visitante.atletas ?? [];
+
+  // For live matches the CBF API sets entrouJogando=true for players who've been on the pitch
+  // (starters + subs who came on). For pre-kickoff (lineup published but not kicked off),
+  // entrouJogando is all false, so fall back to !reserva (official starting 11).
+  const homeEnteredStarted = homeAtletas.filter((a) => a.entrouJogando && !a.reserva);
+  const awayEnteredStarted = awayAtletas.filter((a) => a.entrouJogando && !a.reserva);
+  const homeStarters = homeEnteredStarted.length > 0 ? homeEnteredStarted : homeAtletas.filter((a) => !a.reserva);
+  const awayStarters = awayEnteredStarted.length > 0 ? awayEnteredStarted : awayAtletas.filter((a) => !a.reserva);
+
+  // ── Súmula PDF fallback for escalação ────────────────────────────────────
+  const sumulaHome = matchDocs?.sumula?.mandante;
+  const sumulaAway = matchDocs?.sumula?.visitante;
+
+  type DisplayPlayer = { key: string; num: number; name: string };
+
+  const homeDisplayStarters: DisplayPlayer[] = homeStarters.length > 0
+    ? homeStarters.map((p) => ({ key: String(p.id), num: p.numeroCamisa, name: p.apelido.replace(/^\d+\s+-\s+/, '') }))
+    : (sumulaHome?.titulares ?? []).map((p) => ({ key: String(p.numero), num: p.numero, name: p.apelido }));
+
+  const awayDisplayStarters: DisplayPlayer[] = awayStarters.length > 0
+    ? awayStarters.map((p) => ({ key: String(p.id), num: p.numeroCamisa, name: p.apelido.replace(/^\d+\s+-\s+/, '') }))
+    : (sumulaAway?.titulares ?? []).map((p) => ({ key: String(p.numero), num: p.numero, name: p.apelido }));
+
+  // ── Substituições: súmula PDF (post-match) ou API CBF (ao vivo) ──────────
+  const homeAllSumulaPlayers = [...(sumulaHome?.titulares ?? []), ...(sumulaHome?.reservas ?? [])];
+  const awayAllSumulaPlayers = [...(sumulaAway?.titulares ?? []), ...(sumulaAway?.reservas ?? [])];
+
+  type DisplaySub = { outName: string; inName: string; minuto: string; shortName: string };
+  const parseSubMinute = (m: string) => { const [b, e] = m.split('+'); return (parseInt(b) || 0) + (parseInt(e) || 0); };
+
+  // Live subs from CBF API alteracoes (real-time during the match)
+  const findAtletaApelido = (id: number, atletas: typeof homeAtletas) =>
+    atletas.find((a) => a.id === id)?.apelido?.replace(/^\d+\s+-\s+/, '') ?? `#${id}`;
+  const apiSubs: DisplaySub[] = [
+    ...(data?.mandante.alteracoes ?? []).map((s) => ({
+      outName: findAtletaApelido(s.codigoJogadorSaiu, homeAtletas),
+      inName: findAtletaApelido(s.codigoJogadorEntrou, homeAtletas),
+      minuto: s.tempoSubs,
+      shortName: match.homeTeam.shortName,
+    })),
+    ...(data?.visitante.alteracoes ?? []).map((s) => ({
+      outName: findAtletaApelido(s.codigoJogadorSaiu, awayAtletas),
+      inName: findAtletaApelido(s.codigoJogadorEntrou, awayAtletas),
+      minuto: s.tempoSubs,
+      shortName: match.awayTeam.shortName,
+    })),
+  ].sort((a, b) => parseSubMinute(a.minuto) - parseSubMinute(b.minuto));
+
+  // Prefer API subs for live (real-time), súmula PDF for post-match
+  const sumulaSubs: DisplaySub[] = [
+    ...(sumulaHome?.substituicoes ?? []).map((s) => ({
+      outName: findSumulaPlayerName(s.saiuNumero, homeAllSumulaPlayers),
+      inName: findSumulaPlayerName(s.entrouNumero, homeAllSumulaPlayers),
+      minuto: s.minuto,
+      shortName: match.homeTeam.shortName,
+    })),
+    ...(sumulaAway?.substituicoes ?? []).map((s) => ({
+      outName: findSumulaPlayerName(s.saiuNumero, awayAllSumulaPlayers),
+      inName: findSumulaPlayerName(s.entrouNumero, awayAllSumulaPlayers),
+      minuto: s.minuto,
+      shortName: match.awayTeam.shortName,
+    })),
+  ].sort((a, b) => parseSubMinute(a.minuto) - parseSubMinute(b.minuto));
+
+  const displaySubs: DisplaySub[] = isLive && apiSubs.length > 0 ? apiSubs : sumulaSubs;
 
   const mainRef  = data?.arbitros.find((a) => a.funcao === 'Arbitro');
   const varRef   = data?.arbitros.find((a) => a.funcao === 'VAR');
@@ -637,22 +806,22 @@ function CbfMatchModalContent({
         )}
       </section>
 
-      {/* ── 2. Escalação — publicada ~48h antes ───────────────────────────── */}
+      {/* ── 2. Escalação — publicada ~48h antes; fallback: súmula PDF ────── */}
       <section>
         <SectionHeader label="Escalação" />
-        {(homeStarters.length > 0 || awayStarters.length > 0) ? (
+        {(homeDisplayStarters.length > 0 || awayDisplayStarters.length > 0) ? (
           <div className="grid grid-cols-2 gap-3">
             {[
-              { label: match.homeTeam.shortName, players: homeStarters },
-              { label: match.awayTeam.shortName, players: awayStarters },
+              { label: match.homeTeam.shortName, players: homeDisplayStarters },
+              { label: match.awayTeam.shortName, players: awayDisplayStarters },
             ].map(({ label, players }) => (
               <div key={label}>
                 <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}</p>
                 <div className="space-y-0.5">
                   {players.map((p) => (
-                    <div key={p.id} className="flex items-center gap-1.5 text-xs font-sans">
-                      <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.numeroCamisa}</span>
-                      <span className="text-zinc-300 truncate">{p.apelido.replace(/^\d+\s+-\s+/, '')}</span>
+                    <div key={p.key} className="flex items-center gap-1.5 text-xs font-sans">
+                      <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.num}</span>
+                      <span className="text-zinc-300 truncate">{p.name}</span>
                     </div>
                   ))}
                 </div>
@@ -662,13 +831,31 @@ function CbfMatchModalContent({
         ) : (
           <Pending>
             {isPostMatch
-              ? 'Escalação não publicada'
+              ? ((matchDocsLoading ?? false) ? 'Carregando súmula…' : 'Escalação não publicada')
               : isLive
               ? 'Sendo confirmada'
               : 'Publicada ~48h antes do jogo'}
           </Pending>
         )}
       </section>
+
+      {/* ── 2b. Substituições — ao vivo (API CBF) ou post-match (súmula PDF) ── */}
+      {(isLive || isPostMatch) && displaySubs.length > 0 && (
+        <section>
+          <SectionHeader label="Substituições" />
+          <div className="space-y-1">
+            {displaySubs.map((s, i) => (
+              <div key={i} className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+                <span className="text-zinc-500 tabular-nums shrink-0 w-8">{s.minuto}&apos;</span>
+                <span className="text-red-400/80 flex-1 truncate">{s.outName}</span>
+                <span className="text-zinc-600 shrink-0" aria-hidden="true">→</span>
+                <span className="text-green-400/80 flex-1 truncate">{s.inName}</span>
+                <span className="text-zinc-600 shrink-0">{s.shortName}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ── 3. Desfalques — pré-jogo ──────────────────────────────────────── */}
       <section>
@@ -761,6 +948,12 @@ function CbfMatchModalContent({
           <Pending>{isPostMatch ? 'Sem cartões registrados' : 'Disponível após o apito final'}</Pending>
         )}
       </section>
+
+      {/* ── 7. Público e Renda — do Boletim Financeiro ───────────────────── */}
+      {isPostMatch && <BoletimSection docs={matchDocs} loading={matchDocsLoading ?? false} />}
+
+      {/* ── 8. Documentos oficiais — publicados horas após o jogo ─────────── */}
+      {isPostMatch && <OfficialDocumentsSection documentos={data?.documentos ?? []} />}
     </>
   );
 }
@@ -827,6 +1020,7 @@ export function MatchCard({
   noEmailGate = false,
   cbfMatchDetail,
   cbfRound,
+  prefetchedMatchDocs,
 }: {
   match: Match;
   /** API-Football team ID string — used for form/highlight in upcoming mode */
@@ -840,6 +1034,8 @@ export function MatchCard({
   cbfMatchDetail?: CbfMatchDetail;
   /** Brasileirão round number — used for the round badge in finished mode */
   cbfRound?: number;
+  /** Pre-fetched match docs (boletim + súmula) — enables renda display on card face */
+  prefetchedMatchDocs?: CbfMatchDocsResult;
 }) {
   const isFinishedMode = match.status === 'finished';
 
@@ -853,6 +1049,16 @@ export function MatchCard({
   const [fichaStatus, setFichaStatus] = useState<FetchStatus>(cbfMatchDetail ? 'done' : 'idle');
   const [eventsData, setEventsData] = useState<MatchEventsData | null>(null);
   const [eventsStatus, setEventsStatus] = useState<FetchStatus>('idle');
+  const [matchDocs, setMatchDocs] = useState<CbfMatchDocsResult | null>(null);
+  const [matchDocsLoading, setMatchDocsLoading] = useState(false);
+
+  // Seed matchDocs from prefetch when it arrives (enables renda on card face)
+  useEffect(() => {
+    if (prefetchedMatchDocs != null && matchDocs === null && !matchDocsLoading) {
+      setMatchDocs(prefetchedMatchDocs);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [prefetchedMatchDocs]);
 
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailGateOpen, setEmailGateOpen] = useState(false);
@@ -861,6 +1067,32 @@ export function MatchCard({
   useEffect(() => {
     setEmailRegistered(localStorage.getItem(EMAIL_REGISTERED_KEY) === '1');
   }, []);
+
+  // Fetch official match documents (boletim + súmula) for finished AND live Série A matches.
+  // For live matches this is usually a no-op (súmula not yet published), but enables
+  // instant escalação display when the match transitions live → encerrado.
+  useEffect(() => {
+    if (activeModal !== 'ficha') return;
+    if (match.leagueId !== 71) return;
+    // Load docs when the match is finished, live, or post-live (hoursUntilKickoff passed live window)
+    const matchHasStarted = isPostMatch || live || match.status === 'finished';
+    if (!matchHasStarted) return;
+    if (matchDocs !== null || matchDocsLoading) return; // already fetched or in-flight
+
+    const id = fichaData?.idJogo;
+    if (!id) return;
+
+    const round = match.round.match(/(\d+)/)?.[1] ?? '';
+    if (!round) return;
+
+    setMatchDocsLoading(true);
+    fetch(`/api/cbf/match-docs?matchId=${id}&round=${round}`)
+      .then((r) => r.ok ? r.json() as Promise<CbfMatchDocsResult> : null)
+      .then((d) => { setMatchDocs(d ?? { available: false }); })
+      .catch(() => { setMatchDocs({ available: false }); })
+      .finally(() => { setMatchDocsLoading(false); });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeModal, fichaData?.idJogo]);
 
   function withEmailGate(action: () => void) {
     if (noEmailGate || emailRegistered) {
@@ -1031,6 +1263,16 @@ export function MatchCard({
   // Round label for header badge
   const roundLabel = cbfRound ? `Rodada ${cbfRound}` : match.round;
 
+  // Compact boletim line for card face (Série A finished only, when prefetched)
+  const boletimCompact = (() => {
+    if (!isFinishedMode || match.leagueId !== 71 || !matchDocs?.boletim) return null;
+    const b = matchDocs.boletim;
+    const parts: string[] = [];
+    if (b.publico.pagante != null) parts.push(`${formatPublico(b.publico.pagante)} pagantes`);
+    if (b.renda.bruta != null) parts.push(formatRenda(b.renda.bruta));
+    return parts.length > 0 ? parts.join(' · ') : null;
+  })();
+
   // Label shown inside the Ficha button to communicate what's available.
   // Non-Série-A competitions are not covered by CBF, so pre-match hints differ.
   const fichaHint = live
@@ -1138,15 +1380,24 @@ export function MatchCard({
 
           {/* Date + Venue row — compact in finished mode */}
           {isFinishedMode ? (
-            <div className="mt-2 flex items-center gap-2 text-xs font-sans text-zinc-500 flex-wrap">
-              <span className="capitalize">{formatDate(match.date)}</span>
-              {(match.stadium || match.city) && (
-                <>
-                  <span aria-hidden="true">·</span>
-                  <span className="truncate">{match.stadium ?? match.city}</span>
-                </>
+            <>
+              <div className="mt-2 flex items-center gap-2 text-xs font-sans text-zinc-500 flex-wrap">
+                <span className="capitalize">{formatDate(match.date)}</span>
+                {(match.stadium || match.city) && (
+                  <>
+                    <span aria-hidden="true">·</span>
+                    <span className="truncate">{match.stadium ?? match.city}</span>
+                  </>
+                )}
+              </div>
+              {/* Compact renda line — only when boletim prefetched (Série A) */}
+              {boletimCompact && (
+                <div className="mt-1 flex items-center gap-1.5 text-xs font-sans text-zinc-500">
+                  <UsersIcon className="w-3 h-3 shrink-0" aria-hidden="true" />
+                  {boletimCompact}
+                </div>
               )}
-            </div>
+            </>
           ) : (
             <>
               {/* Date / Venue grid — upcoming mode */}
@@ -1345,6 +1596,8 @@ export function MatchCard({
               hoursUntilKickoff={hoursUntilKickoff}
               injuries={h2hData?.injuries ?? []}
               injuriesLoading={h2hStatus === 'loading'}
+              matchDocs={matchDocs}
+              matchDocsLoading={matchDocsLoading}
             />
           )}
           {fichaStatus === 'done' && fichaData && (
@@ -1355,6 +1608,8 @@ export function MatchCard({
               hoursUntilKickoff={hoursUntilKickoff}
               injuries={h2hData?.injuries ?? []}
               injuriesLoading={h2hStatus === 'loading'}
+              matchDocs={matchDocs}
+              matchDocsLoading={matchDocsLoading}
             />
           )}
         </ModalShell>

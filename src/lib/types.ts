@@ -159,6 +159,16 @@ export interface StandingEntry {
   all: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } };
   home: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } };
   away: { played: number; win: number; draw: number; lose: number; goals: { for: number; against: number } };
+  /**
+   * Accumulated yellow cards in the competition — sourced from CBF standings scraper.
+   * Only populated for Série A (leagueId 71). Undefined for other competitions.
+   */
+  yellowCards?: number;
+  /**
+   * Accumulated red cards in the competition — sourced from CBF standings scraper.
+   * Only populated for Série A (leagueId 71). Undefined for other competitions.
+   */
+  redCards?: number;
 }
 
 export interface MatchPreview {
@@ -251,6 +261,7 @@ export interface CbfMatchDetail {
   arbitros: CbfReferee[];
   gols: CbfGoal[];
   cartoes: CbfCard[];
+  /** Document links from the CBF internal API (gweb.cbf.com.br) — may be empty for recent matches. Used by cbfDocParser to resolve PDF URLs. */
   documentos: Array<{ url: string; title: string }>;
 }
 

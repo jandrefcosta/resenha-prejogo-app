@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "seed:cbf": "tsx --env-file=.env.local scripts/seed-cbf.ts",
+    "seed:match-docs": "tsx --env-file=.env.local scripts/seed-match-docs.ts",
     "seed:form": "tsx --env-file=.env.local scripts/seed-form.ts",
     "seed:fixtures": "tsx --env-file=.env.local scripts/seed-fixtures.ts",
     "seed:past-results": "tsx --env-file=.env.local scripts/seed-past-results.ts",
@@ -22,9 +23,11 @@
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.37.0",
     "@vercel/analytics": "^2.0.1",
+    "graphify": "^1.0.0",
     "next": "16.2.1",
     "react": "19.2.4",
-    "react-dom": "19.2.4"
+    "react-dom": "19.2.4",
+    "unpdf": "^1.4.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.59.1",

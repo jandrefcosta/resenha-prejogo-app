@@ -312,6 +312,64 @@ Envia feedback/sugestão.
 
 ---
 
+## Documentos Oficiais CBF (Série A — jogos encerrados)
+
+### `GET /api/cbf/match-docs?matchId={idJogo}&round={N}`
+
+Retorna dados parseados dos documentos oficiais (súmula + boletim financeiro) de um jogo encerrado.
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `matchId` | string | `idJogo` da CBF API |
+| `round` | number | Número da rodada (usado para buscar `CbfMatchDetail` com URLs dos PDFs) |
+
+| | |
+|-|-|
+| **Auth** | Nenhuma (público) |
+| **Cache** | Redis permanente — `cbf:match:{id}:sumula`, `cbf:match:{id}:boletim`, `cbf:match:{id}:docs:status` |
+
+**Resposta:**
+```typescript
+{ available: false }
+// ou
+{
+  available: true;
+  sumula?: CbfSumulaData;   // escalação, subs, árbitros, gols, cartões
+  boletim?: CbfBoletimData; // público e renda (todos nulos — PDF image-based)
+}
+```
+
+**Comportamento:**
+- Verifica sentinela Redis; se hit e `available: true` → retorna dados em ~50ms
+- Se sentinela diz `available: false` e idade < 2h → retorna `{ available: false }` sem re-fetch
+- Se não há sentinela → baixa PDFs da CBF, parseia, armazena permanentemente, retorna resultado
+- Chamado pelo `MatchCard` ao abrir a ficha de um jogo encerrado (Série A)
+- Também chamado pelo `MatchSection` para pré-buscar dados ao renderizar o card de resultado (para exibir público no card-face)
+
+---
+
+### `DELETE /api/admin/bust-match-docs?secret={DEBUG_SECRET}`
+
+Invalida documentos cacheados no Redis para forçar re-parse.
+
+| Parâmetro | Tipo | Descrição |
+|-----------|------|-----------|
+| `secret` | string | Deve bater com `DEBUG_SECRET` no `.env.local` |
+| `idJogo` | string | (opcional) Remove as 3 chaves de um jogo específico |
+| `all` | boolean | (opcional) Remove **todas** as chaves `cbf:match:*` |
+
+| | |
+|-|-|
+| **Auth** | Query param `?secret=` (mesmo padrão das rotas de debug) |
+
+**Exemplos:**
+```
+DELETE /api/admin/bust-match-docs?secret=XXX&idJogo=831889
+DELETE /api/admin/bust-match-docs?secret=XXX&all=true
+```
+
+---
+
 ## Debug (desenvolvimento)
 
 ### `GET /api/debug/fixtures?secret=<SECRET>&competition=<id>&club=<slug>&bust=1`

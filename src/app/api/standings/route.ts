@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCache, setCache, TTL_30MIN, TTL_3H } from '@/lib/redisCache';
 import { getCompetitionById, SERIE_A } from '@/data/competitions';
+import { getCbfSerieACards } from '@/lib/cbfStandingsScraper';
 import type { StandingEntry } from '@/lib/types';
 
 const BASE_URL = 'https://v3.football.api-sports.io';
@@ -119,6 +120,24 @@ export async function GET(req: NextRequest) {
   // Copa do Brasil (knockout): [] or no standings data
   const rawGroups: RawStandingEntry[][] = apiData?.response?.[0]?.league?.standings ?? [];
   const groups: StandingEntry[][] = rawGroups.map((group) => group.map(mapEntry));
+
+  // For Série A, enrich standings with accumulated yellow/red cards from CBF.
+  // This runs concurrently with the api-football fetch but we await before building the payload.
+  // Non-critical: if CBF is unavailable, card fields are simply undefined.
+  if (leagueId === 71) {
+    const cardMap = await getCbfSerieACards(competition.season);
+    if (cardMap.size > 0) {
+      for (const group of groups) {
+        for (const entry of group) {
+          const cards = cardMap.get(entry.team.id);
+          if (cards) {
+            entry.yellowCards = cards.yellowCards;
+            entry.redCards = cards.redCards;
+          }
+        }
+      }
+    }
+  }
 
   const payload: StandingsPayload = {
     groups,

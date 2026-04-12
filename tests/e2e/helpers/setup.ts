@@ -5,6 +5,8 @@ import {
   MOCK_PREVIEWS,
   MOCK_PAST_FIXTURES,
   MOCK_PAST_RESULTS,
+  MOCK_CBF_MATCH_DOCS_FULL,
+  MOCK_PAST_FIXTURES_FINISHED,
 } from './mocks';
 
 /**
@@ -28,6 +30,9 @@ export async function mockAllApis(page: Page) {
   // Catch-all registered FIRST = lowest priority (Playwright matches last-registered first)
   await page.route('/api/**', (route) => route.fulfill({ json: {} }));
   // Specific routes registered LAST = highest priority
+  await page.route('/api/cbf/match-docs**', (route) =>
+    route.fulfill({ json: MOCK_CBF_MATCH_DOCS_FULL }),
+  );
   await page.route('/api/past-results**', (route) =>
     route.fulfill({ json: MOCK_PAST_RESULTS }),
   );
@@ -43,11 +48,37 @@ export async function mockAllApis(page: Page) {
 }
 
 /**
+ * Same as mockAllApis but uses finished CBF past-fixtures so the "Rodada 4"
+ * card is available in the Resultados tab with match-docs data.
+ */
+export async function mockAllApisWithFinishedCbf(page: Page, matchDocsResponse: unknown = MOCK_CBF_MATCH_DOCS_FULL) {
+  await page.route('/api/**', (route) => route.fulfill({ json: {} }));
+  await page.route('/api/cbf/match-docs**', (route) =>
+    route.fulfill({ json: matchDocsResponse }),
+  );
+  await page.route('/api/past-results**', (route) =>
+    route.fulfill({ json: MOCK_PAST_RESULTS }),
+  );
+  await page.route('/api/past-fixtures**', (route) =>
+    route.fulfill({ json: MOCK_PAST_FIXTURES_FINISHED }),
+  );
+  await page.route('/api/previews**', (route) =>
+    route.fulfill({ json: MOCK_PREVIEWS }),
+  );
+  await page.route('/api/fixtures', (route) =>
+    route.fulfill({ json: MOCK_FIXTURES }),
+  );
+}
+
+/**
  * Same as mockAllApis but returns multi-competition fixtures (Série A + Copa do Brasil).
  * Use this when testing competition filter pills.
  */
 export async function mockAllApisMulti(page: Page) {
   await page.route('/api/**', (route) => route.fulfill({ json: {} }));
+  await page.route('/api/cbf/match-docs**', (route) =>
+    route.fulfill({ json: MOCK_CBF_MATCH_DOCS_FULL }),
+  );
   await page.route('/api/past-results**', (route) =>
     route.fulfill({ json: MOCK_PAST_RESULTS }),
   );

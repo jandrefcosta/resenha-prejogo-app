@@ -46,3 +46,20 @@ next-env.d.ts
 
 # local API cache
 /.cache
+
+# graphify temp files (intermediate build artifacts)
+.graphify_python
+.graphify_*.json
+.graphify_uncached.txt
+
+# graphify extraction cache (large, regenerable)
+/graphify-out/cache/
+
+requests.http
+
+# Claude Code local settings
+.claude/settings.json
+
+# Debug scripts temporários
+scripts/_debug_pdf.mjs
+scripts/debug-pdf.ts
