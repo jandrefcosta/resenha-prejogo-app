@@ -124,6 +124,11 @@ export interface Match {
   /** True when match was played at a neutral venue */
   isNeutralVenue?: boolean;
   /**
+   * Group letter for Copa do Mundo group stage (A–L).
+   * Not returned by the API — derived client-side by cross-referencing standings data.
+   */
+  group?: string;
+  /**
    * API-Football fixture ID — present only when the primary source is API-Football.
    * Absent for CONMEBOL-sourced matches (where match.id is a CONMEBOL internal ID).
    * Used to safely call /api/match-events without hitting the wrong fixture.
