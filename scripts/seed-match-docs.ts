@@ -143,7 +143,7 @@ async function main() {
 
     for (const match of matches) {
       const id = match.idJogo ?? '?';
-      const label = `${match.clubeMandante?.nome_popular ?? '?'} x ${match.clubeVisitante?.nome_popular ?? '?'}`;
+      const label = `${match.mandante?.nome ?? '?'} x ${match.visitante?.nome ?? '?'}`;
 
       const result = await processMatch(match, force);
       totals[result]++;
