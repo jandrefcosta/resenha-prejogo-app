@@ -11,7 +11,7 @@
 |------|-----------|--------|
 | **Fase 0** | Foundation — tipos, competitions.ts, infraestrutura | ✅ Completa |
 | **Fase 1** | Competições de clubes na página principal | 🟡 Parcialmente completa |
-| **Fase 2** | Página Copa do Mundo 2026 | ⬜ Pendente |
+| **Fase 2** | Página Copa do Mundo 2026 | ✅ Completa |
 | **Fase 3** | Bolão da Copa do Mundo | ⬜ Pendente |
 
 ---
@@ -106,39 +106,30 @@ RoundModal
 
 ---
 
-## Fase 2 — Página Copa do Mundo 2026 ⬜ Pendente
+## Fase 2 — Página Copa do Mundo 2026 ✅ Completa
 
-**Prazo:** Copa começa junho 2026 — janela curta.  
-**Dependência:** Fase 0 ✅ completa.
+Página `/copa-2026` implementada e em produção. Tema verde/amarelo fixo, Brasil destacado, todos os jogos visíveis.
 
-### 2.1 · Estrutura de arquivos (novo, isolado)
+### Implementado
 
-```
-src/app/copa-2026/
-  page.tsx         # tema verde/amarelo fixo, Brasil em destaque
-  layout.tsx       # SEO próprio: "Copa do Mundo 2026"
+| Item | Arquivo |
+|------|---------|
+| Página principal + layout SEO | `src/app/copa-2026/page.tsx`, `layout.tsx` |
+| API fixtures Copa | `src/app/api/copa/fixtures/route.ts` |
+| API standings grupos | `src/app/api/copa/standings/route.ts` |
+| `CopaMatchSection` | `src/components/copa/CopaMatchSection.tsx` |
+| `GroupStandingsModal` (grupos A–L, 12 grupos) | `src/components/copa/GroupStandingsModal.tsx` |
+| `CopaPhaseHeader` | `src/components/copa/CopaPhaseHeader.tsx` |
+| `CopaMatchRow`, `CopaThemeApplier` | `src/components/copa/` |
+| `BrazilCountdown` | `src/components/copa/BrazilCountdown.tsx` |
+| `national-teams.ts` (ClubTheme Seleção) | `src/data/national-teams.ts` |
 
-src/app/api/copa/
-  fixtures/route.ts   # GET fixtures (leagueId=1, sem filtro por clube)
-  standings/route.ts  # GET tabela por grupos (A–H)
+### Pendente (pós-MVP)
 
-src/components/copa/
-  CopaMatchSection.tsx     # lista de jogos com destaque automático do Brasil
-  GroupStandingsModal.tsx  # 8 mini-tabelas por grupo (A–H, 4 times cada)
-  CopaPhaseHeader.tsx      # "Fase de Grupos" / "Oitavas" / "Quartas"
-```
-
-### 2.2 · UX MVP
-
-- Tema verde/amarelo, sem `ClubSelector`
-- Todos os 64 jogos visíveis (não filtra por clube)
-- Brasil sempre destacado (`defaultHighlightTeamId = 6`)
-- `GroupStandingsModal` — 8 grupos × 4 times (componente novo)
-
-### 2.3 · Pós-MVP
-
-- Botão "Seguir outro país" → seletor de seleção, persistido em `localStorage`
-- `CopaPhaseHeader` para fases eliminatórias
+- Link de descoberta na página da Série A (banner ou nav header)
+- `CountrySelector` — "Seguir outro país" via `localStorage`
+- 32 seleções em `national-teams.ts` — só Brasil no MVP
+- Fases eliminatórias interativas (bracket visual)
 
 ---
 
@@ -169,17 +160,15 @@ src/components/copa/
 ```
 AGORA
   │
-  ├─→ 1.3 StandingsModal multi-competição    (~3-4 dias)
+  ├─→ 1.3 StandingsModal multi-competição
   │       GruposTable + BracketView MVP
   │
-  ├─→ 1.4 RoundModal multi-competição        (~3-4 dias)
+  ├─→ 1.4 RoundModal multi-competição
   │       MataMataRound + GruposRound
   │
-  └─→ 2.x Copa do Mundo page                 (~1 semana)
-          Antes de junho 2026 — prazo fixo
-              │
-              └─→ 3.x Bolão                  (~2-3 semanas)
-                      Depende da Fase 2
+  ├─→ 2.x Copa — link de descoberta na Série A   ← único item restante da Fase 2
+  │
+  └─→ 3.x Bolão                                  ← Depende da Fase 2 (já completa)
 ```
 
 ---

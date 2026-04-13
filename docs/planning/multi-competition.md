@@ -1,6 +1,8 @@
 # Planejamento: Suporte a Múltiplos Campeonatos
 
-**Contexto:** A aplicação está 100% hardcoded para o Campeonato Brasileiro Série A. Este documento mapeia tudo que precisaria mudar para suportar múltiplos campeonatos — Copa do Mundo, Libertadores, Copa do Brasil etc. — sem quebrar o que já existe.
+> ⚠️ **Documento histórico** — as fases 1–4 foram implementadas. Estado atual em [v2-multiplas-competicoes.md](v2-multiplas-competicoes.md) e [roadmap.md](roadmap.md).
+
+**Contexto original:** A aplicação estava 100% hardcoded para o Campeonato Brasileiro Série A. Este documento mapeou tudo que precisaria mudar para suportar múltiplos campeonatos — Copa do Mundo, Libertadores, Copa do Brasil etc. — sem quebrar o que já existia.
 
 ---
 

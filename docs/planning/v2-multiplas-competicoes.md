@@ -28,7 +28,8 @@
 
 - **StandingsModal** com seletor de competição (1.3)
 - **RoundModal** com seletor de competição (1.4)
-- **Página Copa do Mundo** `/copa-2026` (Fase 2)
+
+> **Página Copa do Mundo** `/copa-2026` ✅ implementada — ver [roadmap.md](roadmap.md)
 
 ---
 

@@ -1,7 +1,8 @@
 # Área de Admin — Planejamento
 
 > Painel interno para manutenção e operação do projeto, sem depender de CLI ou chamadas manuais a endpoints de debug.  
-> Criado: abril 2026
+> Criado: abril 2026  
+> Status: **⬜ Pendente** — único endpoint admin existente: `DELETE /api/admin/bust-match-docs`
 
 ---
 

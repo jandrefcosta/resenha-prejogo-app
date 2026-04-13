@@ -2,13 +2,42 @@
 
 > Documento de implementação — Resenha Pré-Jogo  
 > Criado: abril 2026  
-> Status: **Pendente**
+> Status: **✅ Implementado**
 
 ---
 
-## Contexto e ponto de partida
+## Estado atual — implementado
 
-A Fase 0 (fundação) está **100% completa**. O que já existe e pode ser reusado:
+Todas as etapas abaixo foram concluídas. O arquivo mantém o registro histórico das decisões de design e dados de API confirmados.
+
+### Arquivos criados
+
+| Arquivo | Descrição |
+|---------|-----------|
+| `src/app/copa-2026/page.tsx` | Página principal — Server Component |
+| `src/app/copa-2026/layout.tsx` | Metadata SEO Copa |
+| `src/app/api/copa/fixtures/route.ts` | GET todos os jogos da Copa |
+| `src/app/api/copa/standings/route.ts` | GET classificação grupos A–L |
+| `src/components/copa/CopaMatchSection.tsx` | Lista de jogos por fase |
+| `src/components/copa/GroupStandingsModal.tsx` | 12 mini-tabelas (A–L) |
+| `src/components/copa/CopaPhaseHeader.tsx` | Label de fase em pt-BR |
+| `src/components/copa/CopaMatchRow.tsx` | Card de jogo simplificado |
+| `src/components/copa/CopaThemeApplier.tsx` | Aplica tema verde/amarelo |
+| `src/components/copa/BrazilCountdown.tsx` | Countdown para estreia do Brasil |
+| `src/data/national-teams.ts` | ClubTheme da Seleção Brasileira |
+
+### Pendente (pós-MVP)
+
+- Link de descoberta na página da Série A (banner ou nav header)
+- `CountrySelector` — "Seguir outro país" via `localStorage`
+- 32 seleções em `national-teams.ts`
+- Bracket visual para fases eliminatórias
+
+---
+
+## Contexto histórico e decisões de design
+
+A Fase 0 (fundação) estava **100% completa** quando este plano foi escrito. O que existia e foi reusado:
 
 | Recurso | Arquivo | Relevância |
 |---------|---------|------------|
