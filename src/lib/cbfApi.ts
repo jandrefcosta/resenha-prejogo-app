@@ -283,6 +283,14 @@ function inferRoundStatus(matches: CbfMatchDetail[]): CbfRoundStatus {
       if (now >= kickoff && now <= estimatedEnd) {
         anyLive = true;
       }
+    } else {
+      // Has a score, but if atletas are missing the CBF hasn't fully published yet.
+      // Don't mark the round as finished until lineup data is present — otherwise
+      // we'd cache the round permanently with empty atletas arrays.
+      const hasLineup = m.mandante.atletas.length > 0 && m.visitante.atletas.length > 0;
+      if (!hasLineup) {
+        allFinished = false;
+      }
     }
   }
 
@@ -303,8 +311,9 @@ function computeTtl(matches: CbfMatchDetail[], status: CbfRoundStatus): number {
     .filter((t) => t > now)
     .sort((a, b) => a - b);
 
-  // All unplayed matches have kickoffs in the past: round just ended,
-  // CBF hasn't published scores yet. Poll frequently until they appear.
+  // All unplayed matches have kickoffs in the past: round just ended.
+  // This also covers the transitional state where scores are published but
+  // lineup data (atletas) hasn't appeared yet — poll frequently.
   if (unplayed.length === 0) return TTL.POST_MATCH;
 
   const hoursUntil = (unplayed[0] - now) / (1000 * 60 * 60);

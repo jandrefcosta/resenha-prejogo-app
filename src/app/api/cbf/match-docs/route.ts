@@ -54,11 +54,14 @@ export async function GET(req: NextRequest) {
   );
   if (sentinel && !sentinel.available) {
     const ageMs = Date.now() - new Date(sentinel.checkedAt).getTime();
-    const TTL_NOT_AVAILABLE = 60 * 60 * 2 * 1000; // 2h in ms
+    // 30 min — docs are usually published within an hour of the final whistle;
+    // the previous 2h window was too aggressive and prevented escalação from
+    // appearing in the critical first hour after a match ends.
+    const TTL_NOT_AVAILABLE = 60 * 30 * 1000; // 30 min in ms
     if (ageMs < TTL_NOT_AVAILABLE) {
       return NextResponse.json(
         { available: false },
-        { headers: { 'Cache-Control': 'public, max-age=7200' } },
+        { headers: { 'Cache-Control': 'public, max-age=1800' } },
       );
     }
   }

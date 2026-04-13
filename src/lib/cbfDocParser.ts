@@ -39,8 +39,10 @@ import type {
 
 const CONTEUDO_BASE = 'https://conteudo.cbf.com.br/sumulas';
 
-/** TTL when documents haven't been published yet. Re-check after 2h. */
-const TTL_NOT_AVAILABLE = 60 * 60 * 2;
+/** TTL when documents haven't been published yet. Re-check after 30 min.
+ *  Docs are typically published within an hour of the final whistle;
+ *  the previous 2h window blocked escalação from appearing in that window. */
+const TTL_NOT_AVAILABLE = 60 * 30;
 
 const PDF_HEADERS = {
   Accept: 'application/pdf,*/*;q=0.8',

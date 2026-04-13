@@ -1087,7 +1087,12 @@ export function MatchCard({
     // Load docs when the match is finished, live, or post-live (hoursUntilKickoff passed live window)
     const matchHasStarted = isPostMatch || live || match.status === 'finished';
     if (!matchHasStarted) return;
-    if (matchDocs !== null || matchDocsLoading) return; // already fetched or in-flight
+    if (matchDocsLoading) return; // fetch already in-flight
+
+    // Only skip if we already have a súmula — the prefetched matchDocs may carry
+    // only boletim data (for the card-face renda line) and must not block the
+    // modal from fetching a full response that includes the súmula.
+    if (matchDocs?.sumula != null) return;
 
     const id = fichaData?.idJogo;
     if (!id) return;
