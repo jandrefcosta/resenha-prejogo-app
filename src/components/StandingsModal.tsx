@@ -338,8 +338,18 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
   const isFirstMount = useRef(true);
   useEffect(() => {
     if (isFirstMount.current) { isFirstMount.current = false; return; }
-    if (selectedCompRef.current.id === 'copa-brasil') fetchBracket();
-    else fetchStandings();
+    if (selectedCompRef.current.id === 'copa-brasil') {
+      // Clear standings state so old competition data doesn't bleed through
+      setGroups(null);
+      setFormat(null);
+      setStatus('loading');
+      fetchBracket();
+    } else {
+      // Clear bracket state so Copa do Brasil data doesn't bleed through
+      setBracketData(null);
+      setBracketStatus('idle');
+      fetchStandings();
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedComp]);
 
@@ -490,7 +500,7 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
         )}
 
         {/* Pontos corridos (Série A) */}
-        {status === 'done' && format === 'pontos-corridos' && groups && (
+        {!isCopa && status === 'done' && format === 'pontos-corridos' && groups && (
           <div className="overflow-y-auto flex-1">
             {/* Zone legend */}
             <div className="px-4 py-2 flex flex-wrap gap-3 border-b border-zinc-800/60 shrink-0">
@@ -638,7 +648,7 @@ export function StandingsModal({ onClose }: { onClose: () => void }) {
         )}
 
         {/* Grupos (Libertadores / Sul-Americana) */}
-        {status === 'done' && format === 'grupos' && groups && (
+        {!isCopa && status === 'done' && format === 'grupos' && groups && (
           <div className="overflow-y-auto flex-1">
             {/* Column headers (sticky) */}
             <div className="sticky top-0 bg-zinc-900/95 backdrop-blur-sm border-b border-zinc-800 z-10">
