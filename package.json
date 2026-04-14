@@ -14,6 +14,7 @@
     "seed:past-results": "tsx --env-file=.env.local scripts/seed-past-results.ts",
     "seed:all": "tsx --env-file=.env.local scripts/seed-all.ts",
     "test:e2e": "playwright test",
+    "graphify:update": "python -c \"from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))\"",
     "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
