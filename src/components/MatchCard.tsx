@@ -3,8 +3,8 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { XMarkIcon, ClockIcon, UsersIcon, DocumentTextIcon, ShareIcon } from '@heroicons/react/20/solid';
 import { SoccerBallIcon } from '@/components/SoccerBallIcon';
-import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer, MatchEventsData } from '@/lib/types';
-import type { CbfMatchDocsResult } from '@/lib/cbfDocTypes';
+import type { Match, H2HData, MatchPreview, TeamPlayersData, CbfMatchDetail, InjuredPlayer, MatchEventsData, LineupData } from '@/lib/types';
+import type { CbfMatchDocsResult, CbfSumulaPlayer } from '@/lib/cbfDocTypes';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
@@ -368,6 +368,8 @@ function NonCbfFichaContent({
   hoursUntilKickoff,
   injuries,
   injuriesLoading,
+  lineups,
+  lineupsLoading,
   events,
   eventsLoading,
   eventsSupported,
@@ -377,6 +379,8 @@ function NonCbfFichaContent({
   hoursUntilKickoff: number;
   injuries: InjuredPlayer[];
   injuriesLoading: boolean;
+  lineups: LineupData | null;
+  lineupsLoading: boolean;
   events: MatchEventsData | null;
   eventsLoading: boolean;
   /** False for CONMEBOL-sourced matches where the fixture ID is not an API-Football ID */
@@ -407,7 +411,45 @@ function NonCbfFichaContent({
         {phaseBanner.label}
       </div>
 
-      {/* 1. Desfalques — pré-jogo e ao vivo; pós-jogo só se houver dados */}
+      {/* 1. Escalação — API-Football (todas competições) */}
+      <section>
+        <SectionHeader label="Escalação" />
+        {lineupsLoading ? (
+          <div className="grid grid-cols-2 gap-3 animate-pulse">
+            {[0, 1].map((s) => (
+              <div key={s} className="space-y-1">
+                <div className="h-3 w-12 bg-zinc-800 rounded mb-2" />
+                {Array.from({ length: 11 }).map((_, i) => <div key={i} className="h-5 bg-zinc-800 rounded" />)}
+              </div>
+            ))}
+          </div>
+        ) : lineups ? (
+          <div className="grid grid-cols-2 gap-3">
+            {[
+              { label: match.homeTeam.shortName, players: lineups.home.startXI, formation: lineups.home.formation },
+              { label: match.awayTeam.shortName, players: lineups.away.startXI, formation: lineups.away.formation },
+            ].map(({ label, players, formation }) => (
+              <div key={label}>
+                <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}{formation ? <span className="text-zinc-600 ml-1">({formation})</span> : null}</p>
+                <div className="space-y-0.5">
+                  {players.map((p) => (
+                    <div key={p.number} className="flex items-center gap-1.5 text-xs font-sans">
+                      <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.number}</span>
+                      <span className="text-zinc-300 truncate">{p.name}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <Pending>
+            {isPostMatch ? 'Escalação não disponível' : 'Publicada próximo ao jogo'}
+          </Pending>
+        )}
+      </section>
+
+      {/* 2. Desfalques — pré-jogo e ao vivo; pós-jogo só se houver dados */}
       {(!isPostMatch || injuries.length > 0) && (
         <section>
           <SectionHeader label={isPostMatch ? 'Desfalques do Jogo' : 'Principais Desfalques'} />
@@ -646,6 +688,7 @@ function findSumulaPlayerName(numero: number, pool: { numero: number; apelido: s
  */
 function CbfMatchModalContent({
   data,
+  lineups,
   match,
   isLive,
   hoursUntilKickoff,
@@ -655,6 +698,8 @@ function CbfMatchModalContent({
   matchDocsLoading,
 }: {
   data: CbfMatchDetail | null;
+  /** API-Football lineups — primary source for escalação; CBF used as fallback */
+  lineups?: LineupData | null;
   match: Match;
   isLive: boolean;
   hoursUntilKickoff: number; // negative = kickoff already passed
@@ -688,15 +733,20 @@ function CbfMatchModalContent({
   const sumulaHome = matchDocs?.sumula?.mandante;
   const sumulaAway = matchDocs?.sumula?.visitante;
 
-  type DisplayPlayer = { key: string; num: number; name: string };
+  type DisplayPlayer = { key: string; num: number; name: string; formation?: string };
 
-  const homeDisplayStarters: DisplayPlayer[] = homeStarters.length > 0
+  // Priority: API-Football lineups → CBF atletas → Súmula PDF
+  const homeDisplayStarters: DisplayPlayer[] = lineups?.home.startXI.length
+    ? lineups.home.startXI.map((p) => ({ key: String(p.number), num: p.number, name: p.name }))
+    : homeStarters.length > 0
     ? homeStarters.map((p) => ({ key: String(p.id), num: p.numeroCamisa, name: p.apelido.replace(/^\d+\s+-\s+/, '') }))
-    : (sumulaHome?.titulares ?? []).map((p) => ({ key: String(p.numero), num: p.numero, name: p.apelido }));
+    : (sumulaHome?.titulares ?? []).map((p: CbfSumulaPlayer) => ({ key: String(p.numero), num: p.numero, name: p.apelido }));
 
-  const awayDisplayStarters: DisplayPlayer[] = awayStarters.length > 0
+  const awayDisplayStarters: DisplayPlayer[] = lineups?.away.startXI.length
+    ? lineups.away.startXI.map((p) => ({ key: String(p.number), num: p.number, name: p.name }))
+    : awayStarters.length > 0
     ? awayStarters.map((p) => ({ key: String(p.id), num: p.numeroCamisa, name: p.apelido.replace(/^\d+\s+-\s+/, '') }))
-    : (sumulaAway?.titulares ?? []).map((p) => ({ key: String(p.numero), num: p.numero, name: p.apelido }));
+    : (sumulaAway?.titulares ?? []).map((p: CbfSumulaPlayer) => ({ key: String(p.numero), num: p.numero, name: p.apelido }));
 
   // ── Substituições: súmula PDF (post-match) ou API CBF (ao vivo) ──────────
   const homeAllSumulaPlayers = [...(sumulaHome?.titulares ?? []), ...(sumulaHome?.reservas ?? [])];
@@ -1058,6 +1108,8 @@ export function MatchCard({
   const [fichaData, setFichaData] = useState<CbfMatchDetail | null>(cbfMatchDetail ?? null);
   const [fichaStatus, setFichaStatus] = useState<FetchStatus>(cbfMatchDetail ? 'done' : 'idle');
   const [eventsData, setEventsData] = useState<MatchEventsData | null>(null);
+  const [lineupData, setLineupData] = useState<LineupData | null>(null);
+  const [lineupStatus, setLineupStatus] = useState<FetchStatus>('idle');
   const [eventsStatus, setEventsStatus] = useState<FetchStatus>('idle');
   const [matchDocs, setMatchDocs] = useState<CbfMatchDocsResult | null>(null);
   const [matchDocsLoading, setMatchDocsLoading] = useState(false);
@@ -1151,6 +1203,7 @@ export function MatchCard({
 
   function openFichaModal() {
     setActiveModal('ficha');
+
     // Always fetch h2h in background for injuries data (all competitions)
     if (h2hStatus === 'idle') {
       setH2hStatus('loading');
@@ -1160,43 +1213,64 @@ export function MatchCard({
         .then((d) => { setH2hData(d); setH2hStatus('done'); })
         .catch(() => setH2hStatus('error'));
     }
+
+    // Resolve the API-Football fixture ID for lineup + events fetches.
+    // CONMEBOL-sourced matches (leagueId 13/11) use CONMEBOL internal IDs —
+    // past-results enriches them with apiFootballFixtureId when a cross-reference is found.
+    // Copa do Brasil (73) always has a valid API-Football fixture ID (match.id).
+    const isConmebolSource = match.leagueId === 13 || match.leagueId === 11;
+    const afFixtureId = isConmebolSource
+      ? (match.apiFootballFixtureId ?? null)
+      : parseInt(match.id, 10) || null;
+    const afHomeId = isConmebolSource
+      ? (match.apiFootballHomeId != null ? String(match.apiFootballHomeId) : null)
+      : match.homeTeam.id;
+    const afAwayId = isConmebolSource
+      ? (match.apiFootballAwayId != null ? String(match.apiFootballAwayId) : null)
+      : match.awayTeam.id;
+
+    // Fetch API-Football lineups (primary source for all competitions)
+    if (lineupStatus === 'idle' && afFixtureId != null) {
+      setLineupStatus('loading');
+      fetch(`/api/lineups?fixture=${afFixtureId}`)
+        .then((r) => {
+          if (r.status === 404) return null;
+          if (!r.ok) throw new Error();
+          return r.json() as Promise<LineupData>;
+        })
+        .then((d) => { setLineupData(d); setLineupStatus('done'); })
+        .catch(() => setLineupStatus('error'));
+    } else if (lineupStatus === 'idle') {
+      setLineupStatus('not_found');
+    }
+
+    // Fetch goal events for finished matches (all competitions with AF fixture ID)
+    const canFetchEvents = match.status === 'finished' && afFixtureId != null && afHomeId != null && afAwayId != null;
+    if (eventsStatus === 'idle' && canFetchEvents) {
+      setEventsStatus('loading');
+      const eventsParams = new URLSearchParams({
+        fixture: String(afFixtureId!),
+        home:    afHomeId!,
+        away:    afAwayId!,
+        finished: '1',
+      });
+      fetch(`/api/match-events?${eventsParams}`)
+        .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<MatchEventsData>; })
+        .then((d) => { setEventsData(d); setEventsStatus('done'); })
+        .catch(() => setEventsStatus('error'));
+    }
+
     // CBF data already pre-loaded (finished Brasileirão card from Resultados tab)
     if (fichaStatus === 'done') return;
     if (fichaStatus !== 'idle') return;
-    // Non-Série-A: CBF does not cover this competition — skip the CBF fetch entirely
+
+    // Non-Série-A: CBF does not cover these competitions — skip CBF fetch
     if (match.leagueId !== 71) {
       setFichaStatus('not_found');
-      // Fetch goal events only when we have a confirmed API-Football fixture ID.
-      // CONMEBOL-sourced matches (leagueId 13/11) use a CONMEBOL internal match ID —
-      // but past-results enriches them with apiFootballFixtureId when a cross-reference
-      // is found. Copa do Brasil (73) always has a valid API-Football fixture ID (match.id).
-      const isConmebolSource = match.leagueId === 13 || match.leagueId === 11;
-      const fixtureId = isConmebolSource
-        ? (match.apiFootballFixtureId != null ? String(match.apiFootballFixtureId) : null)
-        : match.id;
-      const homeId = isConmebolSource
-        ? (match.apiFootballHomeId != null ? String(match.apiFootballHomeId) : null)
-        : match.homeTeam.id;
-      const awayId = isConmebolSource
-        ? (match.apiFootballAwayId != null ? String(match.apiFootballAwayId) : null)
-        : match.awayTeam.id;
-
-      const canFetchEvents = match.status === 'finished' && fixtureId != null && homeId != null && awayId != null;
-      if (eventsStatus === 'idle' && canFetchEvents) {
-        setEventsStatus('loading');
-        const eventsParams = new URLSearchParams({
-          fixture: fixtureId!,
-          home:    homeId!,
-          away:    awayId!,
-          finished: '1',
-        });
-        fetch(`/api/match-events?${eventsParams}`)
-          .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<MatchEventsData>; })
-          .then((d) => { setEventsData(d); setEventsStatus('done'); })
-          .catch(() => setEventsStatus('error'));
-      }
       return;
     }
+
+    // Série A: fetch CBF for referees, goals, cards, financial data
     setFichaStatus('loading');
     const round = match.round.match(/(\d+)/)?.[1] ?? '';
     const params = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, round });
@@ -1289,14 +1363,13 @@ export function MatchCard({
   })();
 
   // Label shown inside the Ficha button to communicate what's available.
-  // Non-Série-A competitions are not covered by CBF, so pre-match hints differ.
   const fichaHint = live
     ? 'Ao vivo'
     : isPostMatch || isFinishedMode
     ? 'Resultado'
     : match.leagueId === 71
     ? hoursUntilKickoff <= 48 ? 'Árbitro' : '48h antes'
-    : 'Lesões';
+    : hoursUntilKickoff <= 48 ? 'Escalação' : 'Lesões';
 
   return (
     <>
@@ -1593,6 +1666,8 @@ export function MatchCard({
               hoursUntilKickoff={hoursUntilKickoff}
               injuries={h2hData?.injuries ?? []}
               injuriesLoading={h2hStatus === 'loading'}
+              lineups={lineupData}
+              lineupsLoading={lineupStatus === 'loading'}
               events={eventsData}
               eventsLoading={eventsStatus === 'loading'}
               eventsSupported={
@@ -1606,6 +1681,7 @@ export function MatchCard({
           {fichaStatus === 'not_found' && match.leagueId === 71 && (
             <CbfMatchModalContent
               data={null}
+              lineups={lineupData}
               match={match}
               isLive={live}
               hoursUntilKickoff={hoursUntilKickoff}
@@ -1618,6 +1694,7 @@ export function MatchCard({
           {fichaStatus === 'done' && fichaData && (
             <CbfMatchModalContent
               data={fichaData}
+              lineups={lineupData}
               match={match}
               isLive={live}
               hoursUntilKickoff={hoursUntilKickoff}

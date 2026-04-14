@@ -369,6 +369,29 @@ export interface CopaBracketData {
   ttlSeconds: number;
 }
 
+// ─── API-Football lineups (/fixtures/lineups) ─────────────────────────────────
+
+export interface AfPlayer {
+  id: number | null;
+  name: string;
+  number: number;
+  pos: string; // "G" | "D" | "M" | "F"
+  grid: string | null; // "1:1" format
+}
+
+export interface AfLineupTeam {
+  formation: string;
+  startXI: AfPlayer[];
+  substitutes: AfPlayer[];
+  coach: string | null;
+}
+
+export interface LineupData {
+  home: AfLineupTeam;
+  away: AfLineupTeam;
+  fetchedAt: string;
+}
+
 // ─── Match events (API-Football /fixtures/events) ─────────────────────────────
 
 export interface MatchGoalEvent {

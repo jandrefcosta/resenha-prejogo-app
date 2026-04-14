@@ -6,7 +6,7 @@ import { SoccerBallIcon } from '@/components/SoccerBallIcon';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import clubsData from '@/data/clubs.json';
-import type { CbfMatchDetail, ClubTheme } from '@/lib/types';
+import type { CbfMatchDetail, ClubTheme, LineupData } from '@/lib/types';
 
 // ─── Logo map: cbfId → API-Football logo URL ──────────────────────────────────
 
@@ -89,19 +89,51 @@ function TeamLogo({ cbfId, alt }: { cbfId: string; alt: string }) {
 
 // ─── Ficha modal (post-match) ─────────────────────────────────────────────────
 
-function FichaResultModal({ data, onClose }: { data: CbfMatchDetail; onClose: () => void }) {
+function FichaResultModal({
+  data,
+  apiFootballFixtureId,
+  onClose,
+}: {
+  data: CbfMatchDetail;
+  apiFootballFixtureId?: number;
+  onClose: () => void;
+}) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, onClose);
   useScrollLock();
 
-  const homeStarters = data.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando);
-  const awayStarters = data.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando);
+  const [lineups, setLineups] = useState<LineupData | null>(null);
+  const [lineupsLoading, setLineupsLoading] = useState(!!apiFootballFixtureId);
+
+  // Fetch API-Football lineups on mount (primary source)
+  useState(() => {
+    if (!apiFootballFixtureId) return;
+    fetch(`/api/lineups?fixture=${apiFootballFixtureId}`)
+      .then((r) => (r.ok ? r.json() as Promise<LineupData> : null))
+      .then((d) => { setLineups(d); setLineupsLoading(false); })
+      .catch(() => setLineupsLoading(false));
+  });
+
+  // CBF atletas fallback
+  const homeStartersCbf = data.mandante.atletas.filter((a) => !a.reserva && a.entrouJogando);
+  const awayStartersCbf = data.visitante.atletas.filter((a) => !a.reserva && a.entrouJogando);
   const homeReserves = data.mandante.atletas.filter((a) => a.reserva && a.entrouJogando);
   const awayReserves = data.visitante.atletas.filter((a) => a.reserva && a.entrouJogando);
+
   const mainRef = data.arbitros.find((a) => a.funcao === 'Arbitro');
   const varRef  = data.arbitros.find((a) => a.funcao === 'VAR');
+  const hasSubs = homeReserves.length > 0 || awayReserves.length > 0;
+
+  // Priority: AF lineups → CBF atletas
+  type DisplayPlayer = { key: string; num: number; name: string };
+  const homeStarters: DisplayPlayer[] = lineups?.home.startXI.length
+    ? lineups.home.startXI.map((p) => ({ key: String(p.number), num: p.number, name: p.name }))
+    : homeStartersCbf.map((p) => ({ key: String(p.id), num: p.numeroCamisa, name: p.apelido.replace(/^\d+\s+-\s+/, '') }));
+  const awayStarters: DisplayPlayer[] = lineups?.away.startXI.length
+    ? lineups.away.startXI.map((p) => ({ key: String(p.number), num: p.number, name: p.name }))
+    : awayStartersCbf.map((p) => ({ key: String(p.id), num: p.numeroCamisa, name: p.apelido.replace(/^\d+\s+-\s+/, '') }));
+
   const hasLineup = homeStarters.length > 0 || awayStarters.length > 0;
-  const hasSubs   = homeReserves.length > 0 || awayReserves.length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-0 sm:px-4">
@@ -137,22 +169,33 @@ function FichaResultModal({ data, onClose }: { data: CbfMatchDetail; onClose: ()
             Encerrado
           </div>
 
-          {/* Escalação */}
+          {/* Escalação — AF primário, CBF fallback */}
           <section>
             <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2 font-sans">Escalação</p>
-            {hasLineup ? (
+            {lineupsLoading ? (
+              <div className="grid grid-cols-2 gap-3 animate-pulse">
+                {[0, 1].map((s) => (
+                  <div key={s} className="space-y-1">
+                    <div className="h-3 w-12 bg-zinc-800 rounded mb-2" />
+                    {Array.from({ length: 11 }).map((_, i) => <div key={i} className="h-5 bg-zinc-800 rounded" />)}
+                  </div>
+                ))}
+              </div>
+            ) : hasLineup ? (
               <div className="grid grid-cols-2 gap-3">
                 {[
-                  { label: teamShort(data.mandante.id, data.mandante.nome), players: homeStarters },
-                  { label: teamShort(data.visitante.id, data.visitante.nome), players: awayStarters },
-                ].map(({ label, players }) => (
+                  { label: teamShort(data.mandante.id, data.mandante.nome), players: homeStarters, formation: lineups?.home.formation },
+                  { label: teamShort(data.visitante.id, data.visitante.nome), players: awayStarters, formation: lineups?.away.formation },
+                ].map(({ label, players, formation }) => (
                   <div key={label}>
-                    <p className="text-xs text-zinc-500 font-sans mb-1.5">{label}</p>
+                    <p className="text-xs text-zinc-500 font-sans mb-1.5">
+                      {label}{formation ? <span className="text-zinc-600 ml-1">({formation})</span> : null}
+                    </p>
                     <div className="space-y-0.5">
                       {players.map((p) => (
-                        <div key={p.id} className="flex items-center gap-1.5 text-xs font-sans">
-                          <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.numeroCamisa}</span>
-                          <span className="text-zinc-300 truncate">{p.apelido.replace(/^\d+\s+-\s+/, '')}</span>
+                        <div key={p.key} className="flex items-center gap-1.5 text-xs font-sans">
+                          <span className="text-zinc-600 tabular-nums w-4 text-right shrink-0">{p.num}</span>
+                          <span className="text-zinc-300 truncate">{p.name}</span>
                         </div>
                       ))}
                     </div>
@@ -162,12 +205,12 @@ function FichaResultModal({ data, onClose }: { data: CbfMatchDetail; onClose: ()
             ) : (
               <div className="flex items-center gap-2 rounded-lg border border-dashed border-zinc-700 px-3 py-2.5 text-xs font-sans text-zinc-500">
                 <span className="w-1.5 h-1.5 rounded-full bg-zinc-600 shrink-0" aria-hidden="true" />
-                Escalação não publicada pelo CBF
+                Escalação não disponível
               </div>
             )}
           </section>
 
-          {/* Substituições */}
+          {/* Substituições — CBF (real-time subs list) */}
           {hasSubs && (
             <section>
               <p className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-2 font-sans">Substituições</p>

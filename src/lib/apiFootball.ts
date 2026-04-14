@@ -1,8 +1,8 @@
 import { unstable_cache } from 'next/cache';
 import clubsData from '@/data/clubs.json';
-import { getCache, setCache, TTL_6H } from '@/lib/redisCache';
+import { getCache, setCache, TTL_6H, TTL_24H } from '@/lib/redisCache';
 import { SERIE_A, getCompetitionByLeagueId, type Competition } from '@/data/competitions';
-import type { ClubTheme, Match, MatchTeam } from '@/lib/types';
+import type { ClubTheme, Match, MatchTeam, LineupData } from '@/lib/types';
 
 const clubs = clubsData as ClubTheme[];
 const BASE_URL = 'https://v3.football.api-sports.io';
@@ -252,4 +252,100 @@ export async function getFinishedFixturesByClub(
   return raw
     .map(mapFixture)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()); // newest first
+}
+
+// ─── Lineups (/fixtures/lineups) ─────────────────────────────────────────────
+
+interface ApiLineupPlayer {
+  player: { id: number | null; name: string; number: number; pos: string; grid: string | null };
+}
+
+interface ApiLineupTeam {
+  formation: string;
+  startXI: ApiLineupPlayer[];
+  substitutes: ApiLineupPlayer[];
+  coach: { name: string | null };
+}
+
+interface ApiLineupResponse {
+  team: { id: number; name: string };
+  formation: string;
+  startXI: ApiLineupPlayer[];
+  substitutes: ApiLineupPlayer[];
+  coach: { name: string | null };
+}
+
+function mapLineupTeam(raw: ApiLineupResponse): ApiLineupTeam {
+  return {
+    formation: raw.formation ?? '',
+    startXI: raw.startXI ?? [],
+    substitutes: raw.substitutes ?? [],
+    coach: raw.coach ?? { name: null },
+  };
+}
+
+/**
+ * Fetches lineups for a fixture from API-Football.
+ * Returns null when the fixture has no lineups published yet.
+ * TTL strategy:
+ *   - No data yet (< 1h before kickoff): 10 min
+ *   - Data available: 24h (immutable once published)
+ */
+export async function fetchLineups(fixtureId: number): Promise<LineupData | null> {
+  const cacheKey = `lineups:${fixtureId}`;
+  const cached = await getCache<LineupData>(cacheKey);
+  if (cached) return cached;
+
+  const key = process.env.API_FOOTBALL_KEY;
+  if (!key) throw new Error('API_FOOTBALL_KEY is not set');
+
+  const url = new URL(`${BASE_URL}/fixtures/lineups`);
+  url.searchParams.set('fixture', String(fixtureId));
+
+  const res = await fetch(url.toString(), {
+    headers: { 'x-apisports-key': key },
+  });
+  if (!res.ok) throw new Error(`API-Football lineups HTTP ${res.status}`);
+
+  const data: ApiResponse<ApiLineupResponse> = await res.json();
+
+  const hasErrors = Array.isArray(data.errors)
+    ? data.errors.length > 0
+    : Object.keys(data.errors).length > 0;
+  if (hasErrors) throw new Error(`API-Football lineups error: ${JSON.stringify(data.errors)}`);
+
+  if (data.response.length < 2) {
+    // Lineups not yet published — cache briefly and return null
+    await setCache(cacheKey, null, 60 * 10); // 10 min
+    return null;
+  }
+
+  const [homeRaw, awayRaw] = data.response;
+  const mapTeam = (raw: ApiLineupResponse) => ({
+    formation: mapLineupTeam(raw).formation,
+    startXI: raw.startXI.map((p) => ({
+      id: p.player.id,
+      name: p.player.name,
+      number: p.player.number,
+      pos: p.player.pos,
+      grid: p.player.grid,
+    })),
+    substitutes: raw.substitutes.map((p) => ({
+      id: p.player.id,
+      name: p.player.name,
+      number: p.player.number,
+      pos: p.player.pos,
+      grid: p.player.grid,
+    })),
+    coach: raw.coach?.name ?? null,
+  });
+
+  const result: LineupData = {
+    home: mapTeam(homeRaw),
+    away: mapTeam(awayRaw),
+    fetchedAt: new Date().toISOString(),
+  };
+
+  await setCache(cacheKey, result, TTL_24H);
+  return result;
 }
