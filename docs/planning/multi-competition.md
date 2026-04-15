@@ -261,7 +261,7 @@ Parâmetro `?competition=<id>` opcional (default `serie-a`) — totalmente retro
 | `GET /api/standings` | `?competition=world-cup-2026` |
 | `GET /api/round` | `?competition=world-cup-2026` |
 | `GET /api/past-fixtures` | `?competition=world-cup-2026` (dispatch para adapter certo) |
-| `GET /api/broadcasters` | Recebe `competition` como parâmetro |
+| Broadcasters | Resolvido internamente por `getBroadcastersForFixture`, sem endpoint público dedicado |
 
 ---
 

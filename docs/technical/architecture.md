@@ -60,8 +60,6 @@ src/
 │   └── api/                # Route handlers (REST API)
 │       ├── fixtures/       # Multi-competição: Série A, Libertadores, Copa BR, Sul-Am
 │       ├── previews/       # Batch form + broadcasters (até 20 IDs)
-│       ├── broadcasters/
-│       ├── form/
 │       ├── h2h/            # Cache key unificado sem leagueId
 │       ├── standings/      # Série A + Libertadores (grupos); Copa do Brasil excluída
 │       ├── players/

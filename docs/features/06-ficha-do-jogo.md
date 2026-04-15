@@ -17,7 +17,7 @@ Exibe os detalhes de uma partida. O conteúdo varia conforme a competição e o 
 ### Série A
 
 1. O usuário clica no botão **"Ficha"** em um `MatchCard`.
-2. O modal abre e busca dados da CBF (`/api/cbf/round/{round}`).
+2. O modal abre e busca o jogo na CBF via `/api/cbf/match`; para jogos encerrados, busca documentos oficiais via `/api/cbf/match-docs`.
 3. O conteúdo é renderizado conforme a fase do jogo.
 4. Após o encerramento e publicação pela CBF, todas as seções ficam preenchidas.
 
@@ -174,21 +174,22 @@ Retorna dados parseados dos documentos oficiais de um jogo encerrado.
 
 ## API Endpoint — Cache Bust
 
-### `DELETE /api/admin/bust-match-docs?secret={DEBUG_SECRET}`
+### `DELETE /api/admin/bust-match-docs`
 
 Remove documentos cacheados do Redis. Parâmetros adicionais:
 - `?idJogo=N` — remove as 3 chaves de um jogo específico (`sumula`, `boletim`, `docs:status`)
 - `?all=true` — remove todas as chaves `cbf:match:*`
+- Auth: header `Authorization: Bearer <DEBUG_SECRET>`
 
 ---
 
-## API Endpoint (Série A)
+## API Endpoints (Série A)
 
-### `GET /api/cbf/round/{round}`
+### `GET /api/cbf/match?home=X&away=Y&round=N`
 
-Chamado com o número da rodada do jogo. Retorna dados de todos os jogos da rodada.
+Chamado com IDs API-Football de mandante/visitante e a rodada. Retorna o `CbfMatchDetail` do jogo específico.
 
-O `MatchCard` filtra o jogo específico pelo `idJogo` da CBF.
+O `MatchCard` usa esse retorno para preencher dados oficiais da CBF quando o jogo é de Série A.
 
 **Retorno (`CbfMatchDetail`):**
 ```typescript

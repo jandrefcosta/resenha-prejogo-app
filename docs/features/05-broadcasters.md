@@ -9,30 +9,24 @@ Descobre automaticamente em quais canais de TV e plataformas de streaming cada p
 ## Fluxo
 
 1. Ao carregar os fixtures, o `MatchSection` chama `/api/previews?ids=...` em batch.
-2. Para cada jogo, o endpoint `/api/broadcasters` é chamado internamente.
-3. Se o dado estiver em cache (Redis), retorna imediatamente.
-4. Se não, chama o Gemini com uma busca no Google para descobrir os canais.
-5. O resultado é armazenado no Redis e retornado como array de strings.
+2. A rota `/api/previews` chama a função server-side `getBroadcastersForFixture` para cada jogo elegível.
+3. Se o dado estiver em cache no Redis, retorna imediatamente.
+4. Se não estiver em cache, chama o Gemini com uma busca no Google para descobrir os canais.
+5. O resultado é armazenado no Redis e retornado como array de strings dentro do payload de preview.
+
+O `RoundModal` segue o mesmo princípio: chama `/api/round`, e essa rota usa `getBroadcastersForFixture` internamente para os jogos da rodada.
 
 ---
 
-## API Endpoint
+## Integração Interna
 
-### `GET /api/broadcasters?fixtureId=X&home=Y&away=Z&round=N&date=D`
+A busca de canais não é exposta por uma rota HTTP pública dedicada. Ela fica centralizada em:
 
-**Parâmetros:**
-- `fixtureId` — ID do fixture na API-Football
-- `home` — nome do time mandante
-- `away` — nome do time visitante
-- `round` — número da rodada
-- `date` — data do jogo (ISO 8601)
+- `src/lib/broadcasterSearch.ts` — `getBroadcastersForFixture`
+- `/api/previews` — resolve broadcasters em batch para os cards
+- `/api/round` — resolve broadcasters para a visão da rodada
 
-**Resposta:**
-```json
-{
-  "broadcasters": ["Globo", "SporTV", "Premiere"]
-}
-```
+Isso evita uma superfície pública redundante para chamadas ao Gemini.
 
 ---
 

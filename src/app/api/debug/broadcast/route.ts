@@ -1,4 +1,5 @@
 import { GoogleGenAI } from '@google/genai';
+import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 import { NextRequest, NextResponse } from 'next/server';
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
@@ -13,15 +14,9 @@ const SYSTEM_PROMPT =
   'Busque onde a partida será transmitida e retorne SOMENTE um array JSON com os nomes dos canais. Ex: ["Globo","Premiere"]. ' +
   'Canais: Globo, SporTV, SporTV 2, Premiere, CazéTV, Amazon Prime Video, TNT Sports, Max, ESPN, Band.';
 
-function isAuthorized(req: NextRequest): boolean {
-  const secret = process.env.DEBUG_SECRET;
-  if (!secret) return false;
-  return req.nextUrl.searchParams.get('secret') === secret;
-}
-
 export async function GET(req: NextRequest) {
-  if (!isAuthorized(req)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAdminRequest(req)) {
+    return unauthorizedAdminResponse();
   }
 
   const formattedDate = new Intl.DateTimeFormat('pt-BR', {
@@ -63,5 +58,8 @@ export async function GET(req: NextRequest) {
     error = e instanceof Error ? e.message : String(e);
   }
 
-  return NextResponse.json({ formattedDate, rawContent, parsedBroadcasters, error });
+  return NextResponse.json(
+    { formattedDate, rawContent, parsedBroadcasters, error },
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
 }

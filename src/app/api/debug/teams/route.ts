@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import clubsData from '@/data/clubs.json';
+import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 import type { ClubTheme } from '@/lib/types';
 
 const clubs = clubsData as ClubTheme[];
 
 export async function GET(req: import('next/server').NextRequest) {
-  const secret = process.env.DEBUG_SECRET;
-  if (!secret || req.nextUrl.searchParams.get('secret') !== secret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAdminRequest(req)) {
+    return unauthorizedAdminResponse();
   }
   const key = process.env.API_FOOTBALL_KEY;
   if (!key) return NextResponse.json({ error: 'API_FOOTBALL_KEY not set' }, { status: 500 });
@@ -50,11 +50,14 @@ export async function GET(req: import('next/server').NextRequest) {
     .filter((c) => c.apiFootballId !== null && !apiTeams.find((t) => t.id === c.apiFootballId))
     .map((c) => ({ ourId: c.id, ourName: c.name, apiFootballId: c.apiFootballId }));
 
-  return NextResponse.json({
-    season: today.getFullYear(),
-    totalInLeague: apiTeams.length,
-    matched,
-    missingFromOurJson: missing,
-    ourClubsNotInLeague: notInLeague,
-  });
+  return NextResponse.json(
+    {
+      season: today.getFullYear(),
+      totalInLeague: apiTeams.length,
+      matched,
+      missingFromOurJson: missing,
+      ourClubsNotInLeague: notInLeague,
+    },
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
 }

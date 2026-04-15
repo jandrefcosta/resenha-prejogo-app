@@ -8,23 +8,18 @@
  *   DELETE /api/admin/bust-match-docs?idJogo=831894
  *   DELETE /api/admin/bust-match-docs?all=true   (scan + delete all cbf:match:*:docs:status keys)
  *
- * Protected by DEBUG_SECRET query param (same mechanism used by /api/debug/* routes).
+ * Protected by Authorization: Bearer <DEBUG_SECRET>.
  */
 
+import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 import { deleteCache, redis } from '@/lib/redisCache';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
-function isAuthorised(req: NextRequest): boolean {
-  const secret = process.env.DEBUG_SECRET;
-  if (!secret) return false;
-  return req.nextUrl.searchParams.get('secret') === secret;
-}
-
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
-  if (!isAuthorised(req)) {
-    return NextResponse.json({ error: 'Unauthorised' }, { status: 401 });
+  if (!isAdminRequest(req)) {
+    return unauthorizedAdminResponse();
   }
 
   const { searchParams } = req.nextUrl;
@@ -44,7 +39,10 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
       deleteCache(`cbf:match:${idJogo}:sumula`),
       deleteCache(`cbf:match:${idJogo}:boletim`),
     ]);
-    return NextResponse.json({ cleared: [idJogo] });
+    return NextResponse.json(
+      { cleared: [idJogo] },
+      { headers: { 'Cache-Control': 'no-store' } },
+    );
   }
 
   // all=true: scan for all status keys and delete associated sumula/boletim caches
@@ -66,5 +64,8 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
   ]);
   await Promise.all(deletes);
 
-  return NextResponse.json({ cleared: idJogos, count: idJogos.length });
+  return NextResponse.json(
+    { cleared: idJogos, count: idJogos.length },
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
 }

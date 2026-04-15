@@ -9,7 +9,7 @@
 ## Motivação
 
 Hoje a manutenção exige:
-- Chamadas manuais a `/api/debug/*` com `DEBUG_SECRET` na query string
+- Chamadas manuais a `/api/debug/*` com `Authorization: Bearer <DEBUG_SECRET>`
 - CLI via `npm run seed:cbf` para popular rodadas no Redis
 - Acesso direto ao Upstash console para inspecionar chaves
 

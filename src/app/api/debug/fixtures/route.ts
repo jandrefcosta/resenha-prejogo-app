@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { COMPETITIONS } from '@/data/competitions';
+import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 import { getCache, deleteCache } from '@/lib/redisCache';
 import { getFixturesByClub } from '@/lib/apiFootball';
 import clubsData from '@/data/clubs.json';
@@ -11,9 +12,8 @@ const CLUB_COMPETITIONS = COMPETITIONS.filter((c) => c.scope === 'club');
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  const secret = process.env.DEBUG_SECRET;
-  if (!secret || req.nextUrl.searchParams.get('secret') !== secret) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isAdminRequest(req)) {
+    return unauthorizedAdminResponse();
   }
 
   const sp = req.nextUrl.searchParams;
@@ -79,15 +79,18 @@ export async function GET(req: NextRequest) {
 
   const clubDetail = clubSlug ? { slug: clubSlug, matches: merged[clubSlug] ?? [] } : undefined;
 
-  return NextResponse.json({
-    cacheBusted: bust,
-    caches: cacheStatuses,
-    ...(competitionErrors.length ? { errors: competitionErrors } : {}),
-    pipeline: {
-      totalClubsWithMatches: clubSummary.length,
-      clubsWithFewMatches: clubSummary.filter((c) => c.total < 3),
-      allClubs: clubSummary,
-      ...(clubDetail !== undefined ? { clubDetail } : {}),
+  return NextResponse.json(
+    {
+      cacheBusted: bust,
+      caches: cacheStatuses,
+      ...(competitionErrors.length ? { errors: competitionErrors } : {}),
+      pipeline: {
+        totalClubsWithMatches: clubSummary.length,
+        clubsWithFewMatches: clubSummary.filter((c) => c.total < 3),
+        allClubs: clubSummary,
+        ...(clubDetail !== undefined ? { clubDetail } : {}),
+      },
     },
-  });
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
 }

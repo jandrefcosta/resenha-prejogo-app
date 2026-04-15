@@ -184,8 +184,9 @@ Definido em `src/lib/matchConstants.ts` — single source of truth usado pelo `c
 O cache de fixtures não tem invalidação manual — expira naturalmente em 6h.
 
 Para forçar refresh via endpoint de debug (apaga todas as 4 competições de uma vez):
-```
-GET /api/debug/fixtures?secret=<SECRET>&bust=1
+```http
+GET /api/debug/fixtures?bust=1
+Authorization: Bearer <DEBUG_SECRET>
 ```
 
 ### CBF rounds

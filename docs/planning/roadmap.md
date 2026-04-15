@@ -42,7 +42,7 @@ Implementado com `Promise.allSettled` em `/api/fixtures`. Retorna jogos de todas
 ### ✅ 1.2 · Card correto por competição
 
 - `match.competitionName` exibido no card (substituiu label "Serie A" fixo)
-- `leagueId` passado para `/api/h2h` e `/api/form`
+- `leagueId` passado para `/api/h2h`; forma também é resolvida em batch por `/api/previews`
 - Ficha do Jogo: mensagem específica para jogos não-CBF (`leagueId !== 71`)
 - Forma unificada em `leagueId=71` para evitar 4× chamadas
 
