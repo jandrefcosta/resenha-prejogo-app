@@ -60,6 +60,15 @@ requests.http
 # Claude Code local settings
 .claude/settings.json
 
+# PDF pipeline — arquivos locais gerados por docs:update (regeneráveis, 50MB+)
+/scripts/pdfs/
+/scripts/round-map.json
+
 # Debug scripts temporários
 scripts/_debug_pdf.mjs
 scripts/debug-pdf.ts
+scripts/debug-regex.mjs
+scripts/reparse-boletins.mjs
+scripts/debug-boletim-text.ts
+scripts/diagnose-match-docs.ts
+scripts/check-status-urls.ts

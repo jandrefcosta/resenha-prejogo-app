@@ -6,6 +6,7 @@ import { MatchCard } from '@/components/MatchCard';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import type { Match, MatchPreview, CbfMatchDetail } from '@/lib/types';
 import type { CbfMatchDocsResult } from '@/lib/cbfDocTypes';
+import { getMatchDocs } from '@/lib/matchDocs';
 import { localiseRound } from '@/lib/localiseRound';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme } from '@/lib/types';
@@ -269,19 +270,19 @@ export function MatchSection() {
     if (derivedSerieARound > 0) setSerieARound(derivedSerieARound);
   }, [derivedSerieARound]);
 
-  // Prefetch match-docs for finished Série A matches so renda shows on card face
+  // Load match-docs for finished Série A matches from static JSON (pre-built offline)
   useEffect(() => {
     if (!pastMatches || pastMatches.length === 0) return;
+    const updates: Record<string, CbfMatchDocsResult> = {};
     pastMatches.forEach((entry) => {
       const id = entry.match.idJogo;
       if (!id || pastMatchDocs[id] !== undefined) return;
-      fetch(`/api/cbf/match-docs?matchId=${encodeURIComponent(id)}&round=${entry.round}`)
-        .then((r) => (r.ok ? (r.json() as Promise<CbfMatchDocsResult>) : null))
-        .then((data) => {
-          if (data) setPastMatchDocs((prev) => ({ ...prev, [id]: data }));
-        })
-        .catch(() => {}); // silent — card face simply won’t show renda
+      const docs = getMatchDocs(id);
+      if (docs) updates[id] = docs;
     });
+    if (Object.keys(updates).length > 0) {
+      setPastMatchDocs((prev) => ({ ...prev, ...updates }));
+    }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pastMatches]);
 

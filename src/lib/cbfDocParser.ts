@@ -192,23 +192,29 @@ export async function parseBoletim(
 
   // ── Estádio / data from header (page 1) ──────────────────────────────────
   const page1 = pages[0] ?? '';
-  // "ESTÁDIO ARENA MRV - BELO HORIZONTE - MG"
-  const estadioMatch = page1.match(/EST[AÁ]DIO\s+(.+?)(?:\n|DATA\b)/i);
-  // "DATA 28/01/2026 19:00"
-  const dataMatch = page1.match(/DATA\s+(\d{2}\/\d{2}\/\d{4})/i);
+  // Old format: "ESTÁDIO ARENA MRV - BELO HORIZONTE - MG"  +  "DATA 28/01/2026 19:00"
+  // New format: "Data: 05/04/2026 19:30 ESTÁDIO"  +  "Jogo: Team x Team  Neo Química Arena"
+  const estadioMatch =
+    page1.match(/EST[AÁ]DIO\s+(.+?)(?:\n|DATA\b)/i) ??
+    page1.match(/Jogo:[^\n]+?\s{2,}(.+?)(?:\n|$)/i);
+  const dataMatch =
+    page1.match(/Data:\s*(\d{2}\/\d{2}\/\d{4})/i) ??
+    page1.match(/DATA\s+(\d{2}\/\d{2}\/\d{4})/i);
 
   // ── TOTAL row (page 1): "TOTAL  disponiveis  devolvidos  vendidos  arrecadacao" ──
   // The last line before RECEITAS / signature block
-  // Format: "TOTAL  25.770  0  25.770  1.331.907,88"
-  const totalRowMatch = page1.match(/^TOTAL\s+([\d.]+)\s+\d+\s+([\d.]+)\s+([\d.,]+)/m);
+  // Format (old): "TOTAL  25.770  0  25.770  1.331.907,88"
+  // Format (new): "TOTAIS 32213 0 32213 R$ 2.171.746,00"
+  const totalRowMatch = page1.match(/^(?:TOTAL|TOTAIS)\s+([\d.]+)\s+\d+\s+([\d.]+)\s+(?:R\$\s*)?([\d.,]+)/m);
   const geralVendidos     = totalRowMatch ? parseIntBr(totalRowMatch[2]) : null;
   const rendaBruta        = totalRowMatch ? parseBrl(totalRowMatch[3])   : null;
 
   // ── Complimentary rows (price = 0,00) → non-paying public ────────────────
-  // Rows like: "DESCRIPTION  qty  0  qty  0,00  0,00"
+  // Rows like (old): "DESCRIPTION  qty  0  qty  0,00  0,00"
+  // Rows like (new): "DESCRIPTION  qty  0  qty  R$ 0,00  R$ 0,00"
   let naoPagante = 0;
-  // Find rows whose price column (4th number after qty) is 0,00
-  const ticketRowPattern = /^.+?\s+([\d.]+)\s+\d+\s+([\d.]+)\s+([\d.,]+)\s+([\d.,]+)$/gm;
+  // Find rows whose price column (4th number after qty) is 0,00 — R$ prefix optional
+  const ticketRowPattern = /^.+?\s+([\d.]+)\s+\d+\s+([\d.]+)\s+(?:R\$\s*)?([\d.,]+)\s+(?:R\$\s*)?([\d.,]+)$/gm;
   let m: RegExpExecArray | null;
   while ((m = ticketRowPattern.exec(page1)) !== null) {
     const preco  = parseBrl(m[3]);
@@ -220,10 +226,11 @@ export async function parseBoletim(
 
   const pagante = geralVendidos != null ? geralVendidos - naoPagante : null;
 
-  // ── Renda Líquida (page 2) ────────────────────────────────────────────────
-  const page2 = pages[1] ?? '';
-  // "RENDA LÍQUIDA 683.891,75"
-  const rendaLiquidaMatch = page2.match(/RENDA\s+L[IÍ]QUIDA\s+([\d.,]+)/i);
+  // ── Renda Líquida (search all pages) ─────────────────────────────────────
+  // Old format (page 2): "RENDA LÍQUIDA 683.891,75"
+  // New format (page 3): "RENDA LÍQUIDA (RECEITA - DESPESA) R$ 1.245.515,49"
+  const allPagesText = pages.join('\n');
+  const rendaLiquidaMatch = allPagesText.match(/RENDA\s+L[IÍ]QUIDA[^0-9]*(?:R\$\s*)?([\d.,]+)/i);
   const rendaLiquida = rendaLiquidaMatch ? parseBrl(rendaLiquidaMatch[1]) : null;
 
   // ── Ticket breakdown (simple aggregation by INTEIRA / MEIA / GRATUIDADE) ─
@@ -255,7 +262,9 @@ export async function parseBoletim(
 function parseTicketCategories(page1Text: string): CbfBoletimTicketCategory[] {
   const acc: Record<string, { quantidade: number; arrecadacao: number }> = {};
 
-  const rowPattern = /^(.+?)\s+([\d.]+)\s+\d+\s+([\d.]+)\s+([\d.,]+)\s+([\d.,]+)$/gm;
+  // Old format: "DESCRIPTION  avail  dev  sold  price  total"
+  // New format: "DESCRIPTION  avail  dev  sold  R$ price  R$ total"
+  const rowPattern = /^(.+?)\s+([\d.]+)\s+\d+\s+([\d.]+)\s+(?:R\$\s*)?([\d.,]+)\s+(?:R\$\s*)?([\d.,]+)$/gm;
   let m: RegExpExecArray | null;
   while ((m = rowPattern.exec(page1Text)) !== null) {
     const desc = m[1].toUpperCase();
