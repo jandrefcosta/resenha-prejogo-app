@@ -185,3 +185,15 @@ export const MOCK_PAST_FIXTURES_FINISHED = [
     },
   },
 ];
+
+// Same as above but uses an idJogo not present in the static match-docs JSON,
+// so getMatchDocs() returns null and the card face shows no boletim.
+export const MOCK_PAST_FIXTURES_FINISHED_NO_STATIC_DOCS = [
+  {
+    round: 4,
+    match: {
+      ...MOCK_PAST_FIXTURES_FINISHED[0].match,
+      idJogo: 'mock-jogo-nodocs',
+    },
+  },
+];

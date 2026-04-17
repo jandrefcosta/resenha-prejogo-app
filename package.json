@@ -18,6 +18,7 @@
     "docs:parse": "node scripts/parse-pdfs.mjs",
     "docs:build": "node scripts/build-match-docs.mjs",
     "docs:update": "node scripts/download-pdfs.mjs && node scripts/parse-pdfs.mjs && node scripts/build-match-docs.mjs",
+    "docs:cron": "node scripts/cron-match-docs.mjs",
     "graphify:update": "python -c \"from graphify.watch import _rebuild_code; from pathlib import Path; _rebuild_code(Path('.'))\"",
     "test:e2e:ui": "playwright test --ui"
   },

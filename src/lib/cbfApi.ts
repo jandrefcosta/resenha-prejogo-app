@@ -91,21 +91,21 @@ interface RawArbitro {
 }
 
 interface RawAtleta {
-  id: number;
+  id: string;         // API returns string despite looking like a number
   numero_camisa: number;
-  reserva: boolean;
-  goleiro: boolean;
-  entrou_jogando: boolean;
+  reserva: boolean | string;
+  goleiro: boolean | string;
+  entrou_jogando: boolean | string;
   nome: string;
   apelido: string;
   foto: string;
 }
 
 interface RawAlteracao {
-  codigo_jogador_saiu: number;
-  codigo_jogador_entrou: number;
-  tempo_jogo: string;
-  tempo_subs: string;
+  codigo_jogador_saiu: string;   // API returns string
+  codigo_jogador_entrou: string; // API returns string
+  tempo_jogo: string;            // actual minute e.g. "25:00" — use this
+  tempo_subs: string;            // phase code e.g. "TN2" — not a minute
 }
 
 interface RawTime {
@@ -159,11 +159,11 @@ function asArray<T>(value: T[] | string | undefined | null): T[] {
 
 function parseAtletas(raw: RawAtleta[] | string): CbfAthlete[] {
   return asArray(raw as RawAtleta[]).map((a) => ({
-    id: a.id,
-    numeroCamisa: a.numero_camisa,
-    reserva: a.reserva,
-    goleiro: a.goleiro,
-    entrouJogando: a.entrou_jogando,
+    id: Number(a.id),
+    numeroCamisa: Number(a.numero_camisa),
+    reserva: a.reserva === true || a.reserva === 'true',
+    goleiro: a.goleiro === true || a.goleiro === 'true',
+    entrouJogando: a.entrou_jogando === true || a.entrou_jogando === 'true',
     nome: a.nome,
     apelido: a.apelido,
     foto: a.foto,
@@ -172,10 +172,11 @@ function parseAtletas(raw: RawAtleta[] | string): CbfAthlete[] {
 
 function parseAlteracoes(raw: RawAlteracao[] | string): CbfSubstitution[] {
   return asArray(raw as RawAlteracao[]).map((a) => ({
-    codigoJogadorSaiu: a.codigo_jogador_saiu,
-    codigoJogadorEntrou: a.codigo_jogador_entrou,
+    codigoJogadorSaiu: Number(a.codigo_jogador_saiu),
+    codigoJogadorEntrou: Number(a.codigo_jogador_entrou),
     tempoJogo: a.tempo_jogo,
-    tempoSubs: a.tempo_subs,
+    // tempo_subs is a phase code (e.g. "TN2"), not a minute — use tempo_jogo instead
+    tempoSubs: a.tempo_jogo,
   }));
 }
 
@@ -415,10 +416,13 @@ export async function getCbfRound(round: number, force = false): Promise<CbfRoun
 
 /**
  * Force a cache refresh for a round (e.g. after a match finishes).
+ * Clears both the primary key and the stale backup key.
  */
 export async function invalidateCbfRound(round: number): Promise<void> {
   // Upstash Redis doesn't expose delete directly via the helper, so we
   // overwrite with TTL 1s to effectively expire it immediately.
-  const key = cacheKey(round);
-  await setCache(key, null, 1);
+  await Promise.all([
+    setCache(cacheKey(round), null, 1),
+    setCache(staleKey(round), null, 1),
+  ]);
 }

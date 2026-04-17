@@ -1,5 +1,5 @@
 {
-  "updatedAt": "2026-04-15T00:51:16.652Z",
+  "updatedAt": "2026-04-17T19:47:48.824Z",
   "totalMatches": 107,
   "matches": {
     "831889": {
@@ -7,7 +7,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831889",
-        "parsedAt": "2026-04-15T00:50:58.781Z",
+        "parsedAt": "2026-04-17T19:47:41.921Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -29,7 +29,7 @@
       },
       "sumula": {
         "idJogo": "831889",
-        "parsedAt": "2026-04-15T00:50:58.857Z",
+        "parsedAt": "2026-04-17T19:47:42.005Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -481,7 +481,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831890",
-        "parsedAt": "2026-04-15T00:50:58.864Z",
+        "parsedAt": "2026-04-17T19:47:42.035Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -503,7 +503,7 @@
       },
       "sumula": {
         "idJogo": "831890",
-        "parsedAt": "2026-04-15T00:50:58.913Z",
+        "parsedAt": "2026-04-17T19:47:42.079Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "29/01/2026",
@@ -997,7 +997,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831891",
-        "parsedAt": "2026-04-15T00:50:59.005Z",
+        "parsedAt": "2026-04-17T19:47:42.170Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "MorumBIS",
         "mandante": "São Paulo",
@@ -1035,7 +1035,7 @@
       },
       "sumula": {
         "idJogo": "831891",
-        "parsedAt": "2026-04-15T00:50:59.046Z",
+        "parsedAt": "2026-04-17T19:47:42.214Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -1487,7 +1487,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831892",
-        "parsedAt": "2026-04-15T00:50:59.092Z",
+        "parsedAt": "2026-04-17T19:47:42.263Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Urbano Caldeira",
         "mandante": "Corinthians",
@@ -1525,7 +1525,7 @@
       },
       "sumula": {
         "idJogo": "831892",
-        "parsedAt": "2026-04-15T00:50:59.121Z",
+        "parsedAt": "2026-04-17T19:47:42.299Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -2057,7 +2057,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831893",
-        "parsedAt": "2026-04-15T00:50:59.143Z",
+        "parsedAt": "2026-04-17T19:47:42.329Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "José Maria de Campos Maia",
         "mandante": "Mirassol",
@@ -2095,7 +2095,7 @@
       },
       "sumula": {
         "idJogo": "831893",
-        "parsedAt": "2026-04-15T00:50:59.169Z",
+        "parsedAt": "2026-04-17T19:47:42.368Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "29/01/2026",
@@ -2571,7 +2571,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831894",
-        "parsedAt": "2026-04-15T00:50:59.187Z",
+        "parsedAt": "2026-04-17T19:47:42.396Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA MRV - BELO HORIZONTE - MG",
         "mandante": "ATLÉTICO MINEIRO SAF - MG",
@@ -2609,7 +2609,7 @@
       },
       "sumula": {
         "idJogo": "831894",
-        "parsedAt": "2026-04-15T00:50:59.226Z",
+        "parsedAt": "2026-04-17T19:47:42.430Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -3133,7 +3133,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831895",
-        "parsedAt": "2026-04-15T00:50:59.240Z",
+        "parsedAt": "2026-04-17T19:47:42.459Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "BEIRA-RIO - PORTO ALEGRE - RS",
         "mandante": "INTERNACIONAL - RS",
@@ -3166,7 +3166,7 @@
       },
       "sumula": {
         "idJogo": "831895",
-        "parsedAt": "2026-04-15T00:50:59.266Z",
+        "parsedAt": "2026-04-17T19:47:42.491Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -3626,7 +3626,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831896",
-        "parsedAt": "2026-04-15T00:50:59.277Z",
+        "parsedAt": "2026-04-17T19:47:42.515Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "COUTO PEREIRA - CURITIBA - PR",
         "mandante": "CORITIBA S.A.F. - PR",
@@ -3659,7 +3659,7 @@
       },
       "sumula": {
         "idJogo": "831896",
-        "parsedAt": "2026-04-15T00:50:59.308Z",
+        "parsedAt": "2026-04-17T19:47:42.547Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -4120,7 +4120,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831897",
-        "parsedAt": "2026-04-15T00:50:59.319Z",
+        "parsedAt": "2026-04-17T19:47:42.573Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANOEL BARRADAS - SALVADOR - BA",
         "mandante": "VITÓRIA - BA",
@@ -4153,7 +4153,7 @@
       },
       "sumula": {
         "idJogo": "831897",
-        "parsedAt": "2026-04-15T00:50:59.352Z",
+        "parsedAt": "2026-04-17T19:47:42.602Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -4578,7 +4578,7 @@
       "round": 1,
       "boletim": {
         "idJogo": "831898",
-        "parsedAt": "2026-04-15T00:50:59.359Z",
+        "parsedAt": "2026-04-17T19:47:42.626Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA CONDÁ - CHAPECO - SC",
         "mandante": "CHAPECOENSE - SC",
@@ -4616,7 +4616,7 @@
       },
       "sumula": {
         "idJogo": "831898",
-        "parsedAt": "2026-04-15T00:50:59.384Z",
+        "parsedAt": "2026-04-17T19:47:42.658Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "1",
         "data": "28/01/2026",
@@ -5118,7 +5118,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831899",
-        "parsedAt": "2026-04-15T00:50:59.389Z",
+        "parsedAt": "2026-04-17T19:47:42.694Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -5140,7 +5140,7 @@
       },
       "sumula": {
         "idJogo": "831899",
-        "parsedAt": "2026-04-15T00:50:59.417Z",
+        "parsedAt": "2026-04-17T19:47:42.725Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "04/02/2026",
@@ -5624,7 +5624,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831900",
-        "parsedAt": "2026-04-15T00:50:59.421Z",
+        "parsedAt": "2026-04-17T19:47:42.746Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -5646,7 +5646,7 @@
       },
       "sumula": {
         "idJogo": "831900",
-        "parsedAt": "2026-04-15T00:50:59.445Z",
+        "parsedAt": "2026-04-17T19:47:42.775Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "05/02/2026",
@@ -6091,7 +6091,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831901",
-        "parsedAt": "2026-04-15T00:50:59.484Z",
+        "parsedAt": "2026-04-17T19:47:42.818Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Urbano Caldeira",
         "mandante": "Santos",
@@ -6129,7 +6129,7 @@
       },
       "sumula": {
         "idJogo": "831901",
-        "parsedAt": "2026-04-15T00:50:59.506Z",
+        "parsedAt": "2026-04-17T19:47:42.851Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "04/02/2026",
@@ -6613,7 +6613,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831902",
-        "parsedAt": "2026-04-15T00:50:59.531Z",
+        "parsedAt": "2026-04-17T19:47:42.882Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Arena Barueri",
         "mandante": "Palmeiras",
@@ -6651,7 +6651,7 @@
       },
       "sumula": {
         "idJogo": "831902",
-        "parsedAt": "2026-04-15T00:50:59.555Z",
+        "parsedAt": "2026-04-17T19:47:42.912Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "04/02/2026",
@@ -7105,7 +7105,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831903",
-        "parsedAt": "2026-04-15T00:50:59.574Z",
+        "parsedAt": "2026-04-17T19:47:42.940Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Cícero de Souza Marques",
         "mandante": "Red Bull Bragantino",
@@ -7143,7 +7143,7 @@
       },
       "sumula": {
         "idJogo": "831903",
-        "parsedAt": "2026-04-15T00:50:59.594Z",
+        "parsedAt": "2026-04-17T19:47:42.971Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "04/02/2026",
@@ -7599,7 +7599,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831904",
-        "parsedAt": "2026-04-15T00:50:59.605Z",
+        "parsedAt": "2026-04-17T19:47:42.998Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MINEIRÃO - BELO HORIZONTE - MG",
         "mandante": "CRUZEIRO SAF - MG",
@@ -7637,7 +7637,7 @@
       },
       "sumula": {
         "idJogo": "831904",
-        "parsedAt": "2026-04-15T00:50:59.629Z",
+        "parsedAt": "2026-04-17T19:47:43.030Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "05/02/2026",
@@ -8083,7 +8083,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831905",
-        "parsedAt": "2026-04-15T00:50:59.647Z",
+        "parsedAt": "2026-04-17T19:47:43.059Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DO GRÊMIO - PORTO ALEGRE - RS",
         "mandante": "GRÊMIO - RS",
@@ -8121,7 +8121,7 @@
       },
       "sumula": {
         "idJogo": "831905",
-        "parsedAt": "2026-04-15T00:50:59.673Z",
+        "parsedAt": "2026-04-17T19:47:43.090Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "04/02/2026",
@@ -8589,7 +8589,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831906",
-        "parsedAt": "2026-04-15T00:50:59.681Z",
+        "parsedAt": "2026-04-17T19:47:43.113Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DA BAIXADA - CURITIBA - PR",
         "mandante": "ATHLETICO PARANAENSE - PR",
@@ -8622,7 +8622,7 @@
       },
       "sumula": {
         "idJogo": "831906",
-        "parsedAt": "2026-04-15T00:50:59.703Z",
+        "parsedAt": "2026-04-17T19:47:43.142Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "19/02/2026",
@@ -9114,7 +9114,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831907",
-        "parsedAt": "2026-04-15T00:50:59.718Z",
+        "parsedAt": "2026-04-17T19:47:43.168Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA FONTE NOVA - SALVADOR - BA",
         "mandante": "BAHIA - BA",
@@ -9147,7 +9147,7 @@
       },
       "sumula": {
         "idJogo": "831907",
-        "parsedAt": "2026-04-15T00:50:59.745Z",
+        "parsedAt": "2026-04-17T19:47:43.201Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "05/02/2026",
@@ -9631,7 +9631,7 @@
       "round": 2,
       "boletim": {
         "idJogo": "831908",
-        "parsedAt": "2026-04-15T00:50:59.758Z",
+        "parsedAt": "2026-04-17T19:47:43.225Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANGUEIRÃO - BELEM - PA",
         "mandante": "REMO - PA",
@@ -9669,7 +9669,7 @@
       },
       "sumula": {
         "idJogo": "831908",
-        "parsedAt": "2026-04-15T00:50:59.783Z",
+        "parsedAt": "2026-04-17T19:47:43.255Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "2",
         "data": "04/02/2026",
@@ -10153,7 +10153,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831909",
-        "parsedAt": "2026-04-15T00:50:59.787Z",
+        "parsedAt": "2026-04-17T19:47:43.285Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -10175,7 +10175,7 @@
       },
       "sumula": {
         "idJogo": "831909",
-        "parsedAt": "2026-04-15T00:50:59.831Z",
+        "parsedAt": "2026-04-17T19:47:43.327Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "12/02/2026",
@@ -10675,7 +10675,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831910",
-        "parsedAt": "2026-04-15T00:50:59.837Z",
+        "parsedAt": "2026-04-17T19:47:43.357Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -10697,7 +10697,7 @@
       },
       "sumula": {
         "idJogo": "831910",
-        "parsedAt": "2026-04-15T00:50:59.880Z",
+        "parsedAt": "2026-04-17T19:47:43.391Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "11/02/2026",
@@ -11221,7 +11221,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831911",
-        "parsedAt": "2026-04-15T00:50:59.923Z",
+        "parsedAt": "2026-04-17T19:47:43.432Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "MorumBIS",
         "mandante": "São Paulo",
@@ -11259,7 +11259,7 @@
       },
       "sumula": {
         "idJogo": "831911",
-        "parsedAt": "2026-04-15T00:50:59.948Z",
+        "parsedAt": "2026-04-17T19:47:43.462Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "11/02/2026",
@@ -11735,7 +11735,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831912",
-        "parsedAt": "2026-04-15T00:50:59.983Z",
+        "parsedAt": "2026-04-17T19:47:43.496Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Neo Química Arena",
         "mandante": "Corinthians",
@@ -11773,7 +11773,7 @@
       },
       "sumula": {
         "idJogo": "831912",
-        "parsedAt": "2026-04-15T00:51:00.009Z",
+        "parsedAt": "2026-04-17T19:47:43.529Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "12/02/2026",
@@ -12283,7 +12283,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831913",
-        "parsedAt": "2026-04-15T00:51:00.027Z",
+        "parsedAt": "2026-04-17T19:47:43.553Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "José Maria de Campos Maia",
         "mandante": "Mirassol",
@@ -12321,7 +12321,7 @@
       },
       "sumula": {
         "idJogo": "831913",
-        "parsedAt": "2026-04-15T00:51:00.050Z",
+        "parsedAt": "2026-04-17T19:47:43.584Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "11/02/2026",
@@ -12815,7 +12815,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831914",
-        "parsedAt": "2026-04-15T00:51:00.061Z",
+        "parsedAt": "2026-04-17T19:47:43.608Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA MRV - BELO HORIZONTE - MG",
         "mandante": "ATLÉTICO MINEIRO - MG",
@@ -12853,7 +12853,7 @@
       },
       "sumula": {
         "idJogo": "831914",
-        "parsedAt": "2026-04-15T00:51:00.084Z",
+        "parsedAt": "2026-04-17T19:47:43.638Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "11/02/2026",
@@ -13303,7 +13303,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831915",
-        "parsedAt": "2026-04-15T00:51:00.095Z",
+        "parsedAt": "2026-04-17T19:47:43.662Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "BEIRA-RIO - PORTO ALEGRE - RS",
         "mandante": "INTERNACIONAL - RS",
@@ -13336,7 +13336,7 @@
       },
       "sumula": {
         "idJogo": "831915",
-        "parsedAt": "2026-04-15T00:51:00.117Z",
+        "parsedAt": "2026-04-17T19:47:43.692Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "12/02/2026",
@@ -13836,7 +13836,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831916",
-        "parsedAt": "2026-04-15T00:51:00.124Z",
+        "parsedAt": "2026-04-17T19:47:43.713Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DA BAIXADA - CURITIBA - PR",
         "mandante": "ATHLETICO PARANAENSE - PR",
@@ -13869,7 +13869,7 @@
       },
       "sumula": {
         "idJogo": "831916",
-        "parsedAt": "2026-04-15T00:51:00.147Z",
+        "parsedAt": "2026-04-17T19:47:43.744Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "12/02/2026",
@@ -14361,7 +14361,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831917",
-        "parsedAt": "2026-04-15T00:51:00.158Z",
+        "parsedAt": "2026-04-17T19:47:43.767Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANOEL BARRADAS - SALVADOR - BA",
         "mandante": "VITÓRIA - BA",
@@ -14394,7 +14394,7 @@
       },
       "sumula": {
         "idJogo": "831917",
-        "parsedAt": "2026-04-15T00:51:00.178Z",
+        "parsedAt": "2026-04-17T19:47:43.796Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "10/02/2026",
@@ -14864,7 +14864,7 @@
       "round": 3,
       "boletim": {
         "idJogo": "831918",
-        "parsedAt": "2026-04-15T00:51:00.186Z",
+        "parsedAt": "2026-04-17T19:47:43.819Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA CONDÁ - CHAPECO - SC",
         "mandante": "CHAPECOENSE - SC",
@@ -14902,7 +14902,7 @@
       },
       "sumula": {
         "idJogo": "831918",
-        "parsedAt": "2026-04-15T00:51:00.208Z",
+        "parsedAt": "2026-04-17T19:47:43.849Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "3",
         "data": "11/02/2026",
@@ -15362,7 +15362,7 @@
       "round": 4,
       "boletim": {
         "idJogo": "831921",
-        "parsedAt": "2026-04-15T00:51:00.246Z",
+        "parsedAt": "2026-04-17T19:47:43.888Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Urbano Caldeira",
         "mandante": "Santos",
@@ -15400,7 +15400,7 @@
       },
       "sumula": {
         "idJogo": "831921",
-        "parsedAt": "2026-04-15T00:51:00.268Z",
+        "parsedAt": "2026-04-17T19:47:43.918Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "4",
         "data": "26/02/2026",
@@ -15876,7 +15876,7 @@
       "round": 4,
       "boletim": {
         "idJogo": "831922",
-        "parsedAt": "2026-04-15T00:51:00.287Z",
+        "parsedAt": "2026-04-17T19:47:43.947Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Arena Barueri",
         "mandante": "Palmeiras",
@@ -15914,7 +15914,7 @@
       },
       "sumula": {
         "idJogo": "831922",
-        "parsedAt": "2026-04-15T00:51:00.310Z",
+        "parsedAt": "2026-04-17T19:47:43.985Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "4",
         "data": "25/02/2026",
@@ -16430,7 +16430,7 @@
       "round": 4,
       "boletim": {
         "idJogo": "831923",
-        "parsedAt": "2026-04-15T00:51:00.326Z",
+        "parsedAt": "2026-04-17T19:47:44.013Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Cícero de Souza Marques",
         "mandante": "Red Bull Bragantino",
@@ -16463,7 +16463,7 @@
       },
       "sumula": {
         "idJogo": "831923",
-        "parsedAt": "2026-04-15T00:51:00.350Z",
+        "parsedAt": "2026-04-17T19:47:44.045Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "4",
         "data": "25/02/2026",
@@ -16941,7 +16941,7 @@
       "round": 4,
       "boletim": {
         "idJogo": "831924",
-        "parsedAt": "2026-04-15T00:51:00.361Z",
+        "parsedAt": "2026-04-17T19:47:44.070Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MINEIRÃO - BELO HORIZONTE - MG",
         "mandante": "CRUZEIRO - MG",
@@ -16979,7 +16979,7 @@
       },
       "sumula": {
         "idJogo": "831924",
-        "parsedAt": "2026-04-15T00:51:00.385Z",
+        "parsedAt": "2026-04-17T19:47:44.100Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "4",
         "data": "25/02/2026",
@@ -17465,7 +17465,7 @@
       "round": 4,
       "boletim": {
         "idJogo": "831925",
-        "parsedAt": "2026-04-15T00:51:00.398Z",
+        "parsedAt": "2026-04-17T19:47:44.124Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DO GRÊMIO - PORTO ALEGRE - RS",
         "mandante": "GRÊMIO - RS",
@@ -17503,7 +17503,7 @@
       },
       "sumula": {
         "idJogo": "831925",
-        "parsedAt": "2026-04-15T00:51:00.425Z",
+        "parsedAt": "2026-04-17T19:47:44.156Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "4",
         "data": "25/02/2026",
@@ -17933,7 +17933,7 @@
       "round": 4,
       "boletim": {
         "idJogo": "831926",
-        "parsedAt": "2026-04-15T00:51:00.435Z",
+        "parsedAt": "2026-04-17T19:47:44.180Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "COUTO PEREIRA - CURITIBA - PR",
         "mandante": "CORITIBA SAF - PR",
@@ -17966,7 +17966,7 @@
       },
       "sumula": {
         "idJogo": "831926",
-        "parsedAt": "2026-04-15T00:51:00.469Z",
+        "parsedAt": "2026-04-17T19:47:44.209Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "4",
         "data": "25/02/2026",
@@ -18452,7 +18452,7 @@
       "round": 4,
       "boletim": {
         "idJogo": "831928",
-        "parsedAt": "2026-04-15T00:51:00.481Z",
+        "parsedAt": "2026-04-17T19:47:44.234Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANGUEIRÃO - BELEM - PA",
         "mandante": "REMO - PA",
@@ -18490,7 +18490,7 @@
       },
       "sumula": {
         "idJogo": "831928",
-        "parsedAt": "2026-04-15T00:51:00.509Z",
+        "parsedAt": "2026-04-17T19:47:44.265Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "4",
         "data": "25/02/2026",
@@ -18978,7 +18978,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831929",
-        "parsedAt": "2026-04-15T00:51:00.513Z",
+        "parsedAt": "2026-04-17T19:47:44.300Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -19000,7 +19000,7 @@
       },
       "sumula": {
         "idJogo": "831929",
-        "parsedAt": "2026-04-15T00:51:00.537Z",
+        "parsedAt": "2026-04-17T19:47:44.329Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "11/03/2026",
@@ -19476,7 +19476,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831930",
-        "parsedAt": "2026-04-15T00:51:00.540Z",
+        "parsedAt": "2026-04-17T19:47:44.360Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -19498,7 +19498,7 @@
       },
       "sumula": {
         "idJogo": "831930",
-        "parsedAt": "2026-04-15T00:51:00.562Z",
+        "parsedAt": "2026-04-17T19:47:44.406Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "12/03/2026",
@@ -19976,7 +19976,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831931",
-        "parsedAt": "2026-04-15T00:51:00.590Z",
+        "parsedAt": "2026-04-17T19:47:44.446Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Dr. Oswaldo Teixeira Duarte",
         "mandante": "São Paulo",
@@ -20014,7 +20014,7 @@
       },
       "sumula": {
         "idJogo": "831931",
-        "parsedAt": "2026-04-15T00:51:00.609Z",
+        "parsedAt": "2026-04-17T19:47:44.482Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "12/03/2026",
@@ -20450,7 +20450,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831932",
-        "parsedAt": "2026-04-15T00:51:00.638Z",
+        "parsedAt": "2026-04-17T19:47:44.524Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Neo Química Arena",
         "mandante": "Corinthians",
@@ -20488,7 +20488,7 @@
       },
       "sumula": {
         "idJogo": "831932",
-        "parsedAt": "2026-04-15T00:51:00.656Z",
+        "parsedAt": "2026-04-17T19:47:44.560Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "11/03/2026",
@@ -20974,7 +20974,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831933",
-        "parsedAt": "2026-04-15T00:51:00.672Z",
+        "parsedAt": "2026-04-17T19:47:44.589Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "José Maria de Campos Maia",
         "mandante": "Mirassol",
@@ -21012,7 +21012,7 @@
       },
       "sumula": {
         "idJogo": "831933",
-        "parsedAt": "2026-04-15T00:51:00.695Z",
+        "parsedAt": "2026-04-17T19:47:44.628Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "10/03/2026",
@@ -21520,7 +21520,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831934",
-        "parsedAt": "2026-04-15T00:51:00.708Z",
+        "parsedAt": "2026-04-17T19:47:44.660Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA MRV - BELO HORIZONTE - MG",
         "mandante": "ATLÉTICO MINEIRO - MG",
@@ -21558,7 +21558,7 @@
       },
       "sumula": {
         "idJogo": "831934",
-        "parsedAt": "2026-04-15T00:51:00.730Z",
+        "parsedAt": "2026-04-17T19:47:44.694Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "11/03/2026",
@@ -22028,7 +22028,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831935",
-        "parsedAt": "2026-04-15T00:51:00.749Z",
+        "parsedAt": "2026-04-17T19:47:44.726Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DO GRÊMIO - PORTO ALEGRE - RS",
         "mandante": "GRÊMIO - RS",
@@ -22066,7 +22066,7 @@
       },
       "sumula": {
         "idJogo": "831935",
-        "parsedAt": "2026-04-15T00:51:00.779Z",
+        "parsedAt": "2026-04-17T19:47:44.762Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "12/03/2026",
@@ -22512,7 +22512,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831936",
-        "parsedAt": "2026-04-15T00:51:00.788Z",
+        "parsedAt": "2026-04-17T19:47:44.785Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DA BAIXADA - CURITIBA - PR",
         "mandante": "ATHLETICO PARANAENSE - PR",
@@ -22545,7 +22545,7 @@
       },
       "sumula": {
         "idJogo": "831936",
-        "parsedAt": "2026-04-15T00:51:00.810Z",
+        "parsedAt": "2026-04-17T19:47:44.819Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "29/03/2026",
@@ -23039,7 +23039,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831937",
-        "parsedAt": "2026-04-15T00:51:00.825Z",
+        "parsedAt": "2026-04-17T19:47:44.853Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA FONTE NOVA - SALVADOR - BA",
         "mandante": "BAHIA - BA",
@@ -23072,7 +23072,7 @@
       },
       "sumula": {
         "idJogo": "831937",
-        "parsedAt": "2026-04-15T00:51:00.847Z",
+        "parsedAt": "2026-04-17T19:47:44.886Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "11/03/2026",
@@ -23493,7 +23493,7 @@
       "round": 5,
       "boletim": {
         "idJogo": "831938",
-        "parsedAt": "2026-04-15T00:51:00.857Z",
+        "parsedAt": "2026-04-17T19:47:44.919Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANGUEIRÃO - BELEM - PA",
         "mandante": "REMO - PA",
@@ -23531,7 +23531,7 @@
       },
       "sumula": {
         "idJogo": "831938",
-        "parsedAt": "2026-04-15T00:51:00.879Z",
+        "parsedAt": "2026-04-17T19:47:44.955Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "5",
         "data": "12/03/2026",
@@ -23991,7 +23991,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831939",
-        "parsedAt": "2026-04-15T00:51:00.883Z",
+        "parsedAt": "2026-04-17T19:47:44.989Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -24013,7 +24013,7 @@
       },
       "sumula": {
         "idJogo": "831939",
-        "parsedAt": "2026-04-15T00:51:00.908Z",
+        "parsedAt": "2026-04-17T19:47:45.026Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "15/03/2026",
@@ -24483,7 +24483,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831940",
-        "parsedAt": "2026-04-15T00:51:00.912Z",
+        "parsedAt": "2026-04-17T19:47:45.056Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -24505,7 +24505,7 @@
       },
       "sumula": {
         "idJogo": "831940",
-        "parsedAt": "2026-04-15T00:51:00.935Z",
+        "parsedAt": "2026-04-17T19:47:45.093Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "14/03/2026",
@@ -24989,7 +24989,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831941",
-        "parsedAt": "2026-04-15T00:51:00.972Z",
+        "parsedAt": "2026-04-17T19:47:45.137Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Urbano Caldeira",
         "mandante": "Santos",
@@ -25027,7 +25027,7 @@
       },
       "sumula": {
         "idJogo": "831941",
-        "parsedAt": "2026-04-15T00:51:00.996Z",
+        "parsedAt": "2026-04-17T19:47:45.168Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "15/03/2026",
@@ -25527,7 +25527,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831942",
-        "parsedAt": "2026-04-15T00:51:01.039Z",
+        "parsedAt": "2026-04-17T19:47:45.207Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Arena Allianz Parque",
         "mandante": "Palmeiras",
@@ -25565,7 +25565,7 @@
       },
       "sumula": {
         "idJogo": "831942",
-        "parsedAt": "2026-04-15T00:51:01.062Z",
+        "parsedAt": "2026-04-17T19:47:45.235Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "15/03/2026",
@@ -26017,7 +26017,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831943",
-        "parsedAt": "2026-04-15T00:51:01.086Z",
+        "parsedAt": "2026-04-17T19:47:45.263Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Cícero de Souza Marques",
         "mandante": "Red Bull Bragantino",
@@ -26055,7 +26055,7 @@
       },
       "sumula": {
         "idJogo": "831943",
-        "parsedAt": "2026-04-15T00:51:01.109Z",
+        "parsedAt": "2026-04-17T19:47:45.295Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "15/03/2026",
@@ -26565,7 +26565,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831944",
-        "parsedAt": "2026-04-15T00:51:01.120Z",
+        "parsedAt": "2026-04-17T19:47:45.321Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MINEIRÃO - BELO HORIZONTE - MG",
         "mandante": "CRUZEIRO - MG",
@@ -26603,7 +26603,7 @@
       },
       "sumula": {
         "idJogo": "831944",
-        "parsedAt": "2026-04-15T00:51:01.145Z",
+        "parsedAt": "2026-04-17T19:47:45.355Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "15/03/2026",
@@ -27127,7 +27127,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831945",
-        "parsedAt": "2026-04-15T00:51:01.159Z",
+        "parsedAt": "2026-04-17T19:47:45.382Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "BEIRA-RIO - PORTO ALEGRE - RS",
         "mandante": "INTERNACIONAL - RS",
@@ -27160,7 +27160,7 @@
       },
       "sumula": {
         "idJogo": "831945",
-        "parsedAt": "2026-04-15T00:51:01.178Z",
+        "parsedAt": "2026-04-17T19:47:45.412Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "15/03/2026",
@@ -27636,7 +27636,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831946",
-        "parsedAt": "2026-04-15T00:51:01.185Z",
+        "parsedAt": "2026-04-17T19:47:45.437Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "COUTO PEREIRA - CURITIBA - PR",
         "mandante": "CORITIBA SAF - PR",
@@ -27669,7 +27669,7 @@
       },
       "sumula": {
         "idJogo": "831946",
-        "parsedAt": "2026-04-15T00:51:01.206Z",
+        "parsedAt": "2026-04-17T19:47:45.467Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "15/03/2026",
@@ -28133,7 +28133,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831947",
-        "parsedAt": "2026-04-15T00:51:01.218Z",
+        "parsedAt": "2026-04-17T19:47:45.490Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANOEL BARRADAS - SALVADOR - BA",
         "mandante": "VITÓRIA - BA",
@@ -28166,7 +28166,7 @@
       },
       "sumula": {
         "idJogo": "831947",
-        "parsedAt": "2026-04-15T00:51:01.243Z",
+        "parsedAt": "2026-04-17T19:47:45.520Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "14/03/2026",
@@ -28597,7 +28597,7 @@
       "round": 6,
       "boletim": {
         "idJogo": "831948",
-        "parsedAt": "2026-04-15T00:51:01.251Z",
+        "parsedAt": "2026-04-17T19:47:45.543Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA CONDÁ - CHAPECO - SC",
         "mandante": "CHAPECOENSE - SC",
@@ -28635,7 +28635,7 @@
       },
       "sumula": {
         "idJogo": "831948",
-        "parsedAt": "2026-04-15T00:51:01.276Z",
+        "parsedAt": "2026-04-17T19:47:45.572Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "6",
         "data": "16/03/2026",
@@ -29079,7 +29079,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831949",
-        "parsedAt": "2026-04-15T00:51:01.280Z",
+        "parsedAt": "2026-04-17T19:47:45.603Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -29101,7 +29101,7 @@
       },
       "sumula": {
         "idJogo": "831949",
-        "parsedAt": "2026-04-15T00:51:01.306Z",
+        "parsedAt": "2026-04-17T19:47:45.640Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "19/03/2026",
@@ -29593,7 +29593,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831950",
-        "parsedAt": "2026-04-15T00:51:01.310Z",
+        "parsedAt": "2026-04-17T19:47:45.669Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -29615,7 +29615,7 @@
       },
       "sumula": {
         "idJogo": "831950",
-        "parsedAt": "2026-04-15T00:51:01.331Z",
+        "parsedAt": "2026-04-17T19:47:45.699Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "18/03/2026",
@@ -30075,7 +30075,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831951",
-        "parsedAt": "2026-04-15T00:51:01.368Z",
+        "parsedAt": "2026-04-17T19:47:45.743Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Urbano Caldeira",
         "mandante": "Santos",
@@ -30113,7 +30113,7 @@
       },
       "sumula": {
         "idJogo": "831951",
-        "parsedAt": "2026-04-15T00:51:01.391Z",
+        "parsedAt": "2026-04-17T19:47:45.775Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "18/03/2026",
@@ -30605,7 +30605,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831952",
-        "parsedAt": "2026-04-15T00:51:01.422Z",
+        "parsedAt": "2026-04-17T19:47:45.813Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Arena Allianz Parque",
         "mandante": "Palmeiras",
@@ -30643,7 +30643,7 @@
       },
       "sumula": {
         "idJogo": "831952",
-        "parsedAt": "2026-04-15T00:51:01.447Z",
+        "parsedAt": "2026-04-17T19:47:45.842Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "18/03/2026",
@@ -31135,7 +31135,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831953",
-        "parsedAt": "2026-04-15T00:51:01.466Z",
+        "parsedAt": "2026-04-17T19:47:45.868Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "José Maria de Campos Maia",
         "mandante": "Mirassol",
@@ -31173,7 +31173,7 @@
       },
       "sumula": {
         "idJogo": "831953",
-        "parsedAt": "2026-04-15T00:51:01.487Z",
+        "parsedAt": "2026-04-17T19:47:45.898Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "18/03/2026",
@@ -31619,7 +31619,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831954",
-        "parsedAt": "2026-04-15T00:51:01.496Z",
+        "parsedAt": "2026-04-17T19:47:45.918Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA MRV - BELO HORIZONTE - MG",
         "mandante": "ATLÉTICO MINEIRO - MG",
@@ -31657,7 +31657,7 @@
       },
       "sumula": {
         "idJogo": "831954",
-        "parsedAt": "2026-04-15T00:51:01.520Z",
+        "parsedAt": "2026-04-17T19:47:45.946Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "18/03/2026",
@@ -32095,7 +32095,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831955",
-        "parsedAt": "2026-04-15T00:51:01.535Z",
+        "parsedAt": "2026-04-17T19:47:45.972Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DO GRÊMIO - PORTO ALEGRE - RS",
         "mandante": "GRÊMIO - RS",
@@ -32133,7 +32133,7 @@
       },
       "sumula": {
         "idJogo": "831955",
-        "parsedAt": "2026-04-15T00:51:01.557Z",
+        "parsedAt": "2026-04-17T19:47:46.000Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "19/03/2026",
@@ -32553,7 +32553,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831956",
-        "parsedAt": "2026-04-15T00:51:01.564Z",
+        "parsedAt": "2026-04-17T19:47:46.021Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DA BAIXADA - CURITIBA - PR",
         "mandante": "ATHLETICO PARANAENSE - PR",
@@ -32586,7 +32586,7 @@
       },
       "sumula": {
         "idJogo": "831956",
-        "parsedAt": "2026-04-15T00:51:01.591Z",
+        "parsedAt": "2026-04-17T19:47:46.051Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "18/03/2026",
@@ -33072,7 +33072,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831957",
-        "parsedAt": "2026-04-15T00:51:01.602Z",
+        "parsedAt": "2026-04-17T19:47:46.078Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA FONTE NOVA - SALVADOR - BA",
         "mandante": "BAHIA - BA",
@@ -33105,7 +33105,7 @@
       },
       "sumula": {
         "idJogo": "831957",
-        "parsedAt": "2026-04-15T00:51:01.623Z",
+        "parsedAt": "2026-04-17T19:47:46.107Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "18/03/2026",
@@ -33559,7 +33559,7 @@
       "round": 7,
       "boletim": {
         "idJogo": "831958",
-        "parsedAt": "2026-04-15T00:51:01.631Z",
+        "parsedAt": "2026-04-17T19:47:46.131Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA CONDÁ - CHAPECO - SC",
         "mandante": "CHAPECOENSE - SC",
@@ -33597,7 +33597,7 @@
       },
       "sumula": {
         "idJogo": "831958",
-        "parsedAt": "2026-04-15T00:51:01.657Z",
+        "parsedAt": "2026-04-17T19:47:46.161Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "7",
         "data": "19/03/2026",
@@ -34056,7 +34056,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831959",
-        "parsedAt": "2026-04-15T00:51:01.661Z",
+        "parsedAt": "2026-04-17T19:47:46.193Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -34078,7 +34078,7 @@
       },
       "sumula": {
         "idJogo": "831959",
-        "parsedAt": "2026-04-15T00:51:01.690Z",
+        "parsedAt": "2026-04-17T19:47:46.223Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "21/03/2026",
@@ -34588,7 +34588,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831960",
-        "parsedAt": "2026-04-15T00:51:01.694Z",
+        "parsedAt": "2026-04-17T19:47:46.247Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -34610,7 +34610,7 @@
       },
       "sumula": {
         "idJogo": "831960",
-        "parsedAt": "2026-04-15T00:51:01.716Z",
+        "parsedAt": "2026-04-17T19:47:46.276Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "22/03/2026",
@@ -35070,7 +35070,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831961",
-        "parsedAt": "2026-04-15T00:51:01.769Z",
+        "parsedAt": "2026-04-17T19:47:46.322Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "MorumBIS",
         "mandante": "São Paulo",
@@ -35108,7 +35108,7 @@
       },
       "sumula": {
         "idJogo": "831961",
-        "parsedAt": "2026-04-15T00:51:01.791Z",
+        "parsedAt": "2026-04-17T19:47:46.355Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "21/03/2026",
@@ -35608,7 +35608,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831962",
-        "parsedAt": "2026-04-15T00:51:01.824Z",
+        "parsedAt": "2026-04-17T19:47:46.393Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Neo Química Arena",
         "mandante": "Corinthians",
@@ -35646,7 +35646,7 @@
       },
       "sumula": {
         "idJogo": "831962",
-        "parsedAt": "2026-04-15T00:51:01.852Z",
+        "parsedAt": "2026-04-17T19:47:46.424Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "22/03/2026",
@@ -36118,7 +36118,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831963",
-        "parsedAt": "2026-04-15T00:51:01.872Z",
+        "parsedAt": "2026-04-17T19:47:46.449Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Cícero de Souza Marques",
         "mandante": "Red Bull Bragantino",
@@ -36156,7 +36156,7 @@
       },
       "sumula": {
         "idJogo": "831963",
-        "parsedAt": "2026-04-15T00:51:01.902Z",
+        "parsedAt": "2026-04-17T19:47:46.477Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "21/03/2026",
@@ -36634,7 +36634,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831964",
-        "parsedAt": "2026-04-15T00:51:01.922Z",
+        "parsedAt": "2026-04-17T19:47:46.505Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MINEIRÃO - BELO HORIZONTE - MG",
         "mandante": "CRUZEIRO - MG",
@@ -36672,7 +36672,7 @@
       },
       "sumula": {
         "idJogo": "831964",
-        "parsedAt": "2026-04-15T00:51:01.955Z",
+        "parsedAt": "2026-04-17T19:47:46.533Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "22/03/2026",
@@ -37117,7 +37117,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831965",
-        "parsedAt": "2026-04-15T00:51:01.966Z",
+        "parsedAt": "2026-04-17T19:47:46.562Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "BEIRA-RIO - PORTO ALEGRE - RS",
         "mandante": "INTERNACIONAL - RS",
@@ -37150,7 +37150,7 @@
       },
       "sumula": {
         "idJogo": "831965",
-        "parsedAt": "2026-04-15T00:51:01.994Z",
+        "parsedAt": "2026-04-17T19:47:46.600Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "22/03/2026",
@@ -37626,7 +37626,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831966",
-        "parsedAt": "2026-04-15T00:51:02.000Z",
+        "parsedAt": "2026-04-17T19:47:46.624Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DA BAIXADA - CURITIBA - PR",
         "mandante": "ATHLETICO PARANAENSE - PR",
@@ -37659,7 +37659,7 @@
       },
       "sumula": {
         "idJogo": "831966",
-        "parsedAt": "2026-04-15T00:51:02.029Z",
+        "parsedAt": "2026-04-17T19:47:46.654Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "22/03/2026",
@@ -38115,7 +38115,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831967",
-        "parsedAt": "2026-04-15T00:51:02.040Z",
+        "parsedAt": "2026-04-17T19:47:46.677Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANOEL BARRADAS - SALVADOR - BA",
         "mandante": "VITÓRIA - BA",
@@ -38148,7 +38148,7 @@
       },
       "sumula": {
         "idJogo": "831967",
-        "parsedAt": "2026-04-15T00:51:02.070Z",
+        "parsedAt": "2026-04-17T19:47:46.704Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "22/03/2026",
@@ -38593,7 +38593,7 @@
       "round": 8,
       "boletim": {
         "idJogo": "831968",
-        "parsedAt": "2026-04-15T00:51:02.080Z",
+        "parsedAt": "2026-04-17T19:47:46.727Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANGUEIRÃO - BELEM - PA",
         "mandante": "REMO - PA",
@@ -38631,7 +38631,7 @@
       },
       "sumula": {
         "idJogo": "831968",
-        "parsedAt": "2026-04-15T00:51:02.104Z",
+        "parsedAt": "2026-04-17T19:47:46.756Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "8",
         "data": "22/03/2026",
@@ -39131,7 +39131,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831970",
-        "parsedAt": "2026-04-15T00:51:02.108Z",
+        "parsedAt": "2026-04-17T19:47:46.790Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -39153,7 +39153,7 @@
       },
       "sumula": {
         "idJogo": "831970",
-        "parsedAt": "2026-04-15T00:51:02.134Z",
+        "parsedAt": "2026-04-17T19:47:46.824Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "01/04/2026",
@@ -39637,7 +39637,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831971",
-        "parsedAt": "2026-04-15T00:51:02.139Z",
+        "parsedAt": "2026-04-17T19:47:46.851Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -39659,7 +39659,7 @@
       },
       "sumula": {
         "idJogo": "831971",
-        "parsedAt": "2026-04-15T00:51:02.163Z",
+        "parsedAt": "2026-04-17T19:47:46.882Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "01/04/2026",
@@ -40175,7 +40175,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831972",
-        "parsedAt": "2026-04-15T00:51:02.202Z",
+        "parsedAt": "2026-04-17T19:47:46.926Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Urbano Caldeira",
         "mandante": "Santos",
@@ -40213,7 +40213,7 @@
       },
       "sumula": {
         "idJogo": "831972",
-        "parsedAt": "2026-04-15T00:51:02.220Z",
+        "parsedAt": "2026-04-17T19:47:46.955Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "02/04/2026",
@@ -40705,7 +40705,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831973",
-        "parsedAt": "2026-04-15T00:51:02.241Z",
+        "parsedAt": "2026-04-17T19:47:46.983Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Arena Crefisa Barueri",
         "mandante": "Palmeiras",
@@ -40743,7 +40743,7 @@
       },
       "sumula": {
         "idJogo": "831973",
-        "parsedAt": "2026-04-15T00:51:02.263Z",
+        "parsedAt": "2026-04-17T19:47:47.012Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "02/04/2026",
@@ -41170,7 +41170,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831974",
-        "parsedAt": "2026-04-15T00:51:02.288Z",
+        "parsedAt": "2026-04-17T19:47:47.038Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Cícero de Souza Marques",
         "mandante": "Red Bull Bragantino",
@@ -41208,7 +41208,7 @@
       },
       "sumula": {
         "idJogo": "831974",
-        "parsedAt": "2026-04-15T00:51:02.316Z",
+        "parsedAt": "2026-04-17T19:47:47.068Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "02/04/2026",
@@ -41676,7 +41676,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831975",
-        "parsedAt": "2026-04-15T00:51:02.336Z",
+        "parsedAt": "2026-04-17T19:47:47.095Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MINEIRÃO - BELO HORIZONTE - MG",
         "mandante": "CRUZEIRO - MG",
@@ -41714,7 +41714,7 @@
       },
       "sumula": {
         "idJogo": "831975",
-        "parsedAt": "2026-04-15T00:51:02.367Z",
+        "parsedAt": "2026-04-17T19:47:47.123Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "01/04/2026",
@@ -42152,7 +42152,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831976",
-        "parsedAt": "2026-04-15T00:51:02.379Z",
+        "parsedAt": "2026-04-17T19:47:47.146Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "BEIRA-RIO - PORTO ALEGRE - RS",
         "mandante": "INTERNACIONAL - RS",
@@ -42185,7 +42185,7 @@
       },
       "sumula": {
         "idJogo": "831976",
-        "parsedAt": "2026-04-15T00:51:02.401Z",
+        "parsedAt": "2026-04-17T19:47:47.175Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "01/04/2026",
@@ -42645,7 +42645,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831977",
-        "parsedAt": "2026-04-15T00:51:02.408Z",
+        "parsedAt": "2026-04-17T19:47:47.196Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "COUTO PEREIRA - CURITIBA - PR",
         "mandante": "CORITIBA SAF - PR",
@@ -42678,7 +42678,7 @@
       },
       "sumula": {
         "idJogo": "831977",
-        "parsedAt": "2026-04-15T00:51:02.445Z",
+        "parsedAt": "2026-04-17T19:47:47.224Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "01/04/2026",
@@ -43140,7 +43140,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831978",
-        "parsedAt": "2026-04-15T00:51:02.457Z",
+        "parsedAt": "2026-04-17T19:47:47.246Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA FONTE NOVA - SALVADOR - BA",
         "mandante": "BAHIA - BA",
@@ -43173,7 +43173,7 @@
       },
       "sumula": {
         "idJogo": "831978",
-        "parsedAt": "2026-04-15T00:51:02.487Z",
+        "parsedAt": "2026-04-17T19:47:47.276Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "01/04/2026",
@@ -43627,7 +43627,7 @@
       "round": 9,
       "boletim": {
         "idJogo": "831979",
-        "parsedAt": "2026-04-15T00:51:02.494Z",
+        "parsedAt": "2026-04-17T19:47:47.297Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA CONDÁ - CHAPECO - SC",
         "mandante": "CHAPECOENSE - SC",
@@ -43665,7 +43665,7 @@
       },
       "sumula": {
         "idJogo": "831979",
-        "parsedAt": "2026-04-15T00:51:02.520Z",
+        "parsedAt": "2026-04-17T19:47:47.325Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "9",
         "data": "02/04/2026",
@@ -44103,7 +44103,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831980",
-        "parsedAt": "2026-04-15T00:51:02.523Z",
+        "parsedAt": "2026-04-17T19:47:47.357Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -44125,7 +44125,7 @@
       },
       "sumula": {
         "idJogo": "831980",
-        "parsedAt": "2026-04-15T00:51:02.556Z",
+        "parsedAt": "2026-04-17T19:47:47.386Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "05/04/2026",
@@ -44595,7 +44595,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831981",
-        "parsedAt": "2026-04-15T00:51:02.559Z",
+        "parsedAt": "2026-04-17T19:47:47.413Z",
         "competicao": "",
         "estadio": "",
         "mandante": "",
@@ -44617,7 +44617,7 @@
       },
       "sumula": {
         "idJogo": "831981",
-        "parsedAt": "2026-04-15T00:51:02.590Z",
+        "parsedAt": "2026-04-17T19:47:47.443Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "04/04/2026",
@@ -45101,7 +45101,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831982",
-        "parsedAt": "2026-04-15T00:51:02.633Z",
+        "parsedAt": "2026-04-17T19:47:47.485Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "MorumBIS",
         "mandante": "São Paulo",
@@ -45139,7 +45139,7 @@
       },
       "sumula": {
         "idJogo": "831982",
-        "parsedAt": "2026-04-15T00:51:02.660Z",
+        "parsedAt": "2026-04-17T19:47:47.514Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "04/04/2026",
@@ -45607,7 +45607,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831983",
-        "parsedAt": "2026-04-15T00:51:02.691Z",
+        "parsedAt": "2026-04-17T19:47:47.549Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "Neo Química Arena",
         "mandante": "Corinthians",
@@ -45645,7 +45645,7 @@
       },
       "sumula": {
         "idJogo": "831983",
-        "parsedAt": "2026-04-15T00:51:02.727Z",
+        "parsedAt": "2026-04-17T19:47:47.578Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "05/04/2026",
@@ -46121,7 +46121,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831984",
-        "parsedAt": "2026-04-15T00:51:02.748Z",
+        "parsedAt": "2026-04-17T19:47:47.600Z",
         "competicao": "Brasileiro - Série A",
         "estadio": "José Maria de Campos Maia",
         "mandante": "Mirassol",
@@ -46159,7 +46159,7 @@
       },
       "sumula": {
         "idJogo": "831984",
-        "parsedAt": "2026-04-15T00:51:02.773Z",
+        "parsedAt": "2026-04-17T19:47:47.631Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "05/04/2026",
@@ -46627,7 +46627,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831985",
-        "parsedAt": "2026-04-15T00:51:02.788Z",
+        "parsedAt": "2026-04-17T19:47:47.654Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA MRV - BELO HORIZONTE - MG",
         "mandante": "ATLÉTICO MINEIRO - MG",
@@ -46665,7 +46665,7 @@
       },
       "sumula": {
         "idJogo": "831985",
-        "parsedAt": "2026-04-15T00:51:02.821Z",
+        "parsedAt": "2026-04-17T19:47:47.682Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "05/04/2026",
@@ -47097,7 +47097,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831986",
-        "parsedAt": "2026-04-15T00:51:02.835Z",
+        "parsedAt": "2026-04-17T19:47:47.706Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA DO GRÊMIO - PORTO ALEGRE - RS",
         "mandante": "GRÊMIO - RS",
@@ -47135,7 +47135,7 @@
       },
       "sumula": {
         "idJogo": "831986",
-        "parsedAt": "2026-04-15T00:51:02.858Z",
+        "parsedAt": "2026-04-17T19:47:47.735Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "05/04/2026",
@@ -47548,7 +47548,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831987",
-        "parsedAt": "2026-04-15T00:51:02.867Z",
+        "parsedAt": "2026-04-17T19:47:47.756Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "COUTO PEREIRA - CURITIBA - PR",
         "mandante": "CORITIBA SAF - PR",
@@ -47581,7 +47581,7 @@
       },
       "sumula": {
         "idJogo": "831987",
-        "parsedAt": "2026-04-15T00:51:02.898Z",
+        "parsedAt": "2026-04-17T19:47:47.785Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "04/04/2026",
@@ -48043,7 +48043,7 @@
       "round": 10,
       "boletim": {
         "idJogo": "831988",
-        "parsedAt": "2026-04-15T00:51:02.910Z",
+        "parsedAt": "2026-04-17T19:47:47.812Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "ARENA FONTE NOVA - SALVADOR - BA",
         "mandante": "BAHIA - BA",
@@ -48076,7 +48076,7 @@
       },
       "sumula": {
         "idJogo": "831988",
-        "parsedAt": "2026-04-15T00:51:02.942Z",
+        "parsedAt": "2026-04-17T19:47:47.843Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "05/04/2026",
@@ -48601,7 +48601,7 @@
       "boletim": null,
       "sumula": {
         "idJogo": "831989",
-        "parsedAt": "2026-04-15T00:51:02.964Z",
+        "parsedAt": "2026-04-17T19:47:47.873Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "10",
         "data": "05/04/2026",
@@ -49038,7 +49038,7 @@
       "boletim": null,
       "sumula": {
         "idJogo": "831990",
-        "parsedAt": "2026-04-15T00:51:02.994Z",
+        "parsedAt": "2026-04-17T19:47:47.905Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "12/04/2026",
@@ -49555,7 +49555,7 @@
       "boletim": null,
       "sumula": {
         "idJogo": "831991",
-        "parsedAt": "2026-04-15T00:51:03.022Z",
+        "parsedAt": "2026-04-17T19:47:47.938Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "12/04/2026",
@@ -50058,7 +50058,7 @@
       "boletim": null,
       "sumula": {
         "idJogo": "831992",
-        "parsedAt": "2026-04-15T00:51:03.045Z",
+        "parsedAt": "2026-04-17T19:47:47.970Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "11/04/2026",
@@ -50529,7 +50529,7 @@
       "boletim": null,
       "sumula": {
         "idJogo": "831993",
-        "parsedAt": "2026-04-15T00:51:03.080Z",
+        "parsedAt": "2026-04-17T19:47:48.002Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "12/04/2026",
@@ -50973,7 +50973,7 @@
       "boletim": null,
       "sumula": {
         "idJogo": "831994",
-        "parsedAt": "2026-04-15T00:51:03.126Z",
+        "parsedAt": "2026-04-17T19:47:48.041Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "11/04/2026",
@@ -51489,7 +51489,7 @@
       "round": 11,
       "boletim": {
         "idJogo": "831995",
-        "parsedAt": "2026-04-15T00:51:03.139Z",
+        "parsedAt": "2026-04-17T19:47:48.066Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MINEIRÃO - BELO HORIZONTE - MG",
         "mandante": "CRUZEIRO - MG",
@@ -51527,7 +51527,7 @@
       },
       "sumula": {
         "idJogo": "831995",
-        "parsedAt": "2026-04-15T00:51:03.167Z",
+        "parsedAt": "2026-04-17T19:47:48.103Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "12/04/2026",
@@ -51991,7 +51991,7 @@
       "round": 11,
       "boletim": {
         "idJogo": "831996",
-        "parsedAt": "2026-04-15T00:51:03.180Z",
+        "parsedAt": "2026-04-17T19:47:48.135Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "BEIRA-RIO - PORTO ALEGRE - RS",
         "mandante": "INTERNACIONAL - RS",
@@ -52024,7 +52024,7 @@
       },
       "sumula": {
         "idJogo": "831996",
-        "parsedAt": "2026-04-15T00:51:03.210Z",
+        "parsedAt": "2026-04-17T19:47:48.173Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "11/04/2026",
@@ -52484,7 +52484,7 @@
       "boletim": null,
       "sumula": {
         "idJogo": "831997",
-        "parsedAt": "2026-04-15T00:51:03.234Z",
+        "parsedAt": "2026-04-17T19:47:48.207Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "12/04/2026",
@@ -52970,7 +52970,7 @@
       "round": 11,
       "boletim": {
         "idJogo": "831998",
-        "parsedAt": "2026-04-15T00:51:03.246Z",
+        "parsedAt": "2026-04-17T19:47:48.234Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANOEL BARRADAS - SALVADOR - BA",
         "mandante": "VITÓRIA - BA",
@@ -53003,7 +53003,7 @@
       },
       "sumula": {
         "idJogo": "831998",
-        "parsedAt": "2026-04-15T00:51:03.269Z",
+        "parsedAt": "2026-04-17T19:47:48.262Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "11/04/2026",
@@ -53456,7 +53456,7 @@
       "round": 11,
       "boletim": {
         "idJogo": "831999",
-        "parsedAt": "2026-04-15T00:51:03.286Z",
+        "parsedAt": "2026-04-17T19:47:48.285Z",
         "competicao": "CAMPEONATO BRASILEIRO SÉRIE A",
         "estadio": "MANGUEIRÃO - BELEM - PA",
         "mandante": "REMO - PA",
@@ -53494,7 +53494,7 @@
       },
       "sumula": {
         "idJogo": "831999",
-        "parsedAt": "2026-04-15T00:51:03.312Z",
+        "parsedAt": "2026-04-17T19:47:48.314Z",
         "campeonato": "Campeonato Brasileiro - Série A/2026",
         "rodada": "11",
         "data": "11/04/2026",

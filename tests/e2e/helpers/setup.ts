@@ -7,7 +7,10 @@ import {
   MOCK_PAST_RESULTS,
   MOCK_CBF_MATCH_DOCS_FULL,
   MOCK_PAST_FIXTURES_FINISHED,
+  MOCK_PAST_FIXTURES_FINISHED_NO_STATIC_DOCS,
 } from './mocks';
+
+export { MOCK_PAST_FIXTURES_FINISHED_NO_STATIC_DOCS };
 
 /**
  * Pre-populate localStorage before page load.
@@ -51,7 +54,11 @@ export async function mockAllApis(page: Page) {
  * Same as mockAllApis but uses finished CBF past-fixtures so the "Rodada 4"
  * card is available in the Resultados tab with match-docs data.
  */
-export async function mockAllApisWithFinishedCbf(page: Page, matchDocsResponse: unknown = MOCK_CBF_MATCH_DOCS_FULL) {
+export async function mockAllApisWithFinishedCbf(
+  page: Page,
+  matchDocsResponse: unknown = MOCK_CBF_MATCH_DOCS_FULL,
+  pastFixturesResponse: unknown = MOCK_PAST_FIXTURES_FINISHED,
+) {
   await page.route('/api/**', (route) => route.fulfill({ json: {} }));
   await page.route('/api/cbf/match-docs**', (route) =>
     route.fulfill({ json: matchDocsResponse }),
@@ -60,7 +67,7 @@ export async function mockAllApisWithFinishedCbf(page: Page, matchDocsResponse: 
     route.fulfill({ json: MOCK_PAST_RESULTS }),
   );
   await page.route('/api/past-fixtures**', (route) =>
-    route.fulfill({ json: MOCK_PAST_FIXTURES_FINISHED }),
+    route.fulfill({ json: pastFixturesResponse }),
   );
   await page.route('/api/previews**', (route) =>
     route.fulfill({ json: MOCK_PREVIEWS }),

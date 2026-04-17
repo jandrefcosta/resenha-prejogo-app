@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { setupStorage, mockAllApisWithFinishedCbf } from './helpers/setup';
+import { setupStorage, mockAllApisWithFinishedCbf, MOCK_PAST_FIXTURES_FINISHED_NO_STATIC_DOCS } from './helpers/setup';
 import { MOCK_CBF_MATCH_DOCS_UNAVAILABLE } from './helpers/mocks';
 
 // ── Helpers ───────────────────────────────────────────────────────────────── //
@@ -45,7 +45,13 @@ test.describe('card face — renda compact', () => {
 
   test('does not show renda when match-docs unavailable', async ({ page }) => {
     await setupStorage(page);
-    await mockAllApisWithFinishedCbf(page, MOCK_CBF_MATCH_DOCS_UNAVAILABLE);
+    // Use a fixture whose idJogo is NOT in the static match-docs JSON so that
+    // getMatchDocs() returns null and the card face shows no boletim data.
+    await mockAllApisWithFinishedCbf(
+      page,
+      MOCK_CBF_MATCH_DOCS_UNAVAILABLE,
+      MOCK_PAST_FIXTURES_FINISHED_NO_STATIC_DOCS,
+    );
     await page.goto('/');
     await page.getByRole('tab', { name: 'Resultados' }).click();
     const article = page.getByRole('article').filter({ hasText: 'Brasileirão' });

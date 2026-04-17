@@ -59,7 +59,21 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  return NextResponse.json(match, {
+  // Defensive guard: old cached data (parsed before the string→number fix) may have
+  // atletas/alteracoes as non-arrays. Normalize to empty arrays to avoid undefined errors.
+  const safeTeam = (team: typeof match.mandante) => ({
+    ...team,
+    atletas:    Array.isArray(team.atletas)    ? team.atletas    : [],
+    alteracoes: Array.isArray(team.alteracoes) ? team.alteracoes : [],
+  });
+
+  const safeMatch = {
+    ...match,
+    mandante:  safeTeam(match.mandante),
+    visitante: safeTeam(match.visitante),
+  };
+
+  return NextResponse.json(safeMatch, {
     headers: {
       'Cache-Control': `public, s-maxage=${roundData.ttlSeconds}, stale-while-revalidate=60`,
     },
