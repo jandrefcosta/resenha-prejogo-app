@@ -46,7 +46,15 @@ export async function GET(req: NextRequest) {
     );
   }
 
-  const roundData = await getCbfRound(round);
+  let roundData: Awaited<ReturnType<typeof getCbfRound>>;
+  try {
+    roundData = await getCbfRound(round);
+  } catch {
+    return NextResponse.json(
+      { error: 'CBF API temporarily unavailable.' },
+      { status: 502 },
+    );
+  }
 
   const match: CbfMatchDetail | undefined = roundData.matches.find(
     (m) => m.mandante.id === String(homeCbfId) && m.visitante.id === String(awayCbfId),
