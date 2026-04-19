@@ -16,7 +16,7 @@ interface Props {
 export function BroadcasterModal({ broadcasters, isOpen, onClose }: Props) {
   const panelRef = useRef<HTMLDivElement>(null);
   useFocusTrap(panelRef, onClose);
-  useScrollLock();
+  useScrollLock(isOpen);
 
   if (!isOpen) return null;
 

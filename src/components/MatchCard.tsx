@@ -44,7 +44,7 @@ function BroadcasterBadge({ broadcaster, onClick }: { broadcaster: BroadcasterIn
       onClick={onClick}
       className="inline-block rounded px-2 py-0.5 text-xs font-bold text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
       style={{ backgroundColor: bg }}
-      aria-label="Ver onde assistir"
+      aria-label={`Ver onde assistir: ${broadcaster.name}`}
     >
       {broadcaster.name}
     </button>
