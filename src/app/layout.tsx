@@ -4,6 +4,8 @@ import { Analytics } from '@vercel/analytics/next';
 import Script from 'next/script';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { InitialLoader } from '@/components/InitialLoader';
+import { AuthProvider } from '@/components/social/AuthProvider';
+import { SocialDrawer } from '@/components/social/SocialDrawer';
 import './globals.css';
 
 const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID ?? '';
@@ -71,8 +73,11 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 antialiased">
         <ThemeProvider>
-          <InitialLoader />
-          {children}
+          <AuthProvider>
+            <InitialLoader />
+            {children}
+            <SocialDrawer />
+          </AuthProvider>
         </ThemeProvider>
         <Analytics />
         {GA_MEASUREMENT_ID && (

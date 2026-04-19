@@ -186,7 +186,16 @@ export async function GET(req: NextRequest) {
 
   matches.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
+  // Check if any match finished within the last 2 hours — use short CDN TTL so
+  // scores appear quickly; otherwise use a longer TTL for stable historical data.
+  const nowMs = Date.now();
+  const hasRecentFinish = matches.some((m) => {
+    const age = nowMs - new Date(m.date).getTime();
+    return age < 2 * 60 * 60 * 1000;
+  });
+  const maxAge = hasRecentFinish ? 60 : 1800;
+
   return NextResponse.json(matches, {
-    headers: { 'Cache-Control': 'public, s-maxage=1800, stale-while-revalidate=120' },
+    headers: { 'Cache-Control': `public, s-maxage=${maxAge}, stale-while-revalidate=30` },
   });
 }

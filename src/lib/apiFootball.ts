@@ -198,10 +198,9 @@ export async function getFixturesByClub(
 }
 
 const FINISHED_PER_COMPETITION = 5;
-// Finished scores are immutable after ~2h post-match (stats finalization window).
-// 6h TTL avoids redundant API calls for data that never changes after that point.
-// The 30-min window of the previous TTL was unnecessarily aggressive.
-const TTL_FINISHED = 60 * 60 * 6; // 6h
+const TTL_FINISHED_RECENT = 60 * 10;   // 10 min — match just ended, scores may still be updating
+const TTL_FINISHED_STABLE = 60 * 30;   // 30 min — stable, but short enough to catch newly-finished matches
+
 
 /**
  * Returns the last N finished fixtures for a specific team in a competition.
@@ -246,7 +245,18 @@ export async function getFinishedFixturesByClub(
       ['FT', 'AET', 'PEN'].includes(f.fixture.status.short),
     );
 
-    await setCache(cacheKey, raw, TTL_FINISHED);
+    const nowMs = Date.now();
+    const mostRecentKickoff = raw.length
+      ? Math.max(...raw.map((f) => new Date(f.fixture.date).getTime()))
+      : 0;
+    // Short TTL when: (a) a match just finished (<2h ago), or (b) we have fewer
+    // than the expected count, meaning another match might transition to FT soon.
+    const likelyMoreSoon = raw.length < FINISHED_PER_COMPETITION;
+    const ttl = likelyMoreSoon || nowMs - mostRecentKickoff < 2 * 60 * 60 * 1000
+      ? TTL_FINISHED_RECENT
+      : TTL_FINISHED_STABLE;
+
+    await setCache(cacheKey, raw, ttl);
   }
 
   return raw
