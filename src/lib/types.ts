@@ -173,6 +173,7 @@ export interface StandingEntry {
 
 export interface BroadcasterInfo {
   name: string;
+  /** Broadcaster website or stream page URL; empty string if unavailable */
   url: string;
 }
 
