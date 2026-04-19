@@ -3,7 +3,7 @@ import { getFixturesByClub } from '@/lib/apiFootball';
 import { getTeamForm, parseForm } from '@/lib/teamForm';
 import { getBroadcastersForFixture } from '@/lib/broadcasterSearch';
 import { COMPETITIONS } from '@/data/competitions';
-import type { Match, MatchPreview } from '@/lib/types';
+import type { BroadcasterInfo, Match, MatchPreview } from '@/lib/types';
 
 const DAYS_AHEAD_FOR_BROADCAST_SEARCH = 14;
 const CLUB_COMPETITIONS = COMPETITIONS.filter((c) => c.scope === 'club');
@@ -85,9 +85,9 @@ export async function GET(req: NextRequest) {
         searchBroadcasters
           ? withSemaphore(() =>
               getBroadcastersForFixture(m.id, m.homeTeam.name, m.awayTeam.name, m.round, m.date, m.competitionName)
-                .catch(() => [] as string[]),
+                .catch(() => [] as BroadcasterInfo[]),
             )
-          : Promise.resolve([] as string[]),
+          : Promise.resolve([] as BroadcasterInfo[]),
       ]);
 
       const preview: MatchPreview = {
