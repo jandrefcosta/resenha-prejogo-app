@@ -1,35 +1,47 @@
 import { GoogleGenAI } from '@google/genai';
 import { getCache, setCache, TTL_1H, TTL_24H } from '@/lib/redisCache';
+import type { BroadcasterInfo } from './types';
 
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 function buildSystemPrompt(competitionName: string): string {
-  return `Você é um assistente especializado em transmissões de futebol.
-Sua tarefa: buscar na web onde uma partida ESPECÍFICA da ${competitionName} será transmitida.
+  return `You are a sports broadcasting assistant for Brazilian football.
+Your task: find ONLY the confirmed TV/streaming broadcasters for a specific match.
 
-REGRAS ESTRITAS:
-1. Retorne SOMENTE canais com transmissão CONFIRMADA para essa partida específica.
-2. NÃO liste todos os canais que costumam transmitir a ${competitionName} em geral.
-3. Se não encontrar informação específica e confirmada para essa partida, retorne [].
-4. Canais válidos: Globo, SporTV, SporTV 2, SporTV 3, Premiere, CazéTV, Amazon Prime Video, TNT Sports, Max, ESPN, Band, SBT.
+Return a JSON array of objects with this exact shape:
+[{"name": "Globo", "url": "https://globoplay.globo.com"}, {"name": "SporTV", "url": "https://globoplay.globo.com/sportv"}]
 
-Formato de resposta: SOMENTE um array JSON. Ex: ["Globo","SporTV"] ou []
-Sem texto adicional.`;
+Rules:
+- Include ONLY broadcasters confirmed for THIS specific match
+- Do NOT include general channel information
+- The "url" must be the direct watch/live page for the broadcaster, NOT a search page
+- If you cannot find a confirmed URL for a broadcaster, use "" (empty string) for url
+- If no broadcasters are confirmed, return: []
+- Competition: ${competitionName}`;
 }
 
-function parseBroadcasters(text: string): string[] {
-  let parsed: unknown = null;
+function parseBroadcasters(text: string): BroadcasterInfo[] {
+  const match = text.match(/\[[\s\S]*\]/);
+  if (!match) return [];
   try {
-    const jsonStr = text.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/, '').trim();
-    parsed = JSON.parse(jsonStr);
+    const parsed = JSON.parse(match[0]);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((item: unknown) => {
+      if (typeof item === 'string') {
+        return { name: item, url: '' };
+      }
+      if (typeof item === 'object' && item !== null && 'name' in item) {
+        const obj = item as Record<string, unknown>;
+        return {
+          name: typeof obj.name === 'string' ? obj.name : String(obj.name),
+          url: typeof obj.url === 'string' ? obj.url : '',
+        };
+      }
+      return null;
+    }).filter((b): b is BroadcasterInfo => b !== null);
   } catch {
-    const match = text.match(/\[[\s\S]*?\]/);
-    if (match) {
-      try { parsed = JSON.parse(match[0]); } catch { /* */ }
-    }
+    return [];
   }
-  if (!Array.isArray(parsed)) return [];
-  return parsed.filter((v): v is string => typeof v === 'string');
 }
 
 export async function getBroadcastersForFixture(
@@ -40,10 +52,10 @@ export async function getBroadcastersForFixture(
   date: string,
   /** Display name of the competition, used to focus the Gemini search prompt */
   competitionName: string = 'Brasileirão Série A',
-): Promise<string[]> {
+): Promise<BroadcasterInfo[]> {
   const cacheKey = `broadcasters:${fixtureId}`;
 
-  const cached = await getCache<string[]>(cacheKey);
+  const cached = await getCache<BroadcasterInfo[]>(cacheKey);
   if (cached !== null) return cached;
 
   const formattedDate = new Intl.DateTimeFormat('pt-BR', {
