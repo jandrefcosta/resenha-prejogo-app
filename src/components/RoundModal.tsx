@@ -82,7 +82,7 @@ function buildShareText(data: RoundData): string {
         continue;
       }
       const time = formatMatchTime(m.date);
-      const where = m.broadcasters.length > 0 ? ` · ${m.broadcasters.join(', ')}` : '';
+      const where = m.broadcasters.length > 0 ? ` · ${m.broadcasters.map((b) => b.name).join(', ')}` : '';
       lines.push(`${m.homeTeam.name} x ${m.awayTeam.name} — ${time}${where}`);
     }
   }
