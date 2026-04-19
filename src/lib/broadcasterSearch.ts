@@ -32,8 +32,9 @@ function parseBroadcasters(text: string): BroadcasterInfo[] {
       }
       if (typeof item === 'object' && item !== null && 'name' in item) {
         const obj = item as Record<string, unknown>;
+        if (typeof obj.name !== 'string') return null;
         return {
-          name: typeof obj.name === 'string' ? obj.name : String(obj.name),
+          name: obj.name,
           url: typeof obj.url === 'string' ? obj.url : '',
         };
       }
