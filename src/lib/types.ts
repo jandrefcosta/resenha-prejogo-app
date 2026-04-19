@@ -171,10 +171,15 @@ export interface StandingEntry {
   redCards?: number;
 }
 
+export interface BroadcasterInfo {
+  name: string;
+  url: string;
+}
+
 export interface MatchPreview {
   homeForm: string[];
   awayForm: string[];
-  broadcasters: string[];
+  broadcasters: BroadcasterInfo[];
 }
 
 // ─── CBF API types ────────────────────────────────────────────────────────────
