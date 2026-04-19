@@ -101,7 +101,7 @@ export interface Match {
   competitionPhase?: string;
   round: string;
   /** Undefined when the API does not return broadcast data for this fixture */
-  broadcasters?: string[];
+  broadcasters?: BroadcasterInfo[];
   /** Undefined when not yet assigned by the federation */
   referee?: string;
   status: 'scheduled' | 'postponed' | 'finished';

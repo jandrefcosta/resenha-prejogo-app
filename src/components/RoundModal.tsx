@@ -10,11 +10,13 @@ import type { Competition } from '@/data/competitions';
 import type { Match } from '@/lib/types';
 import { BROADCASTER_COLORS } from '@/lib/broadcasterColors';
 import { localiseRound } from '@/lib/localiseRound';
+import { BroadcasterModal } from './BroadcasterModal';
+import type { BroadcasterInfo } from '@/lib/types';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface RoundMatch extends Match {
-  broadcasters: string[];
+  broadcasters: BroadcasterInfo[];
 }
 
 interface RoundData {
@@ -124,15 +126,18 @@ async function handleShare(text: string): Promise<void> {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function BroadcasterBadge({ name }: { name: string }) {
-  const bg = BROADCASTER_COLORS[name] ?? '#374151';
+function BroadcasterBadge({ broadcaster, onClick }: { broadcaster: BroadcasterInfo; onClick: () => void }) {
+  const bg = BROADCASTER_COLORS[broadcaster.name] ?? '#374151';
   return (
-    <span
-      className="inline-block rounded px-2 py-0.5 text-[11px] font-bold text-white leading-tight"
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-block rounded px-2 py-0.5 text-[11px] font-bold text-white leading-tight cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
       style={{ backgroundColor: bg }}
+      aria-label="Ver onde assistir"
     >
-      {name}
-    </span>
+      {broadcaster.name}
+    </button>
   );
 }
 
@@ -147,6 +152,7 @@ function MatchRow({ match }: { match: RoundMatch }) {
   const time = formatMatchTime(match.date);
   const isPostponed = match.status === 'postponed';
   const live = !isPostponed && isMatchLive(match.date);
+  const [broadcasterModalOpen, setBroadcasterModalOpen] = useState(false);
 
   return (
     <div
@@ -205,13 +211,24 @@ function MatchRow({ match }: { match: RoundMatch }) {
 
         {!isPostponed && match.broadcasters.length > 0 && (
           <div className="flex items-center gap-1 flex-wrap">
-            {match.broadcasters.map((b) => <BroadcasterBadge key={b} name={b} />)}
+            {match.broadcasters.map((b: BroadcasterInfo) => (
+              <BroadcasterBadge
+                key={b.name}
+                broadcaster={b}
+                onClick={() => setBroadcasterModalOpen(true)}
+              />
+            ))}
           </div>
         )}
         {!isPostponed && match.broadcasters.length === 0 && (
           <span className="text-[11px] text-zinc-600 font-sans italic">transmissão a confirmar</span>
         )}
       </div>
+      <BroadcasterModal
+        broadcasters={match.broadcasters}
+        isOpen={broadcasterModalOpen}
+        onClose={() => setBroadcasterModalOpen(false)}
+      />
     </div>
   );
 }
