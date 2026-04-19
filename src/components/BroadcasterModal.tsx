@@ -47,7 +47,7 @@ export function BroadcasterModal({ broadcasters, isOpen, onClose }: Props) {
             className="p-1 rounded-full text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
             aria-label="Fechar"
           >
-            <XMarkIcon className="w-5 h-5" />
+            <XMarkIcon className="w-5 h-5" aria-hidden="true" />
           </button>
         </div>
 
