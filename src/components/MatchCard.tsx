@@ -9,6 +9,7 @@ import {
   ShareIcon,
 } from "@heroicons/react/20/solid";
 import { SoccerBallIcon } from "@/components/SoccerBallIcon";
+import { BroadcasterModal } from './BroadcasterModal';
 import type {
   Match,
   H2HData,
@@ -18,6 +19,7 @@ import type {
   InjuredPlayer,
   MatchEventsData,
   LineupData,
+  BroadcasterInfo,
 } from "@/lib/types";
 import type { CbfMatchDocsResult, CbfSumulaPlayer } from "@/lib/cbfDocTypes";
 import { useFocusTrap } from "@/lib/useFocusTrap";
@@ -34,15 +36,18 @@ const DAYS_AHEAD_FOR_BROADCAST_SEARCH = 14;
 
 // ─── Small reusable atoms ─────────────────────────────────────────────────────
 
-function BroadcasterBadge({ name }: { name: string }) {
-  const bg = BROADCASTER_COLORS[name] ?? "#374151";
+function BroadcasterBadge({ broadcaster, onClick }: { broadcaster: BroadcasterInfo; onClick: () => void }) {
+  const bg = BROADCASTER_COLORS[broadcaster.name] ?? "#374151";
   return (
-    <span
-      className="inline-block rounded px-2 py-0.5 text-xs font-bold text-white"
+    <button
+      type="button"
+      onClick={onClick}
+      className="inline-block rounded px-2 py-0.5 text-xs font-bold text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50"
       style={{ backgroundColor: bg }}
+      aria-label="Ver onde assistir"
     >
-      {name}
-    </span>
+      {broadcaster.name}
+    </button>
   );
 }
 
@@ -111,7 +116,7 @@ async function handleShare(text: string): Promise<void> {
   );
 }
 
-function buildShareText(match: Match, broadcasters: string[]): string {
+function buildShareText(match: Match, broadcasters: BroadcasterInfo[]): string {
   const date = new Intl.DateTimeFormat("pt-BR", {
     weekday: "short",
     day: "2-digit",
@@ -136,7 +141,7 @@ function buildShareText(match: Match, broadcasters: string[]): string {
   if (venue) lines.push(`Local: ${venue}`);
 
   if (broadcasters.length > 0) {
-    lines.push(`Onde assistir: ${broadcasters.join(", ")}`);
+    lines.push(`Onde assistir: ${broadcasters.map((b) => b.name).join(", ")}`);
   }
 
   const siteUrl =
@@ -1588,6 +1593,7 @@ export function MatchCard({
 
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailGateOpen, setEmailGateOpen] = useState(false);
+  const [broadcasterModalOpen, setBroadcasterModalOpen] = useState(false);
   const pendingActionRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -2005,8 +2011,12 @@ export function MatchCard({
                 )}
                 {!previewLoading &&
                   broadcasters.length > 0 &&
-                  broadcasters.map((b: string) => (
-                    <BroadcasterBadge key={b} name={b} />
+                  broadcasters.map((b: BroadcasterInfo) => (
+                    <BroadcasterBadge
+                      key={b.name}
+                      broadcaster={b}
+                      onClick={() => setBroadcasterModalOpen(true)}
+                    />
                   ))}
                 {!previewLoading && broadcasters.length === 0 && (
                   <span className="text-xs text-zinc-600 font-sans italic">
@@ -2244,6 +2254,11 @@ export function MatchCard({
           )}
         </ModalShell>
       )}
+      <BroadcasterModal
+        broadcasters={broadcasters}
+        isOpen={broadcasterModalOpen}
+        onClose={() => setBroadcasterModalOpen(false)}
+      />
     </>
   );
 }
