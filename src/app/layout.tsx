@@ -1,4 +1,4 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import { Barlow, Barlow_Condensed } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import Script from 'next/script';
@@ -6,6 +6,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { InitialLoader } from '@/components/InitialLoader';
 import { AuthProvider } from '@/components/social/AuthProvider';
 import { SocialDrawer } from '@/components/social/SocialDrawer';
+import { SerwistProvider } from './serwist-provider';
 import './globals.css';
 
 const CLARITY_PROJECT_ID = process.env.NEXT_PUBLIC_CLARITY_PROJECT_ID ?? '';
@@ -34,6 +35,13 @@ function getBaseUrl(): URL {
 const DESCRIPTION =
   'Acompanhe os próximos jogos do seu clube no futebol brasileiro. Onde assistir, horários, árbitros e análise pré-jogo.';
 
+export const viewport: Viewport = {
+  themeColor: '#09090b',
+  width: 'device-width',
+  initialScale: 1,
+  viewportFit: 'cover',
+};
+
 export const metadata: Metadata = {
   metadataBase: getBaseUrl(),
   title: {
@@ -47,6 +55,13 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: 'Resenha Pré-Jogo' }],
   robots: { index: true, follow: true },
+  applicationName: 'Resenha Pré-Jogo',
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: 'black-translucent',
+    title: 'Resenha Pré-Jogo',
+  },
+  formatDetection: { telephone: false },
   openGraph: {
     type: 'website',
     locale: 'pt_BR',
@@ -72,6 +87,7 @@ export default function RootLayout({
       className={`${barlow.variable} ${barlowCondensed.variable} h-full`}
     >
       <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-100 antialiased">
+        <SerwistProvider swUrl="/serwist/sw.js" disable={process.env.NODE_ENV === 'development'}>
         <ThemeProvider>
           <AuthProvider>
             <InitialLoader />
@@ -104,6 +120,7 @@ export default function RootLayout({
             }}
           />
         )}
+        </SerwistProvider>
       </body>
     </html>
   );

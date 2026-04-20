@@ -167,19 +167,29 @@ function isUpcomingOrLive(match: Match): boolean {
 /**
  * Groups an ordered list of matches into RoundGroup objects for display.
  * Matches must already be filtered to the active competition (if any).
+ *
+ * The group key includes the date (YYYY-MM-DD) so that two-legged ties whose
+ * round strings are identical (e.g. "Round of 16" without "1st Leg"/"2nd Leg")
+ * are not collapsed into a single group, which would break date ordering.
  */
 function buildScheduleGroups(matches: Match[], competitionFilter: number | null): RoundGroup[] {
   const groups: RoundGroup[] = [];
   const seenKeys = new Set<string>();
 
+  // Determine whether more than one competition is present so we can show
+  // the competition name in every group header (not just non-Série-A ones).
+  const uniqueLeagueIds = new Set(matches.map((m) => m.leagueId));
+  const hasMultipleCompetitions = uniqueLeagueIds.size > 1;
+
   for (const match of matches) {
-    const key = `${match.leagueId}:${match.round}`;
+    const dateStr = match.date.substring(0, 10); // YYYY-MM-DD
+    const key = `${match.leagueId}:${match.round}:${dateStr}`;
     if (seenKeys.has(key)) continue;
     seenKeys.add(key);
 
     const localisedRound = localiseRound(match.round);
     const groupLabel =
-      match.leagueId === 71 || competitionFilter !== null
+      competitionFilter !== null || !hasMultipleCompetitions
         ? localisedRound
         : `${match.competitionName} · ${localisedRound}`;
 
@@ -190,7 +200,10 @@ function buildScheduleGroups(matches: Match[], competitionFilter: number | null)
       leagueId: match.leagueId,
       isCurrent: groups.length === 0,
       matches: matches.filter(
-        (m) => m.leagueId === match.leagueId && m.round === match.round,
+        (m) =>
+          m.leagueId === match.leagueId &&
+          m.round === match.round &&
+          m.date.substring(0, 10) === dateStr,
       ),
     });
   }
