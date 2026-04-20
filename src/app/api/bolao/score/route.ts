@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server';
 import {
   getFixtureParticipants,
   getPalpite,
-  scoreExists,
   calcPts,
 } from '@/lib/bolaoRedis';
 import { getCache, redis } from '@/lib/redisCache';
@@ -41,25 +40,33 @@ export async function POST(req: NextRequest) {
 
     for (const userId of participants) {
       try {
-        if (await scoreExists(userId, match.id)) {
-          skipped++;
-          continue;
-        }
-
         const palpite = await getPalpite(userId, match.id);
         if (!palpite) continue;
 
         const resultado = { home: match.score!.home!, away: match.score!.away! };
         const { pts, outcome } = calcPts(palpite, resultado);
 
+        // Atomic NX write — if null is returned, key already existed (already scored)
+        const scored = await redis.set(
+          `score:${userId}:${match.id}`,
+          { pts, outcome },
+          { nx: true }
+        );
+        if (scored === null) {
+          skipped++;
+          continue;
+        }
+
         const bolaoIds = await redis.smembers<string[]>(`bolao:user:${userId}:boloes`);
         const pipeline = redis.pipeline();
-        pipeline.set(`score:${userId}:${match.id}`, { pts, outcome });
         pipeline.zincrby('bolao:global:ranking', pts, userId);
         for (const bolaoId of bolaoIds) {
           pipeline.zincrby(`bolao:${bolaoId}:ranking`, pts, userId);
         }
-        await pipeline.exec();
+        const results = await pipeline.exec();
+        if (results.some((r) => r instanceof Error)) {
+          throw new Error(`Pipeline failed for user ${userId} match ${match.id}`);
+        }
 
         processed++;
       } catch (err) {

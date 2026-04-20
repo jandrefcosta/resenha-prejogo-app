@@ -1,4 +1,4 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { getBolaoMeta, getRanking, getUserRankPosition } from '@/lib/bolaoRedis';
 import { redis } from '@/lib/redisCache';
@@ -19,6 +19,11 @@ export default async function BolaoPrivadoPage({
   if (!meta) notFound();
 
   const user = await getCurrentUser();
+  if (!user) redirect(`/?bolao=${id}`);
+
+  // Check membership
+  const isMember = await redis.sismember(`bolao:${id}:members`, user.sub);
+  if (!isMember) notFound();
 
   const rawRanking = await getRanking(`bolao:${id}:ranking`, 100);
   const userKeys = rawRanking.map((e) => `user:${e.member}`);
@@ -38,10 +43,7 @@ export default async function BolaoPrivadoPage({
   });
 
   const memberCount = await redis.scard(`bolao:${id}:members`);
-  let myPosition: number | null = null;
-  if (user) {
-    myPosition = await getUserRankPosition(`bolao:${id}:ranking`, user.sub);
-  }
+  const myPosition = await getUserRankPosition(`bolao:${id}:ranking`, user.sub);
 
   return (
     <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
@@ -55,7 +57,7 @@ export default async function BolaoPrivadoPage({
         </p>
       </div>
 
-      <RankingTable entries={entries} myUserId={user?.sub} />
+      <RankingTable entries={entries} myUserId={user.sub} />
 
       <div className="flex gap-3">
         <Link

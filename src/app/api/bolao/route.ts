@@ -34,14 +34,16 @@ export async function GET() {
     metas
       .filter((m): m is NonNullable<typeof m> => m !== null)
       .map(async (meta) => {
-        const memberCount = await redis.scard(`bolao:${meta.id}:members`);
-        const position = await redis.zrevrank(`bolao:${meta.id}:ranking`, user.sub);
-        const totalPts = (await redis.zscore(`bolao:${meta.id}:ranking`, user.sub)) ?? 0;
+        const p = redis.pipeline();
+        p.scard(`bolao:${meta.id}:members`);
+        p.zrevrank(`bolao:${meta.id}:ranking`, user.sub);
+        p.zscore(`bolao:${meta.id}:ranking`, user.sub);
+        const [memberCount, position, totalPtsRaw] = await p.exec() as [number, number | null, number | null];
         return {
           ...meta,
           memberCount,
           position: position !== null ? position + 1 : null,
-          totalPts,
+          totalPts: totalPtsRaw ?? 0,
         };
       }),
   );

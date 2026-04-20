@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
-import { getUserPalpites, getScore } from '@/lib/bolaoRedis';
-import { getCache } from '@/lib/redisCache';
+import { getUserPalpites } from '@/lib/bolaoRedis';
+import type { Score } from '@/lib/bolaoRedis';
+import { getCache, redis } from '@/lib/redisCache';
 import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 import { RodadaTabsWrapper } from '@/components/bolao/RodadaTabsWrapper';
 
@@ -24,14 +25,21 @@ export default async function PalpitesPage() {
   const now = Date.now();
   const palpites = await getUserPalpites(user.sub);
 
-  const matchesWithData = await Promise.all(
-    groupMatches.map(async (m) => {
-      const palpite = palpites[m.id];
-      const score = palpite ? await getScore(user.sub, m.id) : null;
-      const isLocked = m.status !== 'postponed' && now >= new Date(m.date).getTime();
-      return { match: m, palpite: palpite ?? null, score: score ?? null, isLocked };
-    }),
-  );
+  // Batch-fetch scores for all fixtures that have a palpite
+  const fixtureIdsWithPalpite = groupMatches.map((m) => m.id).filter((id) => palpites[id]);
+  const scoreKeys = fixtureIdsWithPalpite.map((id) => `score:${user.sub}:${id}`);
+  const rawScores = scoreKeys.length > 0
+    ? await redis.mget<(Score | null)[]>(...scoreKeys)
+    : [];
+  const scoreMap: Record<string, Score | null> = {};
+  fixtureIdsWithPalpite.forEach((id, i) => { scoreMap[id] = rawScores[i] ?? null; });
+
+  const matchesWithData = groupMatches.map((m) => {
+    const palpite = palpites[m.id] ?? null;
+    const score = scoreMap[m.id] ?? null;
+    const isLocked = m.status !== 'postponed' && now >= new Date(m.date).getTime();
+    return { match: m, palpite, score, isLocked };
+  });
 
   // Separate by round
   const byRound: Record<1 | 2 | 3, typeof matchesWithData> = { 1: [], 2: [], 3: [] };
