@@ -176,7 +176,6 @@ export async function getScore(userId: string, fixtureId: string): Promise<Score
 
 /** Incrementa pontos no ranking global e em todos os bolões do usuário */
 export async function incrementUserPoints(userId: string, pts: number): Promise<void> {
-  if (pts === 0) return;
   const bolaoIds = await redis.smembers<string[]>(`bolao:user:${userId}:boloes`);
   const pipeline = redis.pipeline();
   pipeline.zincrby('bolao:global:ranking', pts, userId);
