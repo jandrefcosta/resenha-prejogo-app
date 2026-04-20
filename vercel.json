@@ -6,7 +6,7 @@
     },
     {
       "path": "/api/bolao/score",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
