@@ -1,0 +1,54 @@
+<h2>Arquitetura do Bolão</h2>
+<p class="subtitle">Seção 1 de 4 — Estrutura geral, rotas e dados</p>
+
+<div class="section">
+  <h3>Rotas de página</h3>
+  <div class="mockup">
+    <div class="mockup-header">/bolao — estrutura de navegação</div>
+    <div class="mockup-body" style="padding:12px;font-family:monospace;font-size:12px;line-height:1.8">
+      <div><span style="color:#16a34a">/bolao</span> — hub: ranking global + lista de bolões privados do usuário</div>
+      <div><span style="color:#16a34a">/bolao/[id]</span> — bolão privado: ranking interno + link para palpites</div>
+      <div><span style="color:#16a34a">/bolao/palpites</span> — grid de palpites (R1/R2/R3) — mesmo para global e privado</div>
+      <div><span style="color:#16a34a">/bolao/novo</span> — criar novo bolão privado (nome + código gerado)</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Modelo de dados Redis</h3>
+  <div class="mockup">
+    <div class="mockup-header">Chaves Redis (namespace bolao:*)</div>
+    <div class="mockup-body" style="padding:12px;font-family:monospace;font-size:11px;line-height:2">
+      <div><span style="color:#7c3aed">bolao:global:ranking</span> &nbsp;→ Sorted Set (userId → totalPts) — ranking global</div>
+      <div><span style="color:#7c3aed">bolao:{id}:meta</span> &nbsp;→ JSON (nome, código, adminId, criadoEm)</div>
+      <div><span style="color:#7c3aed">bolao:{id}:members</span> &nbsp;→ Set (userIds)</div>
+      <div><span style="color:#7c3aed">bolao:{id}:ranking</span> &nbsp;→ Sorted Set (userId → totalPts)</div>
+      <div><span style="color:#7c3aed">bolao:code:{code}</span> &nbsp;→ String (bolaoId) — lookup por código convite</div>
+      <div><span style="color:#7c3aed">bolao:user:{userId}:boloes</span> &nbsp;→ Set (bolaoIds) — bolões do usuário</div>
+      <div><span style="color:#7c3aed">palpite:{userId}:{fixtureId}</span> &nbsp;→ JSON ({home, away, locked, ts})</div>
+      <div><span style="color:#7c3aed">score:{userId}:{fixtureId}</span> &nbsp;→ JSON ({pts, outcome}) — após jogo encerrado</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>API Routes</h3>
+  <div class="mockup">
+    <div class="mockup-header">Endpoints /api/bolao/*</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px;line-height:2">
+      <div><span style="color:#0284c7;font-family:monospace">POST /api/bolao</span> — criar bolão privado</div>
+      <div><span style="color:#0284c7;font-family:monospace">POST /api/bolao/join</span> — entrar por código de convite</div>
+      <div><span style="color:#0284c7;font-family:monospace">GET  /api/bolao/[id]</span> — meta + ranking do bolão</div>
+      <div><span style="color:#0284c7;font-family:monospace">GET  /api/bolao/me</span> — bolões do usuário logado</div>
+      <div><span style="color:#0284c7;font-family:monospace">GET  /api/bolao/global</span> — ranking global (top 50 + posição do usuário)</div>
+      <div><span style="color:#0284c7;font-family:monospace">PUT  /api/palpites/[fixtureId]</span> — salvar/atualizar palpite (auth required)</div>
+      <div><span style="color:#0284c7;font-family:monospace">GET  /api/palpites</span> — todos os palpites do usuário logado</div>
+      <div><span style="color:#0284c7;font-family:monospace">POST /api/bolao/score</span> — endpoint do cron (calcular pontos)</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Cron de pontuação</h3>
+  <p style="font-size:13px;color:#374151">Vercel Cron a cada <strong>30 minutos</strong> — chama <code>/api/bolao/score</code> com secret header. Para cada jogo com status <code>finished</code> e palpites ainda não pontuados: calcula pts, grava <code>score:{userId}:{fixtureId}</code>, atualiza Sorted Sets do ranking global e de todos os bolões privados onde o usuário participa.</p>
+</div>

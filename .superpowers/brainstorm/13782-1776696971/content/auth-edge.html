@@ -1,0 +1,69 @@
+<h2>Auth, Estados e Edge Cases</h2>
+<p class="subtitle">Seção 4 de 4 — Comportamento para usuários não logados e casos limite</p>
+
+<div class="section">
+  <h3>Usuário não logado em /bolao</h3>
+  <div class="mockup">
+    <div class="mockup-header">/bolao — visitante sem conta</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px">
+      <div style="font-weight:bold;font-size:14px;margin-bottom:8px">🏆 Bolão Copa 2026</div>
+      <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;margin-bottom:10px">
+        <div style="font-size:11px;color:#15803d;font-weight:bold;margin-bottom:6px">RANKING GLOBAL — Top 10</div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #dcfce7"><span>1. gabriel_sp</span><span>87 pts</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #dcfce7"><span>2. maria_silva</span><span>82 pts</span></div>
+        <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#9ca3af"><span>... ranking público</span></div>
+      </div>
+      <div style="border:2px dashed #d1d5db;border-radius:8px;padding:16px;text-align:center">
+        <div style="font-size:14px;font-weight:bold;margin-bottom:4px">Quer participar?</div>
+        <div style="color:#6b7280;font-size:12px;margin-bottom:10px">Crie uma conta para palpitar e entrar no ranking</div>
+        <div style="background:#16a34a;color:#fff;padding:8px 16px;border-radius:6px;font-size:13px;display:inline-block">Criar conta / Entrar</div>
+      </div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:#6b7280;margin-top:6px">Ranking global é <strong>público</strong> (visível sem login). Palpitar e criar bolões requer login — redireciona para auth existente.</p>
+</div>
+
+<div class="section">
+  <h3>Edge cases cobertos</h3>
+  <div class="mockup">
+    <div class="mockup-header">Casos limite e como tratar</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px">
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6">
+        <div style="font-weight:bold;color:#dc2626;margin-bottom:2px">Jogo adiado (status: postponed)</div>
+        <div style="color:#374151">Lock é desfeito — palpite volta a ser editável até novo kickoff.</div>
+      </div>
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6">
+        <div style="font-weight:bold;color:#d97706;margin-bottom:2px">Palpite duplo (PUT no mesmo fixtureId)</div>
+        <div style="color:#374151">Sobrescreve o anterior se ainda não lockado. Atomicidade garantida pelo Redis SET.</div>
+      </div>
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6">
+        <div style="font-weight:bold;color:#d97706;margin-bottom:2px">Cron roda antes do resultado final</div>
+        <div style="color:#374151">Checa <code>match.status === 'finished'</code> antes de calcular. Se não finalizado, pula.</div>
+      </div>
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6">
+        <div style="font-weight:bold;color:#d97706;margin-bottom:2px">Cron roda duas vezes no mesmo jogo</div>
+        <div style="color:#374151">Chave <code>score:{userId}:{fixtureId}</code> já existe → pula. Idempotente por design.</div>
+      </div>
+      <div style="margin-bottom:10px;padding-bottom:10px;border-bottom:1px solid #f3f4f6">
+        <div style="font-weight:bold;color:#7c3aed;margin-bottom:2px">Código de convite inválido</div>
+        <div style="color:#374151">GET <code>bolao:code:{code}</code> retorna null → 404 com mensagem amigável.</div>
+      </div>
+      <div>
+        <div style="font-weight:bold;color:#7c3aed;margin-bottom:2px">Usuário já membro do bolão privado</div>
+        <div style="color:#374151">SISMEMBER no set de members → retorna 200 sem duplicar.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Dependências novas</h3>
+  <div class="mockup">
+    <div class="mockup-header">Packages a instalar</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px;font-family:monospace">
+      <div style="margin-bottom:6px"><span style="color:#16a34a">nanoid</span> <span style="color:#6b7280">— gerar IDs únicos para bolões e códigos de convite curtos (ex: "TRAB42")</span></div>
+      <div><span style="color:#6b7280">resend — </span><span style="color:#9ca3af;text-decoration:line-through">não necessário</span> <span style="color:#6b7280">— auth existente não usa email transacional</span></div>
+    </div>
+  </div>
+  <p style="font-size:12px;color:#6b7280;margin-top:6px">Só <strong>nanoid</strong> precisa ser instalado. Resend não é necessário pois reutilizamos o auth existente.</p>
+</div>

@@ -1,0 +1,83 @@
+<h2>Pontuação e Regras</h2>
+<p class="subtitle">Seção 3 de 4 — Como os pontos são calculados e quando</p>
+
+<div class="section">
+  <h3>Tabela de pontuação</h3>
+  <div class="mockup">
+    <div class="mockup-header">Regras de pontuação</div>
+    <div class="mockup-body" style="padding:12px;font-size:13px">
+      <div style="display:flex;align-items:center;gap:12px;padding:10px;background:#f0fdf4;border-radius:8px;margin-bottom:8px;border:1px solid #bbf7d0">
+        <div style="font-size:22px;font-weight:900;color:#16a34a;min-width:40px;text-align:center">10</div>
+        <div>
+          <div style="font-weight:bold">Acerto exato</div>
+          <div style="color:#6b7280;font-size:12px">Placar correto. Ex: palpitou 2×1, resultado 2×1</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px;background:#eff6ff;border-radius:8px;margin-bottom:8px;border:1px solid #bfdbfe">
+        <div style="font-size:22px;font-weight:900;color:#2563eb;min-width:40px;text-align:center">5</div>
+        <div>
+          <div style="font-weight:bold">Resultado correto</div>
+          <div style="color:#6b7280;font-size:12px">Vencedor certo mas placar errado. Ex: palpitou 2×1, resultado 3×0</div>
+        </div>
+      </div>
+      <div style="display:flex;align-items:center;gap:12px;padding:10px;background:#f9fafb;border-radius:8px;border:1px solid #e5e7eb">
+        <div style="font-size:22px;font-weight:900;color:#9ca3af;min-width:40px;text-align:center">0</div>
+        <div>
+          <div style="font-weight:bold">Errou</div>
+          <div style="color:#6b7280;font-size:12px">Resultado diferente do palpite</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Fluxo de lock e pontuação</h3>
+  <div class="mockup">
+    <div class="mockup-header">Ciclo de vida de um palpite</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px">
+      <div style="display:flex;flex-direction:column;gap:0">
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0">
+          <div style="width:28px;height:28px;border-radius:50%;background:#16a34a;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0">1</div>
+          <div><strong>Usuário palpita</strong> — qualquer momento antes do kickoff. Pode editar livremente enquanto jogo não começou.</div>
+        </div>
+        <div style="margin-left:14px;border-left:2px solid #e5e7eb;height:16px"></div>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0">
+          <div style="width:28px;height:28px;border-radius:50%;background:#dc2626;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0">2</div>
+          <div><strong>Kickoff</strong> — palpite travado automaticamente. Campo vira read-only. Sem possibilidade de edição.</div>
+        </div>
+        <div style="margin-left:14px;border-left:2px solid #e5e7eb;height:16px"></div>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0">
+          <div style="width:28px;height:28px;border-radius:50%;background:#7c3aed;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0">3</div>
+          <div><strong>Jogo encerrado</strong> — API-Football retorna placar final. Cron (30min) detecta, calcula pontos, atualiza rankings.</div>
+        </div>
+        <div style="margin-left:14px;border-left:2px solid #e5e7eb;height:16px"></div>
+        <div style="display:flex;align-items:flex-start;gap:10px;padding:8px 0">
+          <div style="width:28px;height:28px;border-radius:50%;background:#0284c7;color:#fff;display:flex;align-items:center;justify-content:center;font-weight:bold;flex-shrink:0">4</div>
+          <div><strong>Ranking atualizado</strong> — Sorted Sets Redis atualizados. Usuário vê nova posição no ranking global e em cada bolão privado.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Lock na UI — como detectar</h3>
+  <div class="mockup">
+    <div class="mockup-header">Lógica de lock no servidor</div>
+    <div class="mockup-body" style="padding:12px;font-size:12px;font-family:monospace;line-height:1.8">
+      <div style="color:#6b7280">// PUT /api/palpites/[fixtureId]</div>
+      <div>const match = await getCopaFixture(fixtureId)</div>
+      <div>const kickoff = new Date(match.date)</div>
+      <div>if (Date.now() >= kickoff.getTime()) {</div>
+      <div style="padding-left:16px;color:#dc2626">return 403 // palpite travado</div>
+      <div>}</div>
+      <div style="color:#6b7280">// salva palpite normalmente</div>
+    </div>
+  </div>
+</div>
+
+<div class="section">
+  <h3>Palpite sem preenchimento</h3>
+  <p style="font-size:13px;color:#374151">Se o kickoff chegar e o usuário <strong>não tiver palpitado</strong> naquele jogo, ele simplesmente não aparece no cálculo — fica com 0 pts naquele jogo. Sem palpite padrão, sem auto-fill. O ranking reflete quem de fato participou.</p>
+</div>

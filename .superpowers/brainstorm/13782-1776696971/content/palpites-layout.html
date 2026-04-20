@@ -1,0 +1,102 @@
+<h2>Layout da tela de palpites</h2>
+<p class="subtitle">Como o usuário preenche os 48 jogos da fase de grupos</p>
+
+<div class="options">
+  <div class="option" data-choice="a" onclick="toggleSelect(this)">
+    <div class="letter">A</div>
+    <div class="content">
+      <h3>Lista por rodada</h3>
+      <p>3 rodadas (R1, R2, R3) com tabs ou acordeão. Usuário preenche rodada por rodada — 16 jogos por vez.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Palpites — Grupos</div>
+        <div class="mockup-body" style="padding:10px;font-size:12px">
+          <div style="display:flex;gap:6px;margin-bottom:10px">
+            <div style="background:#16a34a;color:#fff;padding:3px 10px;border-radius:20px;font-size:11px">Rodada 1</div>
+            <div style="background:#e5e7eb;color:#6b7280;padding:3px 10px;border-radius:20px;font-size:11px">Rodada 2</div>
+            <div style="background:#e5e7eb;color:#6b7280;padding:3px 10px;border-radius:20px;font-size:11px">Rodada 3</div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <span style="flex:1;text-align:right">Brasil</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="color:#9ca3af">×</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="flex:1">Croácia</span>
+            </div>
+          </div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:6px">
+            <div style="display:flex;align-items:center;gap:6px;font-size:12px">
+              <span style="flex:1;text-align:right">Argentina</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="color:#9ca3af">×</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="flex:1">Marrocos</span>
+            </div>
+          </div>
+          <div style="color:#9ca3af;font-size:11px;text-align:center">+ 14 jogos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="b" onclick="toggleSelect(this)">
+    <div class="letter">B</div>
+    <div class="content">
+      <h3>Lista por grupo (A–L)</h3>
+      <p>12 grupos como seções. Cada grupo mostra seus 3 jogos (R1, R2, R3). Usuário navega por grupo.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Palpites — Grupos</div>
+        <div class="mockup-body" style="padding:10px;font-size:12px">
+          <div style="font-weight:bold;margin-bottom:6px;color:#1f2937">Grupo C <span style="color:#16a34a;font-size:10px">🇧🇷 Brasil</span></div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:4px">
+            <div style="color:#9ca3af;font-size:10px;margin-bottom:4px">Rodada 1</div>
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="flex:1;text-align:right;font-size:12px">Brasil</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px;font-size:12px" placeholder="0" readonly>
+              <span style="color:#9ca3af;font-size:12px">×</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px;font-size:12px" placeholder="0" readonly>
+              <span style="flex:1;font-size:12px">Croácia</span>
+            </div>
+          </div>
+          <div style="color:#9ca3af;font-size:10px;text-align:center">+ 2 jogos do Grupo C</div>
+          <div style="border-top:1px solid #f3f4f6;margin-top:8px;padding-top:6px;font-weight:bold;color:#1f2937;font-size:12px">Grupo D</div>
+          <div style="color:#9ca3af;font-size:10px;text-align:center">3 jogos…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="option" data-choice="c" onclick="toggleSelect(this)">
+    <div class="letter">C</div>
+    <div class="content">
+      <h3>Scroll único contínuo</h3>
+      <p>Todos os 48 jogos em scroll vertical contínuo, agrupados por data. Sem tabs ou acordeão — uma lista só.</p>
+      <div class="mockup" style="margin-top:10px">
+        <div class="mockup-header">Palpites — todos os jogos</div>
+        <div class="mockup-body" style="padding:10px;font-size:12px">
+          <div style="color:#6b7280;font-size:10px;margin-bottom:4px;text-transform:uppercase;letter-spacing:0.5px">12 Jun · Grupo A</div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:4px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="flex:1;text-align:right;font-size:12px">EUA</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="color:#9ca3af">×</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="flex:1;font-size:12px">México</span>
+            </div>
+          </div>
+          <div style="color:#6b7280;font-size:10px;margin:6px 0 4px;text-transform:uppercase;letter-spacing:0.5px">13 Jun · Grupo C</div>
+          <div style="border:1px solid #e5e7eb;border-radius:8px;padding:8px;margin-bottom:4px">
+            <div style="display:flex;align-items:center;gap:6px">
+              <span style="flex:1;text-align:right;font-size:12px">Brasil</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="color:#9ca3af">×</span>
+              <input style="width:28px;text-align:center;border:1px solid #d1d5db;border-radius:4px;padding:2px" placeholder="0" readonly>
+              <span style="flex:1;font-size:12px">Croácia</span>
+            </div>
+          </div>
+          <div style="color:#9ca3af;font-size:10px;text-align:center">↓ + 46 jogos</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
