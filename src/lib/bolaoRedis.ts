@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto';
 import { customAlphabet } from 'nanoid';
 import { redis } from './redisCache';
 
@@ -45,7 +46,6 @@ export async function createBolao(
   nome: string,
   adminId: string,
 ): Promise<BolaoMeta> {
-  const { randomUUID } = await import('crypto');
   const id = randomUUID();
   const codigo = generateInviteCode();
   const meta: BolaoMeta = { id, nome, codigo, adminId, criadoEm: new Date().toISOString() };
@@ -183,7 +183,11 @@ export async function incrementUserPoints(userId: string, pts: number): Promise<
   for (const bolaoId of bolaoIds) {
     pipeline.zincrby(`bolao:${bolaoId}:ranking`, pts, userId);
   }
-  await pipeline.exec();
+  const results = await pipeline.exec();
+  const failed = results.filter((r) => r instanceof Error);
+  if (failed.length > 0) {
+    throw new Error(`incrementUserPoints: ${failed.length} pipeline command(s) failed for userId=${userId}`);
+  }
 }
 
 // ─── Pontuação ────────────────────────────────────────────────────────────────
