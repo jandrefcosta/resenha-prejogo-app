@@ -33,7 +33,7 @@ export function AuthModal({ onClose }: Props) {
       />
       <div
         ref={panelRef}
-        className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden"
+        className="relative w-full sm:max-w-sm rounded-t-2xl sm:rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl overflow-hidden pb-[env(safe-area-inset-bottom)] sm:pb-0"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800">

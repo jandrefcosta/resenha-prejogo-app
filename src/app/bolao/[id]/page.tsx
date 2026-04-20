@@ -1,8 +1,9 @@
-import { notFound, redirect } from 'next/navigation';
+import { notFound } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { getBolaoMeta, getRanking, getUserRankPosition } from '@/lib/bolaoRedis';
 import { redis } from '@/lib/redisCache';
 import { RankingTable } from '@/components/bolao/RankingTable';
+import { TrophyIcon, PencilIcon, ChevronLeftIcon } from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import type { RankingEntry } from '@/components/bolao/RankingTable';
 import { ShareBolaoButton } from '@/components/bolao/ShareBolaoButton';
@@ -19,7 +20,21 @@ export default async function BolaoPrivadoPage({
   if (!meta) notFound();
 
   const user = await getCurrentUser();
-  if (!user) redirect(`/?bolao=${id}`);
+  if (!user) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-12 text-center space-y-4">
+        <TrophyIcon className="h-12 w-12 text-yellow-400 mx-auto" />
+        <h1 className="text-xl font-bold text-zinc-100">{meta.nome}</h1>
+        <p className="text-zinc-400 text-sm">Faça login para ver o ranking e fazer seus palpites neste bolão.</p>
+        <Link
+          href={`/login?returnTo=/bolao/${id}`}
+          className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+        >
+          Entrar / Criar conta
+        </Link>
+      </main>
+    );
+  }
 
   // Check membership
   const isMember = await redis.sismember(`bolao:${id}:members`, user.sub);
@@ -46,12 +61,19 @@ export default async function BolaoPrivadoPage({
   const myPosition = await getUserRankPosition(`bolao:${id}:ranking`, user.sub);
 
   return (
-    <main className="max-w-lg mx-auto px-4 py-6 space-y-6">
+    <main className="max-w-lg mx-auto w-full px-4 py-6 space-y-6 flex-1">
       <div>
-        <h1 className="text-xl font-bold text-gray-900">{meta.nome}</h1>
-        <p className="text-sm text-gray-400 mt-1">
+        <Link
+          href="/bolao"
+          className="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200 mb-2 transition-colors"
+        >
+          <ChevronLeftIcon className="h-4 w-4" />
+          Ranking
+        </Link>
+        <h1 className="text-xl font-bold text-zinc-100">{meta.nome}</h1>
+        <p className="text-sm text-zinc-500 mt-1">
           Código:{' '}
-          <span className="font-mono font-bold text-gray-700">{meta.codigo}</span> ·{' '}
+          <span className="font-mono font-bold text-zinc-300">{meta.codigo}</span> ·{' '}
           {memberCount} participante{memberCount !== 1 ? 's' : ''}
           {myPosition && ` · você está em ${myPosition}º`}
         </p>
@@ -64,7 +86,10 @@ export default async function BolaoPrivadoPage({
           href="/bolao/palpites"
           className="flex-1 bg-green-600 hover:bg-green-700 text-white text-center font-semibold py-3 rounded-xl transition-colors text-sm"
         >
-          ✏️ Meus Palpites
+          <span className="flex items-center justify-center gap-1.5">
+            <PencilIcon className="h-4 w-4" />
+            Meus Palpites
+          </span>
         </Link>
         <ShareBolaoButton nome={meta.nome} codigo={meta.codigo} id={id} />
       </div>

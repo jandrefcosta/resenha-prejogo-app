@@ -10,7 +10,7 @@ export function FloatingSuggestion() {
     <>
       <button
         onClick={() => setOpen(true)}
-        className="fixed top-6 right-4 z-40 flex items-center gap-2 rounded-full bg-zinc-800 border border-zinc-700 px-4 py-2.5 text-xs font-semibold text-zinc-300 shadow-lg hover:bg-zinc-700 hover:text-white transition-all cursor-pointer"
+        className="fixed top-[max(1.5rem,env(safe-area-inset-top))] right-4 z-40 flex items-center gap-2 rounded-full bg-zinc-800 border border-zinc-700 px-4 py-2.5 text-xs font-semibold text-zinc-300 shadow-lg hover:bg-zinc-700 hover:text-white transition-all cursor-pointer"
       >
         <span>🐛</span>
         <span>Achou algum erro?</span>
@@ -61,7 +61,7 @@ export function SuggestionModal({ onClose }: { onClose: () => void }) {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center p-4"
+      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
       role="dialog"
       aria-modal="true"
       aria-label="Enviar sugestão"

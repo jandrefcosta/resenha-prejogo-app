@@ -24,7 +24,7 @@ export function RodadaTabs({ rodada, counts, onChange }: Props) {
             className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors ${
               active
                 ? 'bg-green-600 text-white'
-                : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700'
             }`}
           >
             {tab.label}{' '}

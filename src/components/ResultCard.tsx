@@ -143,7 +143,7 @@ function FichaResultModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="ficha-result-title"
-        className="relative z-10 flex flex-col w-full max-w-lg max-h-[90dvh] bg-zinc-900 rounded-t-2xl sm:rounded-2xl border border-zinc-800 shadow-2xl"
+        className="relative z-10 flex flex-col w-full max-w-lg max-h-[90dvh] bg-zinc-900 rounded-t-2xl sm:rounded-2xl border border-zinc-800 shadow-2xl pb-[env(safe-area-inset-bottom)] sm:pb-0"
       >
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-zinc-800 shrink-0">

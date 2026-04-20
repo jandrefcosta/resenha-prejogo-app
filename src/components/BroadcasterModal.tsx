@@ -37,7 +37,7 @@ export function BroadcasterModal({ broadcasters, isOpen, onClose }: Props) {
       {/* Panel */}
       <div
         ref={panelRef}
-        className="relative w-full sm:max-w-sm max-h-[80dvh] rounded-t-2xl sm:rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden"
+        className="relative w-full sm:max-w-sm max-h-[80dvh] rounded-t-2xl sm:rounded-2xl bg-zinc-900 border border-zinc-800 shadow-2xl flex flex-col overflow-hidden pb-[env(safe-area-inset-bottom)] sm:pb-0"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-zinc-800">

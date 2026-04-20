@@ -1,6 +1,7 @@
-import { redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
 import { getUserPalpites } from '@/lib/bolaoRedis';
+import { PencilIcon, ChevronLeftIcon } from '@heroicons/react/20/solid';
+import Link from 'next/link';
 import type { Score } from '@/lib/bolaoRedis';
 import { getCache, redis } from '@/lib/redisCache';
 import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
@@ -15,11 +16,40 @@ const ROUND_KEYS: Record<string, 1 | 2 | 3> = {
   'Rodada 3': 3,
 };
 
+async function getCopaFixtures(): Promise<CopaFixturesPayload | null> {
+  const cached = await getCache<CopaFixturesPayload>('copa-fixtures:2026');
+  if (cached) return cached;
+
+  // Cache miss — populate via internal API
+  try {
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? 'http://localhost:3000';
+    const res = await fetch(`${baseUrl}/api/copa/fixtures`, { cache: 'no-store' });
+    if (!res.ok) return null;
+    return res.json();
+  } catch {
+    return null;
+  }
+}
+
 export default async function PalpitesPage() {
   const user = await getCurrentUser();
-  if (!user) redirect('/');
+  if (!user) {
+    return (
+      <main className="max-w-lg mx-auto px-4 py-12 text-center space-y-4">
+        <PencilIcon className="h-12 w-12 text-zinc-400 mx-auto" />
+        <h1 className="text-xl font-bold text-zinc-100">Meus Palpites</h1>
+        <p className="text-zinc-400 text-sm">Faça login para ver e preencher seus palpites da Copa 2026.</p>
+        <Link
+          href="/login?returnTo=/bolao/palpites"
+          className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+        >
+          Entrar / Criar conta
+        </Link>
+      </main>
+    );
+  }
 
-  const copa = await getCache<CopaFixturesPayload>('copa-fixtures:2026');
+  const copa = await getCopaFixtures();
   const groupMatches = copa?.phases['Grupos'] ?? [];
 
   const now = Date.now();
@@ -55,8 +85,18 @@ export default async function PalpitesPage() {
   };
 
   return (
-    <main className="max-w-lg mx-auto px-4 py-6">
-      <h1 className="text-xl font-bold text-gray-900 mb-4">✏️ Meus Palpites</h1>
+    <main className="max-w-lg mx-auto w-full px-4 py-6 flex-1">
+      <Link
+        href="/bolao"
+        className="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200 mb-4 transition-colors"
+      >
+        <ChevronLeftIcon className="h-4 w-4" />
+        Ranking
+      </Link>
+      <h1 className="text-xl font-bold text-zinc-100 mb-4 flex items-center gap-2">
+        <PencilIcon className="h-5 w-5 text-zinc-400 shrink-0" />
+        Meus Palpites
+      </h1>
       <RodadaTabsWrapper counts={counts} byRound={byRound} />
     </main>
   );

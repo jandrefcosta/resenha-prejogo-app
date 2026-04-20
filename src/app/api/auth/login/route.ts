@@ -5,7 +5,16 @@ import { verifyPassword } from '@/lib/passwordUtils';
 import { signToken, saveSession, AUTH_COOKIE } from '@/lib/auth';
 
 const TTL_30D = 60 * 60 * 24 * 30;
-const TTL_1Y = 60 * 60 * 24 * 365;
+
+// GET: redirect browser navigations to the login page
+export async function GET(req: NextRequest) {
+  const returnTo = req.nextUrl.searchParams.get('returnTo') ?? '/';
+  const url = req.nextUrl.clone();
+  url.pathname = '/login';
+  url.search = '';
+  if (returnTo !== '/') url.searchParams.set('returnTo', returnTo);
+  return NextResponse.redirect(url, 302);
+}
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);

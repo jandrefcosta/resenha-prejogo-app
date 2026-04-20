@@ -25,9 +25,9 @@ interface Props {
 }
 
 const outcomeColors = {
-  exact: 'bg-green-50 border-green-200',
-  correct: 'bg-blue-50 border-blue-200',
-  miss: 'bg-gray-50 border-gray-200',
+  exact: 'bg-green-950/40 border-green-800',
+  correct: 'bg-blue-950/40 border-blue-800',
+  miss: 'bg-zinc-900 border-zinc-700',
 };
 
 export function PalpiteRow({
@@ -73,25 +73,25 @@ export function PalpiteRow({
   const containerClass = score
     ? `border rounded-xl p-3 ${outcomeColors[score.outcome]}`
     : !palpite && !isLocked
-    ? 'border border-dashed border-amber-300 bg-amber-50 rounded-xl p-3'
-    : 'border border-gray-200 rounded-xl p-3';
+    ? 'border border-dashed border-amber-600/60 bg-amber-950/30 rounded-xl p-3'
+    : 'border border-zinc-800 rounded-xl p-3';
 
   return (
     <div className={containerClass}>
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-xs text-gray-400">{dateStr}</span>
+      <div className="flex items-start justify-between gap-2 mb-2">
+        <span className="text-xs text-zinc-500 shrink-0">{dateStr}</span>
         {score && (
-          <span className={`text-xs font-bold ${score.pts > 0 ? 'text-green-700' : 'text-gray-400'}`}>
+          <span className={`text-xs font-bold text-right ${score.pts > 0 ? 'text-green-400' : 'text-zinc-500'}`}>
             +{score.pts} pts
             {score.outcome === 'exact' ? ' · Acerto exato!' : score.outcome === 'correct' ? ' · Resultado certo' : ' · Errou'}
           </span>
         )}
-        {saving && <span className="text-xs text-gray-400">Salvando…</span>}
+        {saving && <span className="text-xs text-zinc-500 shrink-0">Salvando…</span>}
       </div>
 
       <div className="flex items-center gap-2">
-        <span className="flex-1 text-right text-sm font-medium truncate">{homeTeam}</span>
-        <div className="flex items-center gap-1.5">
+        <span className="min-w-0 flex-1 text-right text-sm font-medium truncate">{homeTeam}</span>
+        <div className="flex items-center gap-1.5 shrink-0">
           <input
             type="number"
             min={0}
@@ -100,9 +100,9 @@ export function PalpiteRow({
             disabled={isLocked || !!score}
             onChange={(e) => setHomeVal(e.target.value)}
             onBlur={() => save(homeVal, awayVal)}
-            className="w-9 text-center border border-gray-300 rounded-md p-1 text-sm font-bold disabled:bg-gray-100 disabled:text-gray-500"
+            className="w-10 text-center border border-zinc-700 bg-zinc-900 text-zinc-100 rounded-md p-1 text-sm font-bold disabled:bg-zinc-800 disabled:text-zinc-500"
           />
-          <span className="text-gray-400 text-sm">×</span>
+          <span className="text-zinc-500 text-sm">×</span>
           <input
             type="number"
             min={0}
@@ -111,14 +111,14 @@ export function PalpiteRow({
             disabled={isLocked || !!score}
             onChange={(e) => setAwayVal(e.target.value)}
             onBlur={() => save(homeVal, awayVal)}
-            className="w-9 text-center border border-gray-300 rounded-md p-1 text-sm font-bold disabled:bg-gray-100 disabled:text-gray-500"
+            className="w-10 text-center border border-zinc-700 bg-zinc-900 text-zinc-100 rounded-md p-1 text-sm font-bold disabled:bg-zinc-800 disabled:text-zinc-500"
           />
         </div>
-        <span className="flex-1 text-sm font-medium truncate">{awayTeam}</span>
+        <span className="min-w-0 flex-1 text-sm font-medium truncate">{awayTeam}</span>
       </div>
 
       {score && actualScore && (
-        <p className="text-xs text-center text-gray-400 mt-1.5">
+        <p className="text-xs text-center text-zinc-500 mt-1.5">
           Resultado real: {actualScore.home} × {actualScore.away}
         </p>
       )}

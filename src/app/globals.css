@@ -34,6 +34,11 @@ body {
   font-family: var(--font-sans);
   font-size: 1rem;      /* 16px minimum for mobile readability */
   line-height: 1.6;
+  /* iOS PWA / notch safe areas */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* ─── Reduced motion ──────────────────────────── */
@@ -49,6 +54,17 @@ body {
 /* ─── Touch ───────────────────────────────────── */
 button, [role="button"] {
   touch-action: manipulation;
+}
+
+/* ─── Safe area utilities (iOS PWA / notch) ───── */
+@utility pt-safe {
+  padding-top: env(safe-area-inset-top);
+}
+@utility pb-safe {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+@utility mb-safe {
+  margin-bottom: env(safe-area-inset-bottom);
 }
 
 /* ─── Scrollbar ───────────────────────────────── */

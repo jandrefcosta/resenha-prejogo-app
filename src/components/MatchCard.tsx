@@ -224,7 +224,7 @@ function ModalShell({
 
   return (
     <div
-      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center p-4"
+      className="fixed inset-x-0 top-0 h-dvh z-50 flex items-center justify-center px-4 pt-[max(1rem,env(safe-area-inset-top))] pb-[max(1rem,env(safe-area-inset-bottom))]"
       role="dialog"
       aria-modal="true"
       aria-label={title}

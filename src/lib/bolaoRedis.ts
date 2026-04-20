@@ -93,9 +93,12 @@ export async function getRanking(
   key: string,
   limit = 50,
 ): Promise<Array<{ member: string; score: number }>> {
-  return redis.zrange(key, 0, limit - 1, { rev: true, withScores: true }) as Promise<
-    Array<{ member: string; score: number }>
-  >;
+  const flat = (await redis.zrange(key, 0, limit - 1, { rev: true, withScores: true })) as (string | number)[];
+  const result: Array<{ member: string; score: number }> = [];
+  for (let i = 0; i < flat.length; i += 2) {
+    result.push({ member: flat[i] as string, score: flat[i + 1] as number });
+  }
+  return result;
 }
 
 export async function getUserRankPosition(key: string, userId: string): Promise<number | null> {

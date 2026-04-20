@@ -27,7 +27,7 @@ export function SocialDrawer() {
       {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-6 right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white shadow-lg transition-all hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer"
+        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white shadow-lg transition-all hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer"
         aria-label="Abrir chat da comunidade"
       >
         <ChatBubbleLeftRightIcon className="h-5 w-5" />
@@ -50,7 +50,7 @@ export function SocialDrawer() {
         aria-label="Comunidade"
       >
         {/* Drawer header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-zinc-800 flex-shrink-0">
+        <div className="flex items-center justify-between px-5 pb-4 pt-[max(1rem,env(safe-area-inset-top))] border-b border-zinc-800 flex-shrink-0">
           <span className="text-sm font-semibold text-white font-sans">Comunidade</span>
           <button
             onClick={() => setOpen(false)}

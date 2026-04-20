@@ -14,23 +14,23 @@ export function BolaoCard({ id, nome, codigo, memberCount, position, totalPts }:
   return (
     <Link
       href={`/bolao/${id}`}
-      className="flex items-center justify-between p-4 rounded-xl border border-gray-200 hover:border-gray-300 hover:bg-gray-50 transition-colors"
+      className="flex items-center justify-between gap-3 p-4 rounded-xl border border-zinc-800 hover:border-zinc-600 hover:bg-zinc-800/50 transition-colors"
     >
-      <div>
-        <p className="font-semibold text-gray-900">{nome}</p>
-        <p className="text-xs text-gray-400 mt-0.5">
-          Código: <span className="font-mono font-bold">{codigo}</span> · {memberCount} participante
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold text-zinc-100 truncate">{nome}</p>
+        <p className="text-xs text-zinc-500 mt-0.5 truncate">
+          Código: <span className="font-mono font-bold text-zinc-300">{codigo}</span> · {memberCount} participante
           {memberCount !== 1 ? 's' : ''}
         </p>
       </div>
-      <div className="text-right">
+      <div className="shrink-0 text-right">
         {position !== null ? (
           <>
-            <p className="text-sm font-bold text-gray-900">{totalPts} pts</p>
-            <p className="text-xs text-gray-400">{position}º lugar</p>
+            <p className="text-sm font-bold text-zinc-100">{totalPts} pts</p>
+            <p className="text-xs text-zinc-500">{position}º lugar</p>
           </>
         ) : (
-          <p className="text-xs text-gray-400">Sem palpites</p>
+          <p className="text-xs text-zinc-500">Sem palpites</p>
         )}
       </div>
     </Link>

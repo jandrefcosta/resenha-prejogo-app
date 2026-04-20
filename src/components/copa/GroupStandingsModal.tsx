@@ -217,7 +217,7 @@ export function GroupStandingsModal({
       {/* Panel */}
       <div
         ref={modalRef}
-        className="relative z-10 w-full max-w-lg bg-zinc-900 rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[85vh]"
+        className="relative z-10 w-full max-w-lg bg-zinc-900 rounded-t-2xl sm:rounded-2xl overflow-hidden flex flex-col max-h-[85vh] pb-[env(safe-area-inset-bottom)] sm:pb-0"
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-4 border-b border-zinc-800 shrink-0">

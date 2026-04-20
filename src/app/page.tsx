@@ -13,10 +13,14 @@ export default function HomePage() {
     <div className="flex flex-col min-h-screen">
       {/* Hero */}
       <header
-        className="relative overflow-hidden px-4 pt-14 pb-12 sm:px-6"
+        className="relative overflow-hidden px-4 pb-12 sm:px-6"
         style={{
           background:
             'linear-gradient(160deg, var(--club-primary) 0%, var(--club-gradient-end) 65%, #09090b 100%)',
+          /* Pull header up into the safe area zone so gradient covers the notch/Dynamic Island,
+             then pad the content down by the same amount so nothing is hidden */
+          marginTop: 'calc(-1 * env(safe-area-inset-top))',
+          paddingTop: 'calc(env(safe-area-inset-top) + 3.5rem)',
         }}
       >
         {/* Decorative blur blob */}
@@ -43,7 +47,7 @@ export default function HomePage() {
               href="/bolao"
               className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 min-h-[44px] text-sm font-medium font-sans text-white transition-all hover:bg-white/20 hover:border-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 backdrop-blur-sm"
             >
-              🏆 Bolão
+              🏆 Bolão da Copa
             </Link>
           </div>
         </div>
