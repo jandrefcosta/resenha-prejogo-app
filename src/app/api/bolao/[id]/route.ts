@@ -10,10 +10,14 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> },
 ) {
   const { id } = await params;
+  const user = await getCurrentUser();
+  if (!user) return NextResponse.json({ error: 'Não autenticado' }, { status: 401 });
+
+  const isMember = await redis.sismember(`bolao:${id}:members`, user.sub);
+  if (!isMember) return NextResponse.json({ error: 'Acesso negado' }, { status: 403 });
+
   const meta = await getBolaoMeta(id);
   if (!meta) return NextResponse.json({ error: 'Bolão não encontrado' }, { status: 404 });
-
-  const user = await getCurrentUser();
 
   const rawRanking = await getRanking(`bolao:${id}:ranking`, 100);
   const enriched = await Promise.all(
@@ -33,10 +37,7 @@ export async function GET(
 
   const memberCount = await redis.scard(`bolao:${id}:members`);
 
-  let myPosition: number | null = null;
-  if (user) {
-    myPosition = await getUserRankPosition(`bolao:${id}:ranking`, user.sub);
-  }
+  const myPosition = await getUserRankPosition(`bolao:${id}:ranking`, user.sub);
 
   return NextResponse.json({
     bolao: { ...meta, memberCount },
