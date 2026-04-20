@@ -10,5 +10,10 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  matcher: ['/api/social/:path*'],
+  matcher: [
+    '/api/social/:path*',
+    // Bolão — excluir rotas públicas (global, score usa auth próprio via CRON_SECRET)
+    '/api/bolao/((?!global|score).*)',
+    '/api/palpites/:path*',
+  ],
 };
