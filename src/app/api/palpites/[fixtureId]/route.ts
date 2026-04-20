@@ -17,14 +17,16 @@ export async function PUT(
 
   // Verificar se o jogo ainda não começou
   const copa = await getCache<CopaFixturesPayload>('copa-fixtures:2026');
-  if (copa) {
-    const allMatches = Object.values(copa.phases).flat();
-    const match = allMatches.find((m) => m.id === fixtureId);
-    if (match && match.status !== 'postponed') {
-      const kickoff = new Date(match.date);
-      if (Date.now() >= kickoff.getTime()) {
-        return NextResponse.json({ error: 'Palpite travado — jogo já começou' }, { status: 403 });
-      }
+  if (!copa) {
+    return NextResponse.json({ error: 'Dados da Copa indisponíveis. Tente novamente.' }, { status: 503 });
+  }
+  const allMatches = Object.values(copa.phases).flat();
+  const match = allMatches.find((m) => m.id === fixtureId);
+  // postponed matches have no confirmed kickoff date; allow edits until rescheduled and status reverts
+  if (match && match.status !== 'postponed') {
+    const kickoff = new Date(match.date);
+    if (Date.now() >= kickoff.getTime()) {
+      return NextResponse.json({ error: 'Palpite travado — jogo já começou' }, { status: 403 });
     }
   }
 
