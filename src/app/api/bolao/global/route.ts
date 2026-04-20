@@ -12,20 +12,21 @@ export async function GET() {
   const rawRanking = await getRanking('bolao:global:ranking', 50);
 
   // Enriquecer com username/displayName — buscar user records
-  const enriched = await Promise.all(
-    rawRanking.map(async (entry, i) => {
-      const record = await redis.get<{ username?: string; displayName?: string }>(
-        `user:${entry.member}`,
-      );
-      return {
-        userId: entry.member,
-        username: record?.username ?? entry.member.slice(0, 8),
-        displayName: record?.displayName ?? record?.username ?? 'Anônimo',
-        totalPts: entry.score,
-        position: i + 1,
-      };
-    }),
-  );
+  const userKeys = rawRanking.map((e) => `user:${e.member}`);
+  const records = userKeys.length > 0
+    ? await redis.mget<({ username?: string; displayName?: string } | null)[]>(...userKeys)
+    : [];
+
+  const enriched = rawRanking.map((entry, i) => {
+    const record = records[i];
+    return {
+      userId: entry.member,
+      username: record?.username ?? entry.member.slice(0, 8),
+      displayName: record?.displayName ?? record?.username ?? 'Anônimo',
+      totalPts: entry.score,
+      position: i + 1,
+    };
+  });
 
   let myPosition: number | null = null;
   let myPts = 0;
