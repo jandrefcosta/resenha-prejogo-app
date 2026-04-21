@@ -15,7 +15,7 @@ export async function createTestUser(request: APIRequestContext): Promise<TestUs
   const username = `e2e${ts}`;
   const password = 'TestPass123!';
 
-  const res = await request.post('http://localhost:3000/api/auth/register', {
+  const res = await request.post('/api/auth/register', {
     data: { username, email, password },
   });
 
@@ -38,13 +38,17 @@ export async function loginAs(page: Page, email: string, password: string): Prom
     throw new Error(`loginAs failed ${res.status()}: ${body}`);
   }
 
-  const setCookie = res.headers()['set-cookie'] ?? '';
-  const match = setCookie.match(/sc_auth=([^;]+)/);
-  if (!match) throw new Error('sc_auth cookie not found in login response');
+  const cookieHeaders = res.headersArray()
+    .filter((h) => h.name.toLowerCase() === 'set-cookie')
+    .map((h) => h.value);
+  const scAuthHeader = cookieHeaders
+    .map((h) => h.match(/sc_auth=([^;]+)/))
+    .find((m) => m !== null);
+  if (!scAuthHeader) throw new Error('sc_auth cookie not found in login response');
 
   await page.context().addCookies([{
     name: 'sc_auth',
-    value: match[1],
+    value: scAuthHeader[1],
     domain: 'localhost',
     path: '/',
     httpOnly: true,
