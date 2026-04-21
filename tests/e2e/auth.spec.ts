@@ -105,13 +105,10 @@ test('sessão persiste após page reload', async ({ page, request }) => {
 
 test('/bolao/[id] sem auth — exibe prompt de login', async ({ page }) => {
   await setupStorage(page);
-  // Access a fake bolão ID — getBolaoMeta returns null → notFound()
-  // The page calls notFound() before the auth check when meta is missing
-  await page.goto('/bolao/nonexistent-id-auth-test');
-  // Should show 404 (notFound) since the bolão doesn't exist
-  // Either 404 heading or login prompt is acceptable — just not crash
-  const url = page.url();
-  expect(url).toContain('/bolao/');
+  // Access a fake bolão ID — getBolaoMeta returns null → notFound() fires before auth check
+  // Capture the navigation response to assert the server returned 404
+  const response = await page.goto('/bolao/nonexistent-id-auth-test');
+  expect(response?.status()).toBe(404);
 });
 
 test('GET /api/bolao sem auth → 401', async ({ page }) => {
