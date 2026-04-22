@@ -39,6 +39,9 @@ function LoginPageInner() {
   return (
     <main className="flex-1 flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-sm">
+        <Link href="/" className="inline-flex items-center gap-1 text-sm text-zinc-400 hover:text-zinc-200 transition-colors mb-6">
+          ← Voltar ao início
+        </Link>
         <h1 className="text-2xl font-bold text-zinc-100 text-center mb-6">
           {tab === 'login' ? 'Entrar' : 'Criar conta'}
         </h1>
