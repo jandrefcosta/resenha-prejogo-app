@@ -10,6 +10,7 @@ export const TTL_1H   = 60 * 60;
 export const TTL_3H   = 60 * 60 * 3;
 export const TTL_6H   = 60 * 60 * 6;
 export const TTL_24H  = 60 * 60 * 24;
+export const TTL_1Y   = 60 * 60 * 24 * 365;
 
 export async function getCache<T>(key: string): Promise<T | null> {
   try {

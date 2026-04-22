@@ -1,12 +1,11 @@
 import { randomBytes } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserByEmail, hashEmail } from '@/lib/userIdentity';
-import { redis } from '@/lib/redisCache';
+import { redis, TTL_1H } from '@/lib/redisCache';
 import { passwordResetLimiter } from '@/lib/rateLimiter';
 import { sendPasswordResetEmail } from '@/lib/email';
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
-const TTL_1H = 3600;
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -37,12 +36,20 @@ export async function POST(req: NextRequest) {
   const { userId } = found;
   const token = randomBytes(32).toString('hex');
 
-  await redis.set(`reset:${token}`, { userId }, { ex: TTL_1H });
+  try {
+    await redis.set(`reset:${token}`, { userId }, { ex: TTL_1H });
+  } catch (err) {
+    console.error('[forgot-password] redis set failed:', err);
+    return NextResponse.json({ error: 'Erro interno. Tente novamente.' }, { status: 500 });
+  }
 
   try {
     await sendPasswordResetEmail(email, token);
   } catch (err) {
     console.error('[forgot-password] email send failed:', err);
+    // Limpar token órfão — usuário pode tentar de novo
+    await redis.del(`reset:${token}`).catch(() => {});
+    return NextResponse.json({ error: 'Erro ao enviar email. Tente novamente.' }, { status: 500 });
   }
 
   return NextResponse.json({ ok: true });

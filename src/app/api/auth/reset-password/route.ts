@@ -1,9 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { redis } from '@/lib/redisCache';
+import { redis, TTL_1Y } from '@/lib/redisCache';
 import { getUserById } from '@/lib/userIdentity';
 import { hashPassword } from '@/lib/passwordUtils';
-
-const TTL_1Y = 60 * 60 * 24 * 365;
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -31,9 +29,10 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Link inválido ou expirado.' }, { status: 404 });
   }
 
+  // Invalidar token ANTES de atualizar a senha — elimina janela de reutilização
+  await redis.del(`reset:${token}`);
   const passwordHash = await hashPassword(password);
   await redis.set(`user:${userId}`, { ...record, passwordHash }, { ex: TTL_1Y });
-  await redis.del(`reset:${token}`);
 
   return NextResponse.json({ ok: true });
 }
