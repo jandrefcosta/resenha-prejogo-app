@@ -15,3 +15,12 @@ export function getClientIp(request: Request): string {
   const forwarded = (request.headers as Headers).get('x-forwarded-for');
   return forwarded ? forwarded.split(',')[0].trim() : 'unknown';
 }
+
+/**
+ * Password reset: 3 attempts per email hash per hour (sliding window).
+ */
+export const passwordResetLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(3, '1 h'),
+  prefix: 'rl:password-reset',
+});
