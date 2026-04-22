@@ -2,6 +2,7 @@
 import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
+import Link from 'next/link';
 
 function LoginPageInner() {
   const router = useRouter();
@@ -93,7 +94,17 @@ function LoginPageInner() {
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-zinc-300 mb-1">Senha</label>
+            <div className="flex items-center justify-between mb-1">
+              <label className="block text-sm font-medium text-zinc-300">Senha</label>
+              {tab === 'login' && (
+                <Link
+                  href="/esqueci-senha"
+                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+                >
+                  Esqueci minha senha
+                </Link>
+              )}
+            </div>
             <input
               type="password"
               value={password}
