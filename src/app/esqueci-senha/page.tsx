@@ -13,26 +13,31 @@ export default function EsqueciSenhaPage() {
     setStatus('loading');
     setErrorMsg('');
 
-    const res = await fetch('/api/auth/forgot-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: email.trim() }),
-    });
+    try {
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
 
-    if (res.status === 429) {
-      setErrorMsg('Muitas tentativas. Tente novamente em 1 hora.');
+      if (res.status === 429) {
+        setErrorMsg('Muitas tentativas. Tente novamente em 1 hora.');
+        setStatus('error');
+        return;
+      }
+
+      if (res.status === 400) {
+        setErrorMsg('Email inválido.');
+        setStatus('error');
+        return;
+      }
+
+      // 200 ou 500 — mostrar mensagem genérica (não revelar detalhes internos)
+      setStatus('sent');
+    } catch {
+      setErrorMsg('Erro de conexão. Verifique sua internet e tente novamente.');
       setStatus('error');
-      return;
     }
-
-    if (res.status === 400) {
-      setErrorMsg('Email inválido.');
-      setStatus('error');
-      return;
-    }
-
-    // 200 ou 500 — mostrar mensagem genérica (não revelar detalhes internos)
-    setStatus('sent');
   }
 
   return (

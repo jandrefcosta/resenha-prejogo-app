@@ -42,20 +42,25 @@ function ResetSenhaInner() {
     setStatus('loading');
     setErrorMsg('');
 
-    const res = await fetch('/api/auth/reset-password', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ token, password }),
-    });
+    try {
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, password }),
+      });
 
-    if (res.ok) {
-      setStatus('done');
-      return;
+      if (res.ok) {
+        setStatus('done');
+        return;
+      }
+
+      const data = await res.json().catch(() => ({}));
+      setErrorMsg(data.error ?? 'Erro ao redefinir senha. Tente novamente.');
+      setStatus('error');
+    } catch {
+      setErrorMsg('Erro de conexão. Verifique sua internet e tente novamente.');
+      setStatus('error');
     }
-
-    const data = await res.json().catch(() => ({}));
-    setErrorMsg(data.error ?? 'Erro ao redefinir senha. Tente novamente.');
-    setStatus('error');
   }
 
   if (status === 'done') {
