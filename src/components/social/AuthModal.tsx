@@ -1,6 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import Link from 'next/link';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import { useAuth } from '@/hooks/useAuth';
@@ -109,14 +110,26 @@ function LoginForm({ onClose }: { onClose: () => void }) {
         autoComplete="email"
         placeholder="seuemail@exemplo.com"
       />
-      <Field
-        label="Senha"
-        type="password"
-        value={password}
-        onChange={setPassword}
-        autoComplete="current-password"
-        placeholder="••••••••"
-      />
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <label className="block text-xs font-medium text-zinc-400 font-sans">Senha</label>
+          <Link
+            href="/esqueci-senha"
+            onClick={onClose}
+            className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors font-sans"
+          >
+            Esqueci minha senha
+          </Link>
+        </div>
+        <input
+          type="password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          autoComplete="current-password"
+          placeholder="••••••••"
+          className="w-full rounded-xl bg-zinc-800 border border-zinc-700 px-4 py-2.5 text-sm text-white placeholder-zinc-500 font-sans focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-zinc-600 transition-colors"
+        />
+      </div>
       {error && <ErrorMsg>{error}</ErrorMsg>}
       <SubmitButton loading={loading}>
         {loading ? 'Entrando…' : 'Entrar'}
