@@ -1,13 +1,19 @@
 import { Resend } from 'resend';
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+let _resend: Resend | null = null;
+function getResend(): Resend {
+  if (!_resend) {
+    _resend = new Resend(process.env.RESEND_API_KEY);
+  }
+  return _resend;
+}
 
 const FROM = 'noreply@resenhaprejogo.app';
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL ?? 'https://resenhaprejogo.app';
 
 export async function sendPasswordResetEmail(email: string, token: string): Promise<void> {
   const link = `${BASE_URL}/reset-senha?token=${token}`;
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to: email,
     subject: 'Recuperação de senha — Resenha Pré-Jogo',
