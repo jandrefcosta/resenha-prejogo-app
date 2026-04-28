@@ -4,8 +4,6 @@ import { processMatchDocuments } from '@/lib/cbfDocParser';
 import { redis } from '@/lib/redisCache';
 
 export const dynamic = 'force-dynamic';
-// Cron pode demorar — rodadas × jogos × PDF download+parse
-export const maxDuration = 300;
 
 function authorized(req: NextRequest): boolean {
   const secret = process.env.CRON_SECRET;
