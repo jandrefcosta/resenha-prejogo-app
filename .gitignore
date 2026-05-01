@@ -77,3 +77,5 @@ scripts/reparse-boletins.mjs
 scripts/debug-boletim-text.ts
 scripts/diagnose-match-docs.ts
 scripts/check-status-urls.ts
+# Git worktrees
+.worktrees/
