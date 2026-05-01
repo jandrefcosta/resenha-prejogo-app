@@ -146,7 +146,9 @@ export function useFichaData({
     if (!inFlight.current.has('h2h') && h2hStatus !== 'done') {
       inFlight.current.add('h2h');
       setH2hStatus('loading');
-      const h2hParams = new URLSearchParams({ home: match.homeTeam.id, away: match.awayTeam.id, fixture: match.id, leagueId: String(match.leagueId) });
+      const h2hHome = afHomeId ?? match.homeTeam.id;
+      const h2hAway = afAwayId ?? match.awayTeam.id;
+      const h2hParams = new URLSearchParams({ home: h2hHome, away: h2hAway, fixture: String(afFixtureId ?? match.id), leagueId: String(match.leagueId) });
       fetch(`/api/h2h?${h2hParams}`)
         .then((r) => { if (!r.ok) throw new Error(); return r.json() as Promise<H2HData>; })
         .then((d) => { setH2hData(d); setH2hStatus('done'); })

@@ -755,6 +755,54 @@ function NonCbfFichaContent({
           )}
         </section>
       )}
+
+      {/* 4. Cartões — pós-jogo, apenas quando events disponíveis */}
+      {isPostMatch && eventsSupported && (events?.cards?.length ?? 0) > 0 && (
+        <section>
+          <SectionHeader label="Cartões" />
+          <div className="space-y-1">
+            {events!.cards
+              .slice()
+              .sort((a, b) => a.minute - b.minute)
+              .map((c, i) => {
+                const isRed = c.type === "Red Card" || c.type === "Yellow Red Card";
+                const shortName = c.side === "home" ? match.homeTeam.shortName : match.awayTeam.shortName;
+                return (
+                  <div
+                    key={i}
+                    className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans"
+                  >
+                    <span
+                      className={`w-2.5 h-3.5 rounded-[2px] shrink-0 ${isRed ? "bg-red-600" : "bg-yellow-400"}`}
+                      aria-label={c.type}
+                    />
+                    <span className="font-medium text-zinc-200 flex-1 truncate">
+                      {c.playerName}
+                    </span>
+                    <span className="text-zinc-500 shrink-0">{shortName}</span>
+                    <span className="text-zinc-600 tabular-nums shrink-0">
+                      {c.minute}
+                      {c.minuteExtra ? `+${c.minuteExtra}` : ""}&apos;
+                    </span>
+                  </div>
+                );
+              })}
+          </div>
+        </section>
+      )}
+
+      {/* 5. Arbitragem — sempre visível (pré, ao vivo e pós) */}
+      <section>
+        <SectionHeader label="Arbitragem" />
+        {match.referee ? (
+          <div className="flex items-center gap-2 rounded-lg bg-zinc-800/50 px-3 py-2 text-xs font-sans">
+            <span className="text-zinc-200 flex-1">{match.referee}</span>
+            <span className="text-zinc-500 shrink-0">Principal</span>
+          </div>
+        ) : (
+          <Pending>Árbitro não publicado</Pending>
+        )}
+      </section>
     </>
   );
 }

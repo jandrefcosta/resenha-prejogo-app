@@ -123,15 +123,19 @@ export async function GET(req: NextRequest) {
     ),
   ]);
 
-  // ── Build API-Football fixture lookup: "YYYY-MM-DD:homeApiId:awayApiId" → Match ──
-  // Used to cross-reference CONMEBOL matches and attach apiFootballFixtureId.
-  const apifByKey = new Map<string, Match>();
+  // ── Build API-Football fixture lookups ────────────────────────────────────
+  // Primary:  "YYYY-MM-DD:homeApiId:awayApiId" → Match  (both teams known)
+  // Fallback: "YYYY-MM-DD:teamApiId"           → Match  (only one team known, e.g. foreign opponents)
+  const apifByKey      = new Map<string, Match>();
+  const apifByDayTeam  = new Map<string, Match>();
   for (const result of conmebolApifResults) {
     if (result.status !== 'fulfilled') continue;
     for (const m of result.value) {
       const day = m.date.slice(0, 10);
-      const key = `${day}:${m.homeTeam.id}:${m.awayTeam.id}`;
-      apifByKey.set(key, m);
+      apifByKey.set(`${day}:${m.homeTeam.id}:${m.awayTeam.id}`, m);
+      // Index by each team so we can match even when the opponent has no CONMEBOL→AF mapping
+      apifByDayTeam.set(`${day}:${m.homeTeam.id}`, m);
+      apifByDayTeam.set(`${day}:${m.awayTeam.id}`, m);
     }
   }
 
@@ -140,20 +144,41 @@ export async function GET(req: NextRequest) {
     return matches.map((m) => {
       const homeApiId = conmebolToApiId.get(Number(m.homeTeam.id));
       const awayApiId = conmebolToApiId.get(Number(m.awayTeam.id));
-      if (!homeApiId || !awayApiId) return m;
+      // At least one Brazilian club must be identifiable for a cross-reference
+      if (!homeApiId && !awayApiId) return m;
+
       const day = m.date.slice(0, 10);
-      // Try exact day match; API-Football and CONMEBOL timestamps can differ by up to 1 day
-      // due to timezone differences, so also try adjacent days.
-      const apif =
-        apifByKey.get(`${day}:${homeApiId}:${awayApiId}`) ??
-        apifByKey.get(`${shiftDay(day, -1)}:${homeApiId}:${awayApiId}`) ??
-        apifByKey.get(`${shiftDay(day, +1)}:${homeApiId}:${awayApiId}`);
+
+      // Try exact match first (both teams are Brazilian clubs with known AF IDs)
+      let apif: Match | undefined;
+      if (homeApiId && awayApiId) {
+        apif =
+          apifByKey.get(`${day}:${homeApiId}:${awayApiId}`) ??
+          apifByKey.get(`${shiftDay(day, -1)}:${homeApiId}:${awayApiId}`) ??
+          apifByKey.get(`${shiftDay(day, +1)}:${homeApiId}:${awayApiId}`);
+      }
+
+      // Fallback: match by the known Brazilian club's AF ID alone (opponent is foreign)
+      if (!apif) {
+        const knownApiId = (homeApiId ?? awayApiId)!;
+        apif =
+          apifByDayTeam.get(`${day}:${knownApiId}`) ??
+          apifByDayTeam.get(`${shiftDay(day, -1)}:${knownApiId}`) ??
+          apifByDayTeam.get(`${shiftDay(day, +1)}:${knownApiId}`);
+      }
+
       if (!apif) return m;
+
+      // Resolve AF team IDs from the matched fixture: home/away position may differ from CONMEBOL
+      const resolvedHomeApiId = homeApiId ?? Number(apif.homeTeam.id);
+      const resolvedAwayApiId = awayApiId ?? Number(apif.awayTeam.id);
+
       return {
         ...m,
         apiFootballFixtureId: Number(apif.id),
-        apiFootballHomeId:    homeApiId,
-        apiFootballAwayId:    awayApiId,
+        apiFootballHomeId:    resolvedHomeApiId,
+        apiFootballAwayId:    resolvedAwayApiId,
+        referee:              apif.referee,
       };
     });
   }

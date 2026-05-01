@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCache, setCache, TTL_24H, TTL_3H } from '@/lib/redisCache';
-import type { MatchEventsData, MatchGoalEvent } from '@/lib/types';
+import type { MatchCardEvent, MatchEventsData, MatchGoalEvent } from '@/lib/types';
 
 const BASE_URL = 'https://v3.football.api-sports.io';
 
@@ -51,7 +51,7 @@ export async function GET(req: NextRequest) {
   // Finished matches get 24h TTL; post-match gets 3h to pick up late score publishing
   const isFinished = finishedStr === '1';
   const ttl = isFinished ? TTL_24H : TTL_3H;
-  const cacheKey = `events:v1:${fixtureId}`;
+  const cacheKey = `events:v2:${fixtureId}`;
 
   const cached = await getCache<MatchEventsData>(cacheKey);
   if (cached !== null) {
@@ -73,11 +73,21 @@ export async function GET(req: NextRequest) {
       type: e.detail, // 'Normal Goal' | 'Own Goal' | 'Penalty'
     }));
 
-  const result: MatchEventsData = { goals };
+  const cards: MatchCardEvent[] = rawEvents
+    .filter((e) => e.type === 'Card')
+    .map((e) => ({
+      playerName: e.player.name,
+      minute: e.time.elapsed,
+      minuteExtra: e.time.extra ?? null,
+      side: e.team.id === homeId ? 'home' : 'away',
+      type: e.detail, // 'Yellow Card' | 'Red Card' | 'Yellow Red Card'
+    }));
+
+  const result: MatchEventsData = { goals, cards };
 
   // Only cache when there are events — empty result on a finished match may mean
   // the API hasn't published them yet; retry on next request.
-  if (goals.length > 0 || isFinished) {
+  if (goals.length > 0 || cards.length > 0 || isFinished) {
     void setCache(cacheKey, result, ttl);
   }
 

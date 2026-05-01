@@ -415,8 +415,19 @@ export interface MatchGoalEvent {
   type: string;
 }
 
+export interface MatchCardEvent {
+  playerName: string;
+  minute: number;
+  minuteExtra: number | null;
+  /** 'home' | 'away' */
+  side: 'home' | 'away';
+  /** 'Yellow Card' | 'Red Card' | 'Yellow Red Card' */
+  type: string;
+}
+
 export interface MatchEventsData {
   goals: MatchGoalEvent[];
+  cards: MatchCardEvent[];
 }
 
 /** State used to compute cache TTL */
