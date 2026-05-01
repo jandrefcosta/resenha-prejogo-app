@@ -31,6 +31,14 @@ import {
 } from "@/components/EmailCaptureModal";
 import { BROADCASTER_COLORS } from "@/lib/broadcasterColors";
 import { useFichaData, type FetchStatus } from "@/lib/useFichaData";
+import clubsData from "@/data/clubs.json";
+import type { ClubTheme } from "@/lib/types";
+
+const _conmebolToAfId = new Map<number, number>(
+  (clubsData as ClubTheme[])
+    .filter((c) => c.conmebolId !== null && c.apiFootballId !== null)
+    .map((c) => [c.conmebolId as number, c.apiFootballId as number]),
+);
 
 const DAYS_AHEAD_FOR_BROADCAST_SEARCH = 14;
 
@@ -1671,10 +1679,20 @@ export function MatchCard({
     setActiveModal("h2h");
     if (h2hStatus !== "idle") return;
     setH2hStatus("loading");
+    const isConmebolSource = match.leagueId === 13 || match.leagueId === 11;
+    const h2hHome = isConmebolSource
+      ? String(match.apiFootballHomeId ?? _conmebolToAfId.get(Number(match.homeTeam.id)) ?? match.homeTeam.id)
+      : match.homeTeam.id;
+    const h2hAway = isConmebolSource
+      ? String(match.apiFootballAwayId ?? _conmebolToAfId.get(Number(match.awayTeam.id)) ?? match.awayTeam.id)
+      : match.awayTeam.id;
+    const h2hFixture = isConmebolSource
+      ? String(match.apiFootballFixtureId ?? match.id)
+      : match.id;
     const params = new URLSearchParams({
-      home: match.homeTeam.id,
-      away: match.awayTeam.id,
-      fixture: match.id,
+      home: h2hHome,
+      away: h2hAway,
+      fixture: h2hFixture,
       leagueId: String(match.leagueId),
     });
     fetch(`/api/h2h?${params}`)

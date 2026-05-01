@@ -4,6 +4,15 @@ import { useEffect, useRef, useState } from 'react';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import type { Match, H2HData, MatchEventsData, LineupData, CbfMatchDetail } from '@/lib/types';
 import type { CbfMatchDocsResult } from '@/lib/cbfDocTypes';
+import clubsData from '@/data/clubs.json';
+import type { ClubTheme } from '@/lib/types';
+
+// CONMEBOL team ID → API-Football team ID (Brazilian clubs only)
+const conmebolToAfId = new Map<number, number>(
+  (clubsData as ClubTheme[])
+    .filter((c) => c.conmebolId !== null && c.apiFootballId !== null)
+    .map((c) => [c.conmebolId as number, c.apiFootballId as number]),
+);
 
 export type FetchStatus = 'idle' | 'loading' | 'done' | 'not_found' | 'error';
 
@@ -136,16 +145,26 @@ export function useFichaData({
       ? (match.apiFootballFixtureId ?? null)
       : parseInt(match.id, 10) || null;
     const afHomeId = isConmebolSource
-      ? (match.apiFootballHomeId != null ? String(match.apiFootballHomeId) : null)
+      ? (match.apiFootballHomeId != null
+          ? String(match.apiFootballHomeId)
+          : conmebolToAfId.has(Number(match.homeTeam.id))
+            ? String(conmebolToAfId.get(Number(match.homeTeam.id)))
+            : null)
       : match.homeTeam.id;
     const afAwayId = isConmebolSource
-      ? (match.apiFootballAwayId != null ? String(match.apiFootballAwayId) : null)
+      ? (match.apiFootballAwayId != null
+          ? String(match.apiFootballAwayId)
+          : conmebolToAfId.has(Number(match.awayTeam.id))
+            ? String(conmebolToAfId.get(Number(match.awayTeam.id)))
+            : null)
       : match.awayTeam.id;
 
     // H2H — always fetch for injuries data; ref guard prevents double-fetch
     if (!inFlight.current.has('h2h') && h2hStatus !== 'done') {
       inFlight.current.add('h2h');
       setH2hStatus('loading');
+      // For CONMEBOL matches without enrichment (upcoming fixtures), fall back to CONMEBOL ID
+      // only if no AF ID could be resolved — will return wrong data but won't crash
       const h2hHome = afHomeId ?? match.homeTeam.id;
       const h2hAway = afAwayId ?? match.awayTeam.id;
       const h2hParams = new URLSearchParams({ home: h2hHome, away: h2hAway, fixture: String(afFixtureId ?? match.id), leagueId: String(match.leagueId) });
