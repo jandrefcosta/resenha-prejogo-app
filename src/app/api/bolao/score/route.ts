@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { sql } from 'drizzle-orm';
 import {
   getFixtureParticipants,
   getPalpite,
   calcPts,
 } from '@/lib/bolaoRedis';
 import { getCache, redis } from '@/lib/redisCache';
+import { db } from '@/lib/db';
+import { scores as scoresTable, bolaoRankings, globalRankings } from '@/lib/db/schema';
 import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 
 export const dynamic = 'force-dynamic';
@@ -67,6 +70,25 @@ export async function POST(req: NextRequest) {
         if (results.some((r) => r instanceof Error)) {
           throw new Error(`Pipeline failed for user ${userId} match ${match.id}`);
         }
+
+        const now = new Date();
+        const pgWrites = [
+          db.insert(scoresTable).values({ userId, fixtureId: match.id, points: pts, outcome })
+            .onConflictDoNothing(),
+          db.insert(globalRankings).values({ userId, totalPoints: pts })
+            .onConflictDoUpdate({
+              target: globalRankings.userId,
+              set: { totalPoints: sql`${globalRankings.totalPoints} + ${pts}`, updatedAt: now },
+            }),
+          ...bolaoIds.map(bolaoId =>
+            db.insert(bolaoRankings).values({ bolaoId, userId, totalPoints: pts })
+              .onConflictDoUpdate({
+                target: [bolaoRankings.bolaoId, bolaoRankings.userId],
+                set: { totalPoints: sql`${bolaoRankings.totalPoints} + ${pts}`, updatedAt: now },
+              })
+          ),
+        ];
+        Promise.all(pgWrites).catch(err => console.error('[pg-shadow-write] score cron:', err));
 
         processed++;
       } catch (err) {

@@ -15,8 +15,11 @@
  * the client-side filter in MatchSection.tsx.
  */
 
+import { sql } from 'drizzle-orm';
 import { getCache, setCache, setCachePermanent } from '@/lib/redisCache';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
+import { db } from '@/lib/db';
+import { matchSnapshots } from '@/lib/db/schema';
 import type {
   CbfAthlete,
   CbfCard,
@@ -407,6 +410,51 @@ export async function getCbfRound(round: number, force = false): Promise<CbfRoun
   void setCache(key, data, ttlSeconds);
   if (status === 'finished') {
     void setCachePermanent(staleKey(round), data);
+    // Persist finished matches to Postgres as source of truth.
+    const pgRows = matches
+      .filter(m =>
+        m.mandante.gols !== null && m.mandante.gols !== '' &&
+        m.visitante.gols !== null && m.visitante.gols !== '' &&
+        m.mandante.atletas.length > 0 && m.visitante.atletas.length > 0,
+      )
+      .map(m => {
+        const mainRef = m.arbitros.find(a => a.funcao === 'Arbitro');
+        return {
+          fixtureId:    `cbf_${m.idJogo}`,
+          source:       'cbf' as const,
+          leagueId:     71,
+          season:       2026,
+          round:        String(round),
+          status:       'finished' as const,
+          matchDate:    parseCbfDatetime(m.data, m.hora),
+          homeTeamId:   m.mandante.id,
+          homeTeamName: m.mandante.nome,
+          awayTeamId:   m.visitante.id,
+          awayTeamName: m.visitante.nome,
+          homeScore:    parseInt(m.mandante.gols, 10),
+          awayScore:    parseInt(m.visitante.gols, 10),
+          venue:        m.local || null,
+          referee:      mainRef?.nome ?? null,
+          hasHomeLineup: m.mandante.atletas.length > 0,
+          hasAwayLineup: m.visitante.atletas.length > 0,
+          rawPayload:   m as unknown as Record<string, unknown>,
+        };
+      });
+    if (pgRows.length > 0) {
+      void db.insert(matchSnapshots).values(pgRows)
+        .onConflictDoUpdate({
+          target: matchSnapshots.fixtureId,
+          set: {
+            homeScore:     sql`excluded.home_score`,
+            awayScore:     sql`excluded.away_score`,
+            hasHomeLineup: sql`excluded.has_home_lineup`,
+            hasAwayLineup: sql`excluded.has_away_lineup`,
+            rawPayload:    sql`excluded.raw_payload`,
+            updatedAt:     sql`now()`,
+          },
+        })
+        .catch(err => console.error('[pg-write-through] cbf round:', err));
+    }
   } else {
     void setCache(staleKey(round), data, TTL.FINISHED);
   }

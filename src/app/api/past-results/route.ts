@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { and, eq, or, desc } from 'drizzle-orm';
 import { getFinishedFixturesByClub } from '@/lib/apiFootball';
-import { getConmebolFinishedByTeam, CONMEBOL_TOURNAMENT_IDS } from '@/lib/conmebolApi';
+import { CONMEBOL_TOURNAMENT_IDS } from '@/lib/conmebolApi';
+import { db } from '@/lib/db';
+import { matchSnapshots } from '@/lib/db/schema';
 import { COMPETITIONS } from '@/data/competitions';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme, ConmebolMatchDetail, Match } from '@/lib/types';
@@ -31,10 +34,15 @@ const API_FOOTBALL_ONLY_COMPS = COMPETITIONS.filter(
   c.id !== 'libertadores' && c.id !== 'sul-americana',
 );
 
-// Competitions backed by CONMEBOL API
+// Competitions backed by CONMEBOL (data read from match_snapshots)
 const CONMEBOL_COMPS = COMPETITIONS.filter(
   (c) => c.id === 'libertadores' || c.id === 'sul-americana',
 );
+
+const CONMEBOL_LEAGUE_IDS: Record<string, number> = {
+  libertadores:     13,
+  'sul-americana':  11,
+};
 
 // ─── CONMEBOL → Match converter ───────────────────────────────────────────────
 
@@ -99,17 +107,28 @@ export async function GET(req: NextRequest) {
   }
 
   const teamApiId = club.apiFootballId;
+  const conmebolTeamIdStr = club.conmebolId !== null ? String(club.conmebolId) : null;
 
   // ── Fetch all sources in parallel ────────────────────────────────────────
   const [conmebolResults, apiFootballOnlyResults, conmebolApifResults] = await Promise.all([
-    // CONMEBOL source — only for clubs with a conmebolId
+    // CONMEBOL source — read from match_snapshots (source of truth for finished matches)
     Promise.allSettled(
       CONMEBOL_COMPS
-        .filter(() => club.conmebolId !== null)
+        .filter(() => conmebolTeamIdStr !== null)
         .map(async (comp) => {
-          const tid = CONMEBOL_TOURNAMENT_IDS[comp.id as keyof typeof CONMEBOL_TOURNAMENT_IDS];
-          const raw = await getConmebolFinishedByTeam(tid, club.conmebolId!);
-          return raw.map((m) => conmebolToMatch(m, comp.id));
+          const leagueId = CONMEBOL_LEAGUE_IDS[comp.id];
+          const rows = await db.select().from(matchSnapshots)
+            .where(and(
+              eq(matchSnapshots.source, 'conmebol'),
+              eq(matchSnapshots.leagueId, leagueId),
+              or(
+                eq(matchSnapshots.homeTeamId, conmebolTeamIdStr!),
+                eq(matchSnapshots.awayTeamId, conmebolTeamIdStr!),
+              ),
+            ))
+            .orderBy(desc(matchSnapshots.matchDate))
+            .limit(10);
+          return rows.map(row => conmebolToMatch(row.rawPayload as ConmebolMatchDetail, comp.id));
         }),
     ),
     // API-Football for non-CONMEBOL competitions (Copa do Brasil, etc.)

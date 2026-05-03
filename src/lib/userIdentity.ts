@@ -1,5 +1,7 @@
 import { createHash, randomUUID } from 'crypto';
 import { redis } from './redisCache';
+import { db } from './db';
+import { users } from './db/schema';
 
 export const IDENTITY_COOKIE = 'sc_uid';
 
@@ -56,6 +58,24 @@ export async function registerOrUpdateUser(
       redis.set(`user:${existingByEmail}`, { ...existing, ip, lastSeen: now }, { ex: TTL_1Y }),
       redis.set(`email:${emailHash}`, existingByEmail, { ex: TTL_1Y }),
     ]);
+    if (existing) {
+      db.insert(users).values({
+        id:           existingByEmail,
+        email:        existing.email,
+        emailHash,
+        username:     existing.username ?? null,
+        displayName:  existing.displayName ?? null,
+        bio:          existing.bio ?? null,
+        clubId:       existing.clubId ?? null,
+        passwordHash: existing.passwordHash ?? null,
+        ip,
+        createdAt:    new Date(existing.createdAt),
+        lastSeen:     new Date(now),
+      }).onConflictDoUpdate({
+        target: users.id,
+        set: { ip, lastSeen: new Date(now) },
+      }).catch(err => console.error('[pg-shadow-write] userIdentity update:', err));
+    }
     return existingByEmail;
   }
 
@@ -68,6 +88,16 @@ export async function registerOrUpdateUser(
     redis.set(`user:${userId}`, record, { ex: TTL_1Y }),
     redis.set(`email:${emailHash}`, userId, { ex: TTL_1Y }),
   ]);
+
+  db.insert(users).values({
+    id: userId,
+    email,
+    emailHash,
+    ip,
+    createdAt: new Date(now),
+    lastSeen:  new Date(now),
+  }).onConflictDoNothing()
+    .catch(err => console.error('[pg-shadow-write] userIdentity insert:', err));
 
   return userId;
 }

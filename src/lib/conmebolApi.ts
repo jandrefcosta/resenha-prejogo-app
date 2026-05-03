@@ -14,8 +14,11 @@
  * served rather than throwing, keeping the UI functional during outages.
  */
 
+import { sql } from 'drizzle-orm';
 import { getCache, setCache } from '@/lib/redisCache';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
+import { db } from '@/lib/db';
+import { matchSnapshots } from '@/lib/db/schema';
 import type {
   ConmebolMatchDetail,
   ConmebolMatchStatus,
@@ -299,6 +302,55 @@ export async function getConmebolTournament(
   // Fire-and-forget — failure here is non-critical
   void setCache(key, data, ttlSeconds);
   void setCache(staleKey(tournamentId), data, TTL.FINISHED); // 6 h backup
+
+  // Persist played matches to Postgres as source of truth.
+  const leagueId = tournamentId === CONMEBOL_TOURNAMENT_IDS.libertadores ? 13 : 11;
+  const played = matches.filter(m => m.matchStatus === 'Played');
+  if (played.length > 0) {
+    const pgRows = played.map(m => {
+      const se = m.scoreEntries;
+      return {
+        fixtureId:    `conmebol_${m.id}`,
+        source:       'conmebol' as const,
+        leagueId,
+        season:       2026,
+        round:        m.stage,
+        status:       'finished' as const,
+        matchDate:    new Date(m.date * 1000),
+        homeTeamId:   String(m.home.id),
+        homeTeamName: m.home.name,
+        awayTeamId:   String(m.away.id),
+        awayTeamName: m.away.name,
+        homeScore:    m.homeScore,
+        awayScore:    m.awayScore,
+        scoreHtHome:  se?.ht?.home_score  ?? null,
+        scoreHtAway:  se?.ht?.away_score  ?? null,
+        scoreEtHome:  se?.et?.home_score  ?? null,
+        scoreEtAway:  se?.et?.away_score  ?? null,
+        scorePenHome: se?.pen?.home_score ?? null,
+        scorePenAway: se?.pen?.away_score ?? null,
+        scoreAggHome: se?.aggregate?.home_score ?? null,
+        scoreAggAway: se?.aggregate?.away_score ?? null,
+        winner:       m.winner,
+        matchLengthMin: m.matchLengthMin,
+        venue:        m.venue,
+        hasHomeLineup: false,
+        hasAwayLineup: false,
+        rawPayload:   m as unknown as Record<string, unknown>,
+      };
+    });
+    void db.insert(matchSnapshots).values(pgRows)
+      .onConflictDoUpdate({
+        target: matchSnapshots.fixtureId,
+        set: {
+          homeScore:    sql`excluded.home_score`,
+          awayScore:    sql`excluded.away_score`,
+          rawPayload:   sql`excluded.raw_payload`,
+          updatedAt:    sql`now()`,
+        },
+      })
+      .catch(err => console.error('[pg-write-through] conmebol tournament:', err));
+  }
 
   return data;
 }

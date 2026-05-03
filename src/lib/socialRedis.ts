@@ -1,5 +1,8 @@
 import { randomUUID } from 'crypto';
+import { eq, and } from 'drizzle-orm';
 import { redis } from './redisCache';
+import { db } from './db';
+import { posts as postsTable, postLikes, follows } from './db/schema';
 
 const TTL_1Y = 60 * 60 * 24 * 365;
 const MAX_FEED_SIZE = 500; // trim sorted sets to avoid unbounded growth
@@ -63,6 +66,17 @@ export async function createPost(
   pipeline.zremrangebyrank(`club:posts:${clubId}`, 0, -(MAX_FEED_SIZE + 1));
 
   await pipeline.exec();
+
+  db.insert(postsTable).values({
+    id,
+    authorId,
+    clubId,
+    content,
+    likeCount: 0,
+    createdAt: new Date(now),
+  }).onConflictDoNothing()
+    .catch(err => console.error('[pg-shadow-write] createPost:', err));
+
   return post;
 }
 
@@ -132,6 +146,9 @@ export async function likePost(
   if (post) {
     const likeCount = (post.likeCount ?? 0) + 1;
     await redis.set(`post:${postId}`, { ...post, likeCount }, { ex: TTL_1Y });
+    db.insert(postLikes).values({ postId, userId })
+      .onConflictDoNothing()
+      .catch(err => console.error('[pg-shadow-write] likePost:', err));
     return { likeCount, alreadyLiked: false };
   }
   return { likeCount: await getLikeCount(postId), alreadyLiked: false };
@@ -150,6 +167,9 @@ export async function unlikePost(
   if (post) {
     const likeCount = Math.max(0, (post.likeCount ?? 0) - 1);
     await redis.set(`post:${postId}`, { ...post, likeCount }, { ex: TTL_1Y });
+    db.delete(postLikes)
+      .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)))
+      .catch(err => console.error('[pg-shadow-write] unlikePost:', err));
     return { likeCount };
   }
   return { likeCount: 0 };
@@ -170,6 +190,11 @@ export async function followUser(followerId: string, followingId: string): Promi
   const added = await redis.sadd(`following:${followerId}`, followingId);
   if (!added) return false; // already following
   await redis.sadd(`followers:${followingId}`, followerId);
+
+  db.insert(follows).values({ followerId, followingId })
+    .onConflictDoNothing()
+    .catch(err => console.error('[pg-shadow-write] followUser:', err));
+
   return true;
 }
 
@@ -178,6 +203,10 @@ export async function unfollowUser(followerId: string, followingId: string): Pro
     redis.srem(`following:${followerId}`, followingId),
     redis.srem(`followers:${followingId}`, followerId),
   ]);
+
+  db.delete(follows)
+    .where(and(eq(follows.followerId, followerId), eq(follows.followingId, followingId)))
+    .catch(err => console.error('[pg-shadow-write] unfollowUser:', err));
 }
 
 export async function isFollowing(followerId: string, followingId: string): Promise<boolean> {

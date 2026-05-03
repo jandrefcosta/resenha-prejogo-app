@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
 import { customAlphabet } from 'nanoid';
+import { sql } from 'drizzle-orm';
 import { redis } from './redisCache';
+import { db } from './db';
+import { boloes, bolaoMembers, palpites, scores as scoresTable, bolaoRankings, globalRankings } from './db/schema';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -59,6 +62,12 @@ export async function createBolao(
   pipeline.zadd(`bolao:${id}:ranking`, { score: 0, member: adminId });
   await pipeline.exec();
 
+  const createdAt = new Date(meta.criadoEm);
+  db.insert(boloes).values({ id, adminId, nome, codigo, createdAt })
+    .onConflictDoNothing()
+    .then(() => db.insert(bolaoMembers).values({ bolaoId: id, userId: adminId, joinedAt: createdAt }).onConflictDoNothing())
+    .catch(err => console.error('[pg-shadow-write] createBolao:', err));
+
   return meta;
 }
 
@@ -80,6 +89,10 @@ export async function joinBolao(bolaoId: string, userId: string): Promise<void> 
   // Seed ranking entry com pts atuais do global (ou 0 se novo)
   pipeline.zadd(`bolao:${bolaoId}:ranking`, { nx: true }, { score: 0, member: userId });
   await pipeline.exec();
+
+  db.insert(bolaoMembers).values({ bolaoId, userId })
+    .onConflictDoNothing()
+    .catch(err => console.error('[pg-shadow-write] joinBolao:', err));
 }
 
 export async function getUserBoloes(userId: string): Promise<string[]> {
@@ -118,11 +131,12 @@ export async function savePalpite(
   home: number,
   away: number,
 ): Promise<void> {
+  const now = new Date();
   const palpite: Palpite = {
     home,
     away,
     locked: false,
-    ts: new Date().toISOString(),
+    ts: now.toISOString(),
   };
   const pipeline = redis.pipeline();
   pipeline.set(`palpite:${userId}:${fixtureId}`, palpite);
@@ -131,6 +145,13 @@ export async function savePalpite(
   // Indexar fixtureId por userId para GET /api/palpites
   pipeline.sadd(`palpite:user:${userId}:fixtures`, fixtureId);
   await pipeline.exec();
+
+  db.insert(palpites).values({ userId, fixtureId, homeGoals: home, awayGoals: away, createdAt: now, updatedAt: now })
+    .onConflictDoUpdate({
+      target: [palpites.userId, palpites.fixtureId],
+      set: { homeGoals: home, awayGoals: away, updatedAt: now },
+    })
+    .catch(err => console.error('[pg-shadow-write] savePalpite:', err));
 }
 
 export async function getPalpite(userId: string, fixtureId: string): Promise<Palpite | null> {
@@ -171,6 +192,10 @@ export async function saveScore(
   outcome: Score['outcome'],
 ): Promise<void> {
   await redis.set(`score:${userId}:${fixtureId}`, { pts, outcome } satisfies Score);
+
+  db.insert(scoresTable).values({ userId, fixtureId, points: pts, outcome })
+    .onConflictDoNothing()
+    .catch(err => console.error('[pg-shadow-write] saveScore:', err));
 }
 
 export async function getScore(userId: string, fixtureId: string): Promise<Score | null> {
@@ -190,6 +215,23 @@ export async function incrementUserPoints(userId: string, pts: number): Promise<
   if (failed.length > 0) {
     throw new Error(`incrementUserPoints: ${failed.length} pipeline command(s) failed for userId=${userId}`);
   }
+
+  const now = new Date();
+  const pgWrites = [
+    db.insert(globalRankings).values({ userId, totalPoints: pts })
+      .onConflictDoUpdate({
+        target: globalRankings.userId,
+        set: { totalPoints: sql`${globalRankings.totalPoints} + ${pts}`, updatedAt: now },
+      }),
+    ...bolaoIds.map(bolaoId =>
+      db.insert(bolaoRankings).values({ bolaoId, userId, totalPoints: pts })
+        .onConflictDoUpdate({
+          target: [bolaoRankings.bolaoId, bolaoRankings.userId],
+          set: { totalPoints: sql`${bolaoRankings.totalPoints} + ${pts}`, updatedAt: now },
+        })
+    ),
+  ];
+  Promise.all(pgWrites).catch(err => console.error('[pg-shadow-write] incrementUserPoints:', err));
 }
 
 // ─── Pontuação ────────────────────────────────────────────────────────────────
