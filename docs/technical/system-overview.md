@@ -28,7 +28,7 @@
 | Next.js | 16.2.1 | Framework full-stack (App Router) |
 | React | 19.2.4 | UI runtime |
 | TypeScript | ^5 | Linguagem |
-| Node.js | LTS | Runtime serverless (Vercel) |
+| Node.js | LTS | Runtime (Railway) |
 | Tailwind CSS | ^4 | Estilização utility-first |
 
 ### Serviços Externos
@@ -39,10 +39,9 @@
 | Upstash Ratelimit | `@upstash/ratelimit ^2.0` | Rate limiting sliding window |
 | Google Gemini 2.5 Flash | `@google/genai ^1.47` | Descoberta de transmissores (AI + Google Search) |
 | Resend | `^6.12.2` | Envio transacional de emails |
-| Vercel | — | Deploy, Edge CDN, Analytics |
+| Railway | — | Deploy, hosting, cron jobs |
 | Sentry | `@sentry/nextjs ^10.47` | Error tracking client + server |
 | Microsoft Clarity | — | Heatmaps e session replay |
-| Vercel Analytics | `@vercel/analytics ^2.0` | Page views e Web Vitals |
 
 ### Autenticação e Segurança
 

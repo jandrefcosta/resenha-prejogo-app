@@ -9,8 +9,8 @@
                     └──────┬──────┘
                            │ HTTPS
                     ┌──────▼──────┐
-                    │   Vercel    │
-                    │  Edge/Node  │
+                    │   Railway   │
+                    │    Node     │
                     │ Next.js 16  │
                     └──────┬──────┘
               ┌────────────┼────────────┐
@@ -36,12 +36,12 @@
 | UI Runtime | React | 19.2.4 |
 | Linguagem | TypeScript | 5.x |
 | Estilização | Tailwind CSS | 4.x |
-| Deploy | Vercel | — |
+| Deploy | Railway | — |
 | Cache distribuído | Upstash Redis | @upstash/redis ^1.37 |
+| Banco de dados | PostgreSQL (Railway) | drizzle-orm ^0.45 |
 | Rate limiting | Upstash Ratelimit | @upstash/ratelimit ^2.0 |
 | IA | Google Gemini 2.5 Flash | @google/genai ^1.47 |
 | Monitoramento | Sentry | @sentry/nextjs ^10.47 |
-| Analytics | Vercel Analytics | @vercel/analytics ^2.0 |
 | Ícones | Heroicons | @heroicons/react ^2.2 |
 
 ---

@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next';
 import { Barlow, Barlow_Condensed } from 'next/font/google';
-import { Analytics } from '@vercel/analytics/next';
 import Script from 'next/script';
 import { ThemeProvider } from '@/components/ThemeProvider';
 import { InitialLoader } from '@/components/InitialLoader';
@@ -28,7 +27,6 @@ const barlowCondensed = Barlow_Condensed({
 
 function getBaseUrl(): URL {
   if (process.env.NEXT_PUBLIC_BASE_URL) return new URL(process.env.NEXT_PUBLIC_BASE_URL);
-  if (process.env.VERCEL_URL) return new URL(`https://${process.env.VERCEL_URL}`);
   return new URL('https://www.resenhaprejogo.app');
 }
 
@@ -95,7 +93,6 @@ export default function RootLayout({
             <SocialDrawer />
           </AuthProvider>
         </ThemeProvider>
-        <Analytics />
         {GA_MEASUREMENT_ID && (
           <>
             <Script

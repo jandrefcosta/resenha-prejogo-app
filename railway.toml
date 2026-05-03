@@ -9,3 +9,27 @@ nixPkgs = ["nodejs_20"]
 startCommand = "npm run start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
+
+# ─── Cron Jobs ────────────────────────────────────────────────────────────────
+# Configure these in the Railway dashboard as separate Cron services.
+# Each cron service sends an HTTP POST to the app with the Authorization header.
+#
+# Required env var: CRON_SECRET  (same value set on the main service)
+#
+# Job 1 — Match docs (CBF round summaries)
+#   Schedule : 0 13 * * *   (daily at 13:00 UTC)
+#   URL      : https://<your-domain>/api/admin/run-docs-cron
+#   Method   : POST
+#   Header   : Authorization: Bearer $CRON_SECRET
+#
+# Job 2 — Bolão score cron (calculate scores for finished Copa 2026 matches)
+#   Schedule : 0 3 * * *    (daily at 03:00 UTC)
+#   URL      : https://<your-domain>/api/bolao/score
+#   Method   : POST
+#   Header   : Authorization: Bearer $CRON_SECRET
+#
+# Job 3 — Snapshot matches (persist finished matches to Postgres)
+#   Schedule : 0 6 * * 1    (every Monday at 06:00 UTC)
+#   URL      : https://<your-domain>/api/cron/snapshot-matches
+#   Method   : GET
+#   Header   : Authorization: Bearer $CRON_SECRET
