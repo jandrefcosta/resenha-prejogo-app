@@ -1,6 +1,6 @@
-import { notFound } from 'next/navigation';
+import { notFound, redirect } from 'next/navigation';
 import { getCurrentUser } from '@/lib/auth';
-import { getBolaoMeta, getRanking, getUserRankPosition } from '@/lib/bolaoRedis';
+import { getBolaoMeta, getRanking, getUserRankPosition, joinBolao } from '@/lib/bolaoRedis';
 import { redis } from '@/lib/redisCache';
 import { RankingTable } from '@/components/bolao/RankingTable';
 import { TrophyIcon, PencilIcon, ChevronLeftIcon } from '@heroicons/react/20/solid';
@@ -38,7 +38,36 @@ export default async function BolaoPrivadoPage({
 
   // Check membership
   const isMember = await redis.sismember(`bolao:${id}:members`, user.sub);
-  if (!isMember) notFound();
+  if (!isMember) {
+    async function joinAction() {
+      'use server';
+      await joinBolao(id, user!.sub);
+      redirect(`/bolao/${id}`);
+    }
+
+    const memberCount = await redis.scard(`bolao:${id}:members`);
+
+    return (
+      <main className="max-w-lg mx-auto px-4 py-12 text-center space-y-4">
+        <TrophyIcon className="h-12 w-12 text-yellow-400 mx-auto" />
+        <h1 className="text-xl font-bold text-zinc-100">{meta.nome}</h1>
+        <p className="text-zinc-400 text-sm">
+          {memberCount} participante{memberCount !== 1 ? 's' : ''} · Você foi convidado para este bolão.
+        </p>
+        <form action={joinAction}>
+          <button
+            type="submit"
+            className="inline-block bg-green-600 hover:bg-green-700 text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
+          >
+            Entrar no bolão
+          </button>
+        </form>
+        <Link href="/bolao" className="block text-xs text-zinc-500 hover:text-zinc-300">
+          Ver ranking global
+        </Link>
+      </main>
+    );
+  }
 
   const rawRanking = await getRanking(`bolao:${id}:ranking`, 100);
   const userKeys = rawRanking.map((e) => `user:${e.member}`);

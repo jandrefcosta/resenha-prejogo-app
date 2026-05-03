@@ -50,6 +50,9 @@ export default function OgImage() {
         {/* Title */}
         <div
           style={{
+            display: 'flex',
+            flexWrap: 'wrap',
+            alignItems: 'baseline',
             color: '#ffffff',
             fontSize: 80,
             fontWeight: 800,
@@ -58,7 +61,7 @@ export default function OgImage() {
             letterSpacing: '-0.02em',
           }}
         >
-          Resenha{' '}
+          <span>Resenha&nbsp;</span>
           <span style={{ color: '#E8212B' }}>Pré-Jogo</span>
         </div>
 
