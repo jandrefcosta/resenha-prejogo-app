@@ -1,14 +1,7 @@
 import { GoogleGenAI } from '@google/genai';
 import type { CbfBoletimData, CbfSumulaData } from '@/lib/cbfDocTypes';
 
-// Called as a factory (without `new`) so vitest arrow-function mocks work in tests.
-// The real SDK class is constructable with or without `new` via its Proxy wrapper.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const _GoogleGenAI = GoogleGenAI as unknown as (opts: { apiKey: string }) => InstanceType<typeof GoogleGenAI>;
-
-function getGemini(): InstanceType<typeof GoogleGenAI> {
-  return _GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY ?? '' });
-}
+const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY ?? '' });
 
 const SUMULA_PROMPT = `Extract all data from this CBF "Súmula de Arbitragem" PDF and return ONLY a JSON object — no markdown, no extra text.
 
@@ -65,7 +58,7 @@ export async function parseSumulaWithGemini(
 ): Promise<CbfSumulaData | null> {
   try {
     const base64 = Buffer.from(buffer).toString('base64');
-    const response = await getGemini().models.generateContent({
+    const response = await gemini.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
         {
@@ -105,7 +98,7 @@ export async function parseBoletimWithGemini(
 ): Promise<CbfBoletimData | null> {
   try {
     const base64 = Buffer.from(buffer).toString('base64');
-    const response = await getGemini().models.generateContent({
+    const response = await gemini.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [
         {

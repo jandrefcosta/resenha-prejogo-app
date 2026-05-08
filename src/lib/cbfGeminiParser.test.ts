@@ -1,11 +1,11 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-// Mock @google/genai before importing the module under test
-const mockGenerateContent = vi.fn();
+const mockGenerateContent = vi.hoisted(() => vi.fn());
+
 vi.mock('@google/genai', () => ({
-  GoogleGenAI: vi.fn().mockImplementation(() => ({
-    models: { generateContent: mockGenerateContent },
-  })),
+  GoogleGenAI: vi.fn().mockImplementation(function() {
+    return { models: { generateContent: mockGenerateContent } };
+  }),
 }));
 
 import { parseSumulaWithGemini, parseBoletimWithGemini } from './cbfGeminiParser';
