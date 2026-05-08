@@ -57,8 +57,8 @@ describe('POST /api/admin/force-reprocess-docs', () => {
     mockIsAdminRequest.mockResolvedValue(true);
 
     mockGetCbfRound.mockImplementation(async (r: number) => {
-      if (r === 1) return { status: 'finished', matches: [MATCH] };
-      return { status: 'scheduled', matches: [] };
+      if (r === 1) return { round: 1, status: 'finished', matches: [MATCH], fetchedAt: '', ttlSeconds: 0 } as any;
+      return { round: r, status: 'scheduled', matches: [], fetchedAt: '', ttlSeconds: 0 } as any;
     });
 
     mockResolvePdfUrls.mockResolvedValue({ sumula: 'http://cbf.com/s.pdf', boletim: 'http://cbf.com/b.pdf' });
