@@ -14,6 +14,8 @@
     "seed:past-results": "tsx --env-file=.env.local scripts/seed-past-results.ts",
     "seed:all": "tsx --env-file=.env.local scripts/seed-all.ts",
     "test:e2e": "playwright test",
+    "test:unit": "vitest run",
+    "test:unit:watch": "vitest",
     "docs:download": "node scripts/download-pdfs.mjs",
     "docs:parse": "node scripts/parse-pdfs.mjs",
     "docs:build": "node scripts/build-match-docs.mjs",
@@ -58,6 +60,7 @@
     "serwist": "^9.5.7",
     "tailwindcss": "^4",
     "tsx": "^4.21.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.1.5"
   }
 }
