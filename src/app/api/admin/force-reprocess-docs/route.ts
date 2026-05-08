@@ -23,13 +23,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const totals = { rounds: 0, processed: 0, errors: 0, unavailable: 0 };
 
   for (let r = 1; r <= 38; r++) {
-    let round: Awaited<ReturnType<typeof getCbfRound>>;
-    try {
-      round = await getCbfRound(r);
-    } catch {
-      continue;
-    }
-    if (round.status !== 'finished') continue;
+    const round = await getCbfRound(r).catch(() => null);
+    if (!round || round.status !== 'finished') continue;
     totals.rounds++;
 
     for (const match of round.matches) {
@@ -71,7 +66,7 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   }
 
   const result: ReprocessResult = {
-    ok: true,
+    ok: totals.rounds > 0,
     ...totals,
     durationMs: Date.now() - start,
   };
