@@ -1,6 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# dependencies
+# ──────────────────────────────────────────────────────────────
+# Dependencies
+# ──────────────────────────────────────────────────────────────
 /node_modules
 /.pnp
 .pnp.*
@@ -10,66 +12,70 @@
 !.yarn/releases
 !.yarn/versions
 
-# testing
+# ──────────────────────────────────────────────────────────────
+# Build & runtime artifacts
+# ──────────────────────────────────────────────────────────────
+/.next/
+/out/
+/build
+/dist
+
+# Next.js + Serwist generated service worker files
+public/sw.js
+public/sw.js.map
+public/swe-worker*
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# ──────────────────────────────────────────────────────────────
+# Testing
+# ──────────────────────────────────────────────────────────────
 /coverage
 /test-results
 /playwright-report
 /blob-report
 playwright/.cache
 
-# next.js
-/.next/
-/out/
+# ──────────────────────────────────────────────────────────────
+# Environment & secrets
+# ──────────────────────────────────────────────────────────────
+.env*
+!.env.example   # uncomment when an example file exists
 
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# ──────────────────────────────────────────────────────────────
+# Logs & debug
+# ──────────────────────────────────────────────────────────────
+*.log
+logs/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
-.env*
+# ──────────────────────────────────────────────────────────────
+# Tooling caches
+# ──────────────────────────────────────────────────────────────
+/.cache              # Local API cache (Gemini broadcasters etc.)
+.eslintcache
+.stylelintcache
 
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-
-# Serwist — generated service worker files
-public/sw.js
-public/sw.js.map
-public/swe-worker*
-
-# local API cache
-/.cache
-
-# graphify temp files (intermediate build artifacts)
+# ──────────────────────────────────────────────────────────────
+# Graphify (auto-generated knowledge graph artifacts)
+# ──────────────────────────────────────────────────────────────
+/graphify-out/
 .graphify_python
 .graphify_*.json
 .graphify_uncached.txt
 
-# graphify extraction cache (large, regenerable)
-/graphify-out/cache/
-
-requests.http
-
-# Claude Code local settings
-.claude/settings.json
-
-# PDF pipeline — arquivos locais gerados por docs:update (regeneráveis, 50MB+)
+# ──────────────────────────────────────────────────────────────
+# PDF pipeline (regenerable, 50MB+)
+# ──────────────────────────────────────────────────────────────
 /scripts/pdfs/
 /scripts/round-map.json
 
-# Debug scripts temporários
+# Temporary debug scripts (remove these once features are stable)
 scripts/_debug_pdf.mjs
 scripts/debug-pdf.ts
 scripts/debug-regex.mjs
@@ -77,5 +83,60 @@ scripts/reparse-boletins.mjs
 scripts/debug-boletim-text.ts
 scripts/diagnose-match-docs.ts
 scripts/check-status-urls.ts
+
+# ──────────────────────────────────────────────────────────────
+# Python (used by some skills under .claude/skills/)
+# ──────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.python-version
+
+# ──────────────────────────────────────────────────────────────
+# Local API requests file
+# ──────────────────────────────────────────────────────────────
+requests.http
+
+# ──────────────────────────────────────────────────────────────
+# Vercel
+# ──────────────────────────────────────────────────────────────
+.vercel
+
+# ──────────────────────────────────────────────────────────────
+# Claude Code (machine-specific settings only)
+# ──────────────────────────────────────────────────────────────
+.claude/settings.json
+.claude/.cache/
+
+# ──────────────────────────────────────────────────────────────
 # Git worktrees
+# ──────────────────────────────────────────────────────────────
 .worktrees/
+
+# ──────────────────────────────────────────────────────────────
+# IDE / editor
+# ──────────────────────────────────────────────────────────────
+.idea/
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+!.vscode/launch.json   # remove if launch.json is personal
+*.suo
+*.swp
+*.swo
+
+# ──────────────────────────────────────────────────────────────
+# OS-specific
+# ──────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# ──────────────────────────────────────────────────────────────
+# Misc
+# ──────────────────────────────────────────────────────────────
+*.pem
+tmp/
+temp/
