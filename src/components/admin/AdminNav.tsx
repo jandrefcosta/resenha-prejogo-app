@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/admin/cache', label: 'Cache' },
   { href: '/admin/clubs', label: 'Clubes' },
   { href: '/admin/sugestoes', label: 'Sugestões' },
+  { href: '/admin/docs', label: 'Documentos' },
 ];
 
 export function AdminNav() {
