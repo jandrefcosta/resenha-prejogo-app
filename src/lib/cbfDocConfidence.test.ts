@@ -40,14 +40,14 @@ describe('scoreSumula', () => {
     expect(scoreSumula(fullSumula)).toBe(1.0);
   });
 
-  it('returns 0.0 when both teams have no titulares and no referees', () => {
+  it('returns 0.0 when all critical fields are null or empty (image-based PDF failure)', () => {
     const empty: CbfSumulaData = {
       ...fullSumula,
       mandante: { ...emptyTeam },
       visitante: { ...emptyTeam },
       arbitros: [],
-      gols: [],
-      cartoes: [],
+      gols: null as unknown as [],
+      cartoes: null as unknown as [],
     };
     expect(scoreSumula(empty)).toBe(0);
   });
@@ -61,14 +61,14 @@ describe('scoreSumula', () => {
     expect(scoreSumula(partial)).toBeGreaterThanOrEqual(CONFIDENCE_THRESHOLD);
   });
 
-  it('falls below threshold when both teams are empty regardless of referees', () => {
+  it('falls below threshold when both teams are empty and gols/cartoes are null', () => {
     const worst: CbfSumulaData = {
       ...fullSumula,
       mandante: { ...emptyTeam },
       visitante: { ...emptyTeam },
       arbitros: [],
-      gols: [],
-      cartoes: [],
+      gols: null as unknown as [],
+      cartoes: null as unknown as [],
     };
     expect(scoreSumula(worst)).toBeLessThan(CONFIDENCE_THRESHOLD);
   });
