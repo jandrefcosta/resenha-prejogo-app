@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(npx drizzle-kit *)",
+      "PowerShell(npm install *)",
+      "PowerShell(npm run *)",
+      "Bash(Select-String -Pattern \"cbfDocConfidence|passed|failed|error\" -Context 2)",
+      "Bash(node -e \"const { vi } = require\\('vitest'\\); const f = vi.fn\\(\\).mockImplementation\\(\\(\\) => \\({ x: 1 }\\)\\); console.log\\(new f\\(\\)\\)\")"
+    ]
+  }
+}

@@ -3,7 +3,7 @@ import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 import { redis } from '@/lib/redisCache';
 
 export async function POST(req: NextRequest) {
-  if (!isAdminRequest(req)) {
+  if (!(await isAdminRequest(req))) {
     return unauthorizedAdminResponse();
   }
 

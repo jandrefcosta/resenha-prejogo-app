@@ -15,7 +15,7 @@ const SYSTEM_PROMPT =
   'Canais: Globo, SporTV, SporTV 2, Premiere, CazéTV, Amazon Prime Video, TNT Sports, Max, ESPN, Band.';
 
 export async function GET(req: NextRequest) {
-  if (!isAdminRequest(req)) {
+  if (!(await isAdminRequest(req))) {
     return unauthorizedAdminResponse();
   }
 

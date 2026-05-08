@@ -6,7 +6,7 @@ import type { ClubTheme } from '@/lib/types';
 const clubs = clubsData as ClubTheme[];
 
 export async function GET(req: import('next/server').NextRequest) {
-  if (!isAdminRequest(req)) {
+  if (!(await isAdminRequest(req))) {
     return unauthorizedAdminResponse();
   }
   const key = process.env.API_FOOTBALL_KEY;

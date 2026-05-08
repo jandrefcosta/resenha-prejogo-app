@@ -12,7 +12,7 @@ const CLUB_COMPETITIONS = COMPETITIONS.filter((c) => c.scope === 'club');
 export const dynamic = 'force-dynamic';
 
 export async function GET(req: NextRequest) {
-  if (!isAdminRequest(req)) {
+  if (!(await isAdminRequest(req))) {
     return unauthorizedAdminResponse();
   }
 

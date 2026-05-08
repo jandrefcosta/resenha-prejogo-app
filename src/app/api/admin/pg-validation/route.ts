@@ -2,17 +2,17 @@
  * GET /api/admin/pg-validation
  *
  * Compares entity counts between Redis and Postgres.
- * Protected by CRON_SECRET (same as other admin endpoints).
+ * Auth gated by middleware (admin cookie OR DEBUG_SECRET Bearer).
  *
  * Returns { ok: boolean, checks: Record<string, { redis: number; pg: number; match: boolean }> }
  */
 
-import { type NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import { count } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import {
   users, boloes, bolaoMembers, palpites, scores,
-  bolaoRankings, globalRankings, posts, postLikes, follows, suggestions,
+  globalRankings, posts, follows,
   matchSnapshots,
 } from '@/lib/db/schema';
 import { redis } from '@/lib/redisCache';
@@ -37,15 +37,8 @@ async function pgCount(table: Parameters<typeof db.select>[0] extends undefined 
   return Number(row?.n ?? 0);
 }
 
-export async function GET(req: NextRequest) {
-  if (!process.env.CRON_SECRET) {
-    return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
-  }
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-
+export async function GET() {
+  // Auth handled by middleware (admin cookie OR DEBUG_SECRET Bearer).
   const [
     redisUsers, pgUsers,
     redisBoloes, pgBoloes,

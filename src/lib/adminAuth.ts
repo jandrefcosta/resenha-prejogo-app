@@ -1,5 +1,6 @@
 import { timingSafeEqual } from 'crypto';
 import { NextResponse, type NextRequest } from 'next/server';
+import { ADMIN_COOKIE, verifyAdminToken } from './adminSession';
 
 function getBearerToken(req: NextRequest): string | null {
   const auth = req.headers.get('authorization');
@@ -15,12 +16,21 @@ function safeEquals(received: string, expected: string): boolean {
   return timingSafeEqual(receivedBuffer, expectedBuffer);
 }
 
-export function isAdminRequest(req: NextRequest): boolean {
+/**
+ * Accepts either:
+ *  - `Authorization: Bearer <DEBUG_SECRET>` header (cron, scripts)
+ *  - `sc_admin` cookie set after admin login (browser)
+ */
+export async function isAdminRequest(req: NextRequest): Promise<boolean> {
   const expected = process.env.DEBUG_SECRET;
-  const received = getBearerToken(req);
 
-  if (!expected || !received) return false;
-  return safeEquals(received, expected);
+  // Bearer fast path
+  const bearer = getBearerToken(req);
+  if (expected && bearer && safeEquals(bearer, expected)) return true;
+
+  // Cookie path
+  const cookie = req.cookies.get(ADMIN_COOKIE)?.value;
+  return verifyAdminToken(cookie);
 }
 
 export function unauthorizedAdminResponse(): NextResponse {
