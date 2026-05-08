@@ -212,17 +212,49 @@ No ADRs written yet. Candidates:
 
 ## Known issues / technical debt
 
+### Product & infrastructure gaps
+
 - 🔴 **Boletim PDFs are image-based** — `unpdf` cannot extract text from
   them; only súmula PDFs yield structured data. This limits Ficha do Jogo
   for many matches. A solution (OCR, alternative source, or Gemini vision)
   has not been decided yet.
-- 🟡 **Social feed incomplete** — routes and components exist but the
-  feature is not wired into the main UI.
 - 🟡 **No Postgres schema locked down** — Drizzle ORM is a dependency but
-  the data model split between Postgres (primary) and Redis (secondary) is
-  still being defined.
+  the data model split between Postgres (primary) and Redis (secondary)
+  is still being defined.
 - 🟡 **No CI pipeline** — only Railway auto-deploy on `main`; no lint,
   type-check, or test gate before deploy.
+
+### Work in progress (features partially built)
+
+- 🟡 **Bolão evolution** — `bolaoRedis.ts` has 5 functions ready but not
+  wired: `generateInviteCode`, `scoreExists`, `saveScore`, `getScore`,
+  `incrementUserPoints` (+ `RankingEntry` type). Pending: invite-code
+  flow, scoring system, ranking display.
+- 🟡 **Modals built but not plugged into UI** — `SuggestionModal`,
+  `StandingsModal`, `GroupStandingsModal` exist in `src/components/`.
+- 🟡 **CBF/Conmebol official-source ingestion** — parsers ready
+  (`parseBoletim`, `parseSumula` in `cbfDocParser.ts`) plus
+  `getConmebolFinishedByTeam` in `conmebolApi.ts`. Pending: scheduler,
+  persistence layer.
+- 🟡 **Social feed incomplete** — routes and components exist; functions
+  `hasUserLiked` and `deletePost` in `socialRedis.ts` ready but not
+  wired into the UI.
+
+### Public types kept intentionally
+
+These exports are not "dead" — they are public contracts of their
+modules, kept for current/future consumers:
+
+- `AuthUser` (`src/hooks/useAuth.ts`)
+- `AfPlayer`, `AfLineupTeam` (`src/lib/types.ts`) — API-Football contract
+- `ConmebolCompetitionSlug` (`src/lib/conmebolApi.ts`)
+- `CbfCardEntry` (`src/lib/cbfStandingsScraper.ts`)
+- `ClubValidation` (`src/lib/admin/clubsValidation.ts`)
+
+> **Maintenance rule:** when a WIP item gets wired (or definitively
+> dropped), update or remove the entry above. The `architect` agent uses
+> this section to decide what counts as expected vs. surprising.
+
 
 ## Extension points
 

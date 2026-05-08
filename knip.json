@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "entry": [
+    "src/app/**/page.{ts,tsx}",
+    "src/app/**/layout.{ts,tsx}",
+    "src/app/**/route.{ts,tsx}",
+    "src/app/sw.ts",
+    "scripts/**/*.ts"
+  ],
+  "project": ["src/**/*.{ts,tsx}"],
+  "ignoreBinaries": ["python"],
+  "ignoreDependencies": ["graphify", "tailwindcss"]
+}

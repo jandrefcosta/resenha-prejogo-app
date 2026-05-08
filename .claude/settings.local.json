@@ -5,7 +5,11 @@
       "PowerShell(npm install *)",
       "PowerShell(npm run *)",
       "Bash(Select-String -Pattern \"cbfDocConfidence|passed|failed|error\" -Context 2)",
-      "Bash(node -e \"const { vi } = require\\('vitest'\\); const f = vi.fn\\(\\).mockImplementation\\(\\(\\) => \\({ x: 1 }\\)\\); console.log\\(new f\\(\\)\\)\")"
+      "Bash(node -e \"const { vi } = require\\('vitest'\\); const f = vi.fn\\(\\).mockImplementation\\(\\(\\) => \\({ x: 1 }\\)\\); console.log\\(new f\\(\\)\\)\")",
+      "Bash(not exist *)",
+      "Bash(npx vitest *)",
+      "Bash(./node_modules/.bin/tsc --noEmit)",
+      "Bash(./node_modules/.bin/tsc --noEmit src/components/admin/DocsReprocessCard.tsx)"
     ]
   }
 }
