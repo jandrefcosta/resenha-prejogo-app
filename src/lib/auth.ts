@@ -23,7 +23,7 @@ export async function signToken(userId: string, jti: string): Promise<string> {
     .sign(secret);
 }
 
-export async function verifyToken(token: string): Promise<JwtPayload | null> {
+async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
     const { payload } = await jwtVerify(token, secret);
     if (!payload.sub || !payload.jti) return null;

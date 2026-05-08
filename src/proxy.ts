@@ -4,7 +4,7 @@ import { ADMIN_COOKIE, verifyAdminToken } from '@/lib/adminSession';
 
 const ADMIN_PUBLIC_PATHS = new Set(['/admin/login', '/api/admin/login']);
 
-export async function middleware(req: NextRequest) {
+export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
   // Admin paths (skip user gate entirely)
