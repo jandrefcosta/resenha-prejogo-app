@@ -13,12 +13,13 @@
 
 import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 import { deleteCache, redis } from '@/lib/redisCache';
+import { deletePdfs } from '@/lib/cbfPdfStore';
 import { NextRequest, NextResponse } from 'next/server';
 
 export const runtime = 'nodejs';
 
 export async function DELETE(req: NextRequest): Promise<NextResponse> {
-  if (!isAdminRequest(req)) {
+  if (!(await isAdminRequest(req))) {
     return unauthorizedAdminResponse();
   }
 
@@ -38,6 +39,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
       deleteCache(`cbf:match:${idJogo}:docs:status`),
       deleteCache(`cbf:match:${idJogo}:sumula`),
       deleteCache(`cbf:match:${idJogo}:boletim`),
+      deletePdfs(idJogo),
     ]);
     return NextResponse.json(
       { cleared: [idJogo] },
@@ -63,6 +65,7 @@ export async function DELETE(req: NextRequest): Promise<NextResponse> {
     deleteCache(`cbf:match:${id}:boletim`),
   ]);
   await Promise.all(deletes);
+  await Promise.all(idJogos.map((id) => deletePdfs(id)));
 
   return NextResponse.json(
     { cleared: idJogos, count: idJogos.length },
