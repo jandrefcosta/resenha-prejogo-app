@@ -59,7 +59,8 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
         const result = await processMatchDocuments(match);
         if (result.available) totals.processed++;
         else totals.unavailable++;
-      } catch {
+      } catch (err) {
+        console.error(`[force-reprocess-docs] idJogo=${idJogo} round=${r}`, err);
         totals.errors++;
       }
     }

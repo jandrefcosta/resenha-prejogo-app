@@ -77,7 +77,7 @@ export async function resolvePdfUrls(match: CbfMatchDetail): Promise<PdfUrlSet> 
   const urls: PdfUrlSet = {};
 
   // ── 1. From CBF API documentos field ─────────────────────────────────────
-  for (const doc of match.documentos) {
+  for (const doc of match.documentos ?? []) {
     const title = doc.title.toLowerCase();
     const url = doc.url;
     if (!url || !url.startsWith('http')) continue;
