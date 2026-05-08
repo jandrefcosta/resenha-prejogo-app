@@ -18,7 +18,10 @@
  * Subsequent calls are served from Redis cache (~50ms).
  */
 
-import { getCache, setCache, setCachePermanent } from '@/lib/redisCache';
+import { deleteCache, getCache, setCache, setCachePermanent } from '@/lib/redisCache';
+import { CONFIDENCE_THRESHOLD, scoreBoletim, scoreSumula } from '@/lib/cbfDocConfidence';
+import { parseBoletimWithGemini, parseSumulaWithGemini } from '@/lib/cbfGeminiParser';
+import { getPdf } from '@/lib/cbfPdfStore';
 import type { CbfMatchDetail } from '@/lib/types';
 import type {
   CbfBoletimData,
@@ -656,61 +659,90 @@ export async function processMatchDocuments(
 ): Promise<CbfMatchDocsResult> {
   const { idJogo } = match;
 
-  // ── Check sentinel cache ─────────────────────────────────────────────────
+  // ── 1. Sentinel check ───────────────────────────────────────────────────────
   const statusCached = await getCache<CbfDocStatus>(statusKey(idJogo));
-  if (statusCached) {
-    if (!statusCached.available) {
-      // Sentinel says not published — return early if checked recently
-      const ageMs = Date.now() - new Date(statusCached.checkedAt).getTime();
-      if (ageMs < TTL_NOT_AVAILABLE * 1000) {
-        return { available: false };
-      }
-    } else {
-      // Documents were found before — check if parsed data is cached
-      const [sumula, boletim] = await Promise.all([
-        getCache<CbfSumulaData>(sumulaKey(idJogo)),
-        getCache<CbfBoletimData>(boletimKey(idJogo)),
-      ]);
-      if (sumula || boletim) {
+  if (statusCached && !statusCached.available) {
+    const ageMs = Date.now() - new Date(statusCached.checkedAt).getTime();
+    if (ageMs < TTL_NOT_AVAILABLE * 1000) return { available: false };
+  }
+
+  // ── 2. Redis data check + confidence gate ───────────────────────────────────
+  if (statusCached?.available) {
+    const [sumula, boletim] = await Promise.all([
+      getCache<CbfSumulaData>(sumulaKey(idJogo)),
+      getCache<CbfBoletimData>(boletimKey(idJogo)),
+    ]);
+
+    if (sumula || boletim) {
+      const badSumula  = sumula  !== null && scoreSumula(sumula)   < CONFIDENCE_THRESHOLD;
+      const badBoletim = boletim !== null && scoreBoletim(boletim) < CONFIDENCE_THRESHOLD;
+
+      if (!badSumula && !badBoletim) {
         return { available: true, sumula: sumula ?? undefined, boletim: boletim ?? undefined };
       }
+
+      // Low-quality cached data — evict all keys and re-process
+      await Promise.all([
+        deleteCache(statusKey(idJogo)),
+        deleteCache(sumulaKey(idJogo)),
+        deleteCache(boletimKey(idJogo)),
+      ]);
     }
   }
 
-  // ── Resolve PDF URLs ─────────────────────────────────────────────────────
+  // ── 3. Resolve PDF URLs ─────────────────────────────────────────────────────
   const urls = await resolvePdfUrls(match);
 
-  if (!urls.sumula && !urls.boletim) {
-    // Documents not published yet
+  // ── 4. Fetch PDFs: Postgres first, CBF URL fallback ─────────────────────────
+  const [sumulaBuffer, boletimBuffer] = await Promise.all([
+    getPdf(idJogo, 'sumula').then((buf) => buf ?? (urls.sumula  ? downloadPdf(urls.sumula)  : null)),
+    getPdf(idJogo, 'boletim').then((buf) => buf ?? (urls.boletim ? downloadPdf(urls.boletim) : null)),
+  ]);
+
+  if (!sumulaBuffer && !boletimBuffer) {
     const sentinel: CbfDocStatus = { available: false, checkedAt: new Date().toISOString(), urls: {} };
     void setCache(statusKey(idJogo), sentinel, TTL_NOT_AVAILABLE);
     return { available: false };
   }
 
-  // ── Download and parse (parallel) ───────────────────────────────────────
-  const [sumulaResult, boletimResult] = await Promise.all([
-    urls.sumula
-      ? downloadPdf(urls.sumula).then((buf) => buf ? parseSumula(buf, idJogo) : null)
-      : Promise.resolve(null),
-    urls.boletim
-      ? downloadPdf(urls.boletim).then((buf) => buf ? parseBoletim(buf, idJogo) : null)
-      : Promise.resolve(null),
+  // ── 5. Parse with regex ─────────────────────────────────────────────────────
+  const [sumulaRegex, boletimRegex] = await Promise.all([
+    sumulaBuffer  ? parseSumula(sumulaBuffer, idJogo)  : Promise.resolve(null),
+    boletimBuffer ? parseBoletim(boletimBuffer, idJogo) : Promise.resolve(null),
   ]);
 
-  // ── Store results permanently ────────────────────────────────────────────
-  const sentinel: CbfDocStatus = {
-    available: true,
-    checkedAt: new Date().toISOString(),
-    urls,
-  };
+  // ── 6. Confidence check + Gemini fallback ───────────────────────────────────
+  let finalSumula = sumulaRegex;
+  if (sumulaRegex && scoreSumula(sumulaRegex) < CONFIDENCE_THRESHOLD && sumulaBuffer) {
+    const geminiResult = await parseSumulaWithGemini(sumulaBuffer, idJogo);
+    if (geminiResult) finalSumula = geminiResult;
+  }
+
+  let finalBoletim = boletimRegex;
+  if (boletimRegex && scoreBoletim(boletimRegex) < CONFIDENCE_THRESHOLD && boletimBuffer) {
+    const geminiResult = await parseBoletimWithGemini(boletimBuffer, idJogo);
+    if (geminiResult) finalBoletim = geminiResult;
+  }
+
+  // ── 7. Only store permanently if at least one result passes confidence ───────
+  const sumulaToStore  = finalSumula  && scoreSumula(finalSumula)   >= CONFIDENCE_THRESHOLD ? finalSumula  : null;
+  const boletimToStore = finalBoletim && scoreBoletim(finalBoletim) >= CONFIDENCE_THRESHOLD ? finalBoletim : null;
+
+  if (!sumulaToStore && !boletimToStore) {
+    const sentinel: CbfDocStatus = { available: false, checkedAt: new Date().toISOString(), urls };
+    void setCache(statusKey(idJogo), sentinel, TTL_NOT_AVAILABLE);
+    return { available: false };
+  }
+
+  const sentinel: CbfDocStatus = { available: true, checkedAt: new Date().toISOString(), urls };
   const writes: Promise<void>[] = [setCachePermanent(statusKey(idJogo), sentinel)];
-  if (sumulaResult)  writes.push(setCachePermanent(sumulaKey(idJogo),  sumulaResult));
-  if (boletimResult) writes.push(setCachePermanent(boletimKey(idJogo), boletimResult));
+  if (sumulaToStore)  writes.push(setCachePermanent(sumulaKey(idJogo),  sumulaToStore));
+  if (boletimToStore) writes.push(setCachePermanent(boletimKey(idJogo), boletimToStore));
   await Promise.all(writes);
 
   return {
     available: true,
-    sumula:  sumulaResult  ?? undefined,
-    boletim: boletimResult ?? undefined,
+    sumula:  sumulaToStore  ?? undefined,
+    boletim: boletimToStore ?? undefined,
   };
 }
