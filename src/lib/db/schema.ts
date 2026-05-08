@@ -7,7 +7,14 @@ import {
   primaryKey,
   jsonb,
   index,
+  customType,
 } from 'drizzle-orm/pg-core';
+
+// ─── Custom types ──────────────────────────────────────────────────────────────
+
+const bytea = customType<{ data: Buffer }>({
+  dataType() { return 'bytea'; },
+});
 
 // ─── Usuários ──────────────────────────────────────────────────────────────────
 
@@ -190,6 +197,19 @@ export const matchSnapshots = pgTable('match_snapshots', {
   index('idx_ms_source_league').on(t.source, t.leagueId),
 ]);
 
+// ─── PDF Files ─────────────────────────────────────────────────────────────────
+
+export const pdfFiles = pgTable('pdf_files', {
+  idJogo:       text('id_jogo').notNull(),
+  type:         text('type').notNull(),   // 'sumula' | 'boletim' | 'relatorio'
+  content:      bytea('content').notNull(),
+  url:          text('url'),
+  downloadedAt: timestamp('downloaded_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [
+  primaryKey({ columns: [t.idJogo, t.type] }),
+  index('idx_pdf_files_id_jogo').on(t.idJogo),
+]);
+
 // ─── Tipos inferidos ───────────────────────────────────────────────────────────
 
 export type User            = typeof users.$inferSelect;
@@ -204,3 +224,5 @@ export type Post            = typeof posts.$inferSelect;
 export type NewPost         = typeof posts.$inferInsert;
 export type MatchSnapshot   = typeof matchSnapshots.$inferSelect;
 export type NewMatchSnapshot = typeof matchSnapshots.$inferInsert;
+export type PdfFile         = typeof pdfFiles.$inferSelect;
+export type NewPdfFile      = typeof pdfFiles.$inferInsert;

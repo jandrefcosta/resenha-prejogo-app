@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1778244597172,
+      "tag": "0000_add_pdf_files",
+      "breakpoints": true
+    }
+  ]
+}
