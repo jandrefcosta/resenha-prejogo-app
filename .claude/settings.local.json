@@ -9,7 +9,8 @@
       "Bash(not exist *)",
       "Bash(npx vitest *)",
       "Bash(./node_modules/.bin/tsc --noEmit)",
-      "Bash(./node_modules/.bin/tsc --noEmit src/components/admin/DocsReprocessCard.tsx)"
+      "Bash(./node_modules/.bin/tsc --noEmit src/components/admin/DocsReprocessCard.tsx)",
+      "Bash(Remove-Item *)"
     ]
   }
 }

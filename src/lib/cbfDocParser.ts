@@ -193,8 +193,23 @@ export async function parseBoletim(
   const { extractText } = await import('unpdf');
   const { text: pages } = await extractText(new Uint8Array(buffer), { mergePages: false });
 
-  // ── Estádio / data from header (page 1) ──────────────────────────────────
   const page1 = pages[0] ?? '';
+  const allPagesText = pages.join('\n');
+
+  // ── Format detection ──────────────────────────────────────────────────────
+  // FPF (Federação Paulista de Futebol) boletins use a different multi-column
+  // layout where the PDF extractor reads the price/arrecadação column first
+  // and the localidades/counts column second — so values and labels are
+  // separated in the extracted text.
+  const isFpf = allPagesText.includes('Federação Paulista de Futebol');
+
+  if (isFpf) {
+    return parseBoletimFpf(pages, allPagesText, idJogo);
+  }
+
+  // ── CBF format ────────────────────────────────────────────────────────────
+
+  // ── Estádio / data from header (page 1) ──────────────────────────────────
   // Old format: "ESTÁDIO ARENA MRV - BELO HORIZONTE - MG"  +  "DATA 28/01/2026 19:00"
   // New format: "Data: 05/04/2026 19:30 ESTÁDIO"  +  "Jogo: Team x Team  Neo Química Arena"
   const estadioMatch =
@@ -204,23 +219,19 @@ export async function parseBoletim(
     page1.match(/Data:\s*(\d{2}\/\d{2}\/\d{4})/i) ??
     page1.match(/DATA\s+(\d{2}\/\d{2}\/\d{4})/i);
 
-  // ── TOTAL row (page 1): "TOTAL  disponiveis  devolvidos  vendidos  arrecadacao" ──
-  // The last line before RECEITAS / signature block
+  // ── TOTAL row: "TOTAL  disponiveis  devolvidos  vendidos  arrecadacao" ────
   // Format (old): "TOTAL  25.770  0  25.770  1.331.907,88"
   // Format (new): "TOTAIS 32213 0 32213 R$ 2.171.746,00"
   const totalRowMatch = page1.match(/^(?:TOTAL|TOTAIS)\s+([\d.]+)\s+\d+\s+([\d.]+)\s+(?:R\$\s*)?([\d.,]+)/m);
-  const geralVendidos     = totalRowMatch ? parseIntBr(totalRowMatch[2]) : null;
-  const rendaBruta        = totalRowMatch ? parseBrl(totalRowMatch[3])   : null;
+  const geralVendidos = totalRowMatch ? parseIntBr(totalRowMatch[2]) : null;
+  const rendaBruta    = totalRowMatch ? parseBrl(totalRowMatch[3])   : null;
 
   // ── Complimentary rows (price = 0,00) → non-paying public ────────────────
-  // Rows like (old): "DESCRIPTION  qty  0  qty  0,00  0,00"
-  // Rows like (new): "DESCRIPTION  qty  0  qty  R$ 0,00  R$ 0,00"
   let naoPagante = 0;
-  // Find rows whose price column (4th number after qty) is 0,00 — R$ prefix optional
   const ticketRowPattern = /^.+?\s+([\d.]+)\s+\d+\s+([\d.]+)\s+(?:R\$\s*)?([\d.,]+)\s+(?:R\$\s*)?([\d.,]+)$/gm;
   let m: RegExpExecArray | null;
   while ((m = ticketRowPattern.exec(page1)) !== null) {
-    const preco  = parseBrl(m[3]);
+    const preco    = parseBrl(m[3]);
     const vendidos = parseIntBr(m[2]);
     if (preco === 0 && vendidos != null && vendidos > 0) {
       naoPagante += vendidos;
@@ -232,11 +243,10 @@ export async function parseBoletim(
   // ── Renda Líquida (search all pages) ─────────────────────────────────────
   // Old format (page 2): "RENDA LÍQUIDA 683.891,75"
   // New format (page 3): "RENDA LÍQUIDA (RECEITA - DESPESA) R$ 1.245.515,49"
-  const allPagesText = pages.join('\n');
   const rendaLiquidaMatch = allPagesText.match(/RENDA\s+L[IÍ]QUIDA[^0-9]*(?:R\$\s*)?([\d.,]+)/i);
   const rendaLiquida = rendaLiquidaMatch ? parseBrl(rendaLiquidaMatch[1]) : null;
 
-  // ── Ticket breakdown (simple aggregation by INTEIRA / MEIA / GRATUIDADE) ─
+  // ── Ticket breakdown ──────────────────────────────────────────────────────
   const ingressos = parseTicketCategories(page1);
 
   return {
@@ -254,6 +264,78 @@ export async function parseBoletim(
       liquida: rendaLiquida,
     },
     ingressos,
+  };
+}
+
+/**
+ * FPF (Federação Paulista de Futebol) boletim format.
+ *
+ * In FPF boletins the PDF extractor reads the right column (preço/arrecadação)
+ * before the left column (localidades/counts), so values and descriptive labels
+ * are interleaved in a non-obvious way.
+ *
+ * Key anchors used:
+ *  - geral: TOTAIS row in left column — "TOTAIS 41977 0 41977"
+ *  - renda bruta: the lone R$ total that appears immediately before the first
+ *    localidades text line in page 2 (right-column total before left-column starts)
+ *  - renda líquida: the standalone R$ value immediately before the divisão da
+ *    renda table, which has exactly 4 R$ values on one line
+ *  - estadio: line following "ESTÁDIO" header
+ *  - data: "Data: DD/MM/YYYY" line
+ */
+function parseBoletimFpf(
+  pages: string[],
+  allPagesText: string,
+  idJogo: string,
+): CbfBoletimData {
+  const page1 = pages[0] ?? '';
+
+  // ── Estádio: standalone header, stadium name on next line ────────────────
+  const estadioMatch = page1.match(/EST[AÁ]DIO\s*\n(.+?)(?:\n|$)/i);
+  const estadio = estadioMatch?.[1]?.trim() ?? '';
+
+  // ── Data ──────────────────────────────────────────────────────────────────
+  const dataMatch = allPagesText.match(/Data:\s*(\d{2}\/\d{2}\/\d{4})/i);
+  const data = dataMatch?.[1]?.trim() ?? '';
+
+  // ── Geral (total vendidos) from TOTAIS row ────────────────────────────────
+  // "TOTAIS 41977 0 41977Federação..." — no inline arrecadação
+  const totaisMatch = allPagesText.match(/TOTAIS\s+[\d.]+\s+\d+\s+([\d.]+)/m);
+  const geralVendidos = totaisMatch ? parseIntBr(totaisMatch[1]) : null;
+
+  // ── Renda bruta: standalone R$ value just before the first non-R$ text line ─
+  // The right-column total arrecadação is always the last lone "R$ X" line
+  // immediately before the left-column text content begins (uppercase letter).
+  // All earlier lines are pairs ("R$ x R$ y"), so this is the first standalone.
+  const rendaBrutaMatch = allPagesText.match(
+    /^R\$\s*([\d.,]+)[ \t]*\n[A-ZÁÉÍÓÚÂÃÊÔÕÇÀ]/m,
+  );
+  const rendaBruta = rendaBrutaMatch ? parseBrl(rendaBrutaMatch[1]) : null;
+
+  // ── Renda líquida: standalone R$ value just before divisão da renda table ─
+  // The divisão table has exactly 4 R$ values on one line (líquido, INSS, etc.).
+  // "R$ 2.074.762,22\nR$ 2.074.762,22 R$ 0,00 R$ 0,00 R$ 2.074.762,22"
+  // Use [ \t]+ (not \s+) to prevent matching across newlines.
+  const rendaLiquidaMatch = allPagesText.match(
+    /^R\$\s*([\d.,]+)[ \t]*\nR\$[ \t]*[\d.,]+(?:[ \t]+R\$[ \t]*[\d.,]+){3}[ \t]*$/m,
+  );
+  const rendaLiquida = rendaLiquidaMatch ? parseBrl(rendaLiquidaMatch[1]) : null;
+
+  return {
+    idJogo,
+    parsedAt: new Date().toISOString(),
+    estadio,
+    data,
+    publico: {
+      geral:      geralVendidos,
+      pagante:    null, // FPF format: prices not inline with counts
+      naoPagente: null,
+    },
+    renda: {
+      bruta:   rendaBruta,
+      liquida: rendaLiquida,
+    },
+    ingressos: [],
   };
 }
 
@@ -534,11 +616,11 @@ function parseSubstitutions(page3: string, homeNome: string, awayNome: string): 
   const subSection = page3.slice(subStart);
 
   // Row: "mm:ss  periodo  teamName  entrouNum - entrouName  saiuNum - saiuName"
-  // The minute column uses "mm:ss" format; period 1T or 2T; rest is text
-  const rowPattern = /^(\d{1,3}:\d{2})\s+(1T|2T|PE)\s+(.+?)\s+(\d{1,3})\s+-\s+(.+?)\s+(\d{1,3})\s+-\s+(.+)$/gm;
+  // Minute may be "+N:MM" (extra time) or "-" (halftime / INT). Period may be "INT".
+  const rowPattern = /^(\+?\d{1,3}:\d{2}|-)\s+(1T|2T|PE|INT)\s+(.+?)\s+(\d{1,3})\s+-\s+(.+?)\s+(\d{1,3})\s+-\s+(.+)$/gm;
   let m: RegExpExecArray | null;
   while ((m = rowPattern.exec(subSection)) !== null) {
-    const minutos   = m[1].split(':')[0]; // "15:00" → "15"
+    const minutos = m[1] === '-' ? 'INT' : m[1].replace(/^\+/, '').split(':')[0];
     const periodo   = m[2];
     const teamName  = m[3].trim();
     const entrouNum = parseInt(m[4], 10);
@@ -573,7 +655,8 @@ function parseGoals(page2: string, homeNome: string, awayNome: string): CbfSumul
   const section = page2.slice(golsStart);
 
   // Row: "mm:ss  1T/2T  Nº  TYPE  Nome do Jogador  Equipe"
-  const rowPattern = /^(\d{1,3}:\d{2})\s+(1T|2T|PE|AC)\s+\d+\s+(NR|PN|CT|FT)\s+(.+?)\s+([\w\s/]+(?:SA|MG|SP|RJ|RS|PR|BA|CE|GO|PE|SC|MT|MS|AM|PA|RN|PI|MA|AL|SE|RO|AC|AP|TO|DF|PB|ES|RR)(?:[-/][A-Z]{2})?)$/gm;
+  // Greedy (.+) so the player name captures everything up to the last whitespace before the team token.
+  const rowPattern = /^(\d{1,3}:\d{2})\s+(1T|2T|PE|AC)\s+\d+\s+(NR|PN|CT|FT)\s+(.+)\s+([\w\s/]+(?:SA|MG|SP|RJ|RS|PR|BA|CE|GO|PE|SC|MT|MS|AM|PA|RN|PI|MA|AL|SE|RO|AC|AP|TO|DF|PB|ES|RR)(?:[-/][A-Z]{2})?)$/gm;
   let m: RegExpExecArray | null;
   while ((m = rowPattern.exec(section)) !== null) {
     const minuto  = m[1].split(':')[0];
@@ -619,13 +702,15 @@ function parseCards(page2: string, homeNome: string, awayNome: string): CbfSumul
 
     // Row: "mm:ss  1T/2T  Nº  Name  Team"  (followed by Motivo line)
     // Also: "-  PJ  Nº  Name  Team" for post-match cards
-    const rowPattern = /^(?:(\d{1,3}:\d{2})|\+\d+:\d{2}|-)\s+(1T|2T|PE|AC|PJ)\s+(?:\d+|TC)\s+([A-ZÁÉÍÓÚÂÃÊÔÕÇÀ].+?)\s+([\w\s/]+(?:SA|MG|SP|RJ|RS|PR|BA|CE|GO|PE|SC|MT|MS|AM|PA|RN|PI|MA|AL|SE|RO|AC|AP|TO|DF|PB|ES|RR))$/gm;
+    // Red card rows use " - " as separator before team: "Name - Team/UF"
+    // Greedy (.+) so the player name captures everything; optional " - " separator handles red card format.
+    const rowPattern = /^(?:(\d{1,3}:\d{2})|\+\d+:\d{2}|-)\s+(1T|2T|PE|AC|PJ)\s+(?:\d+|TC)\s+([A-ZÁÉÍÓÚÂÃÊÔÕÇÀ].+)(?:\s+-\s+|\s+)([\w\s/]+(?:SA|MG|SP|RJ|RS|PR|BA|CE|GO|PE|SC|MT|MS|AM|PA|RN|PI|MA|AL|SE|RO|AC|AP|TO|DF|PB|ES|RR))$/gm;
 
     let m: RegExpExecArray | null;
     while ((m = rowPattern.exec(sectionText)) !== null) {
       const minuto  = (m[1] ?? '').split(':')[0] || '90+';
       const periodo = m[2];
-      const jogador = m[3].trim();
+      const jogador = m[3].trim().replace(/\s+-$/, '');
       const equipe  = m[4].trim();
       const time: 'mandante' | 'visitante' = isTeamMatch(equipe, homeNome) ? 'mandante' : 'visitante';
 

@@ -70,7 +70,8 @@ export async function parseSumulaWithGemini(
       ],
     });
 
-    const json = JSON.parse(response.text ?? '');
+    const raw = (response.text ?? '').replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    const json = JSON.parse(raw);
 
     return {
       idJogo,
@@ -110,7 +111,8 @@ export async function parseBoletimWithGemini(
       ],
     });
 
-    const json = JSON.parse(response.text ?? '');
+    const raw = (response.text ?? '').replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/, '').trim();
+    const json = JSON.parse(raw);
 
     return {
       idJogo,

@@ -42,7 +42,7 @@ playwright/.cache
 # Environment & secrets
 # ──────────────────────────────────────────────────────────────
 .env*
-!.env.example   # uncomment when an example file exists
+!.env.example
 
 # ──────────────────────────────────────────────────────────────
 # Logs & debug
@@ -57,7 +57,7 @@ yarn-error.log*
 # ──────────────────────────────────────────────────────────────
 # Tooling caches
 # ──────────────────────────────────────────────────────────────
-/.cache              # Local API cache (Gemini broadcasters etc.)
+/.cache
 .eslintcache
 .stylelintcache
 
@@ -85,7 +85,7 @@ scripts/diagnose-match-docs.ts
 scripts/check-status-urls.ts
 
 # ──────────────────────────────────────────────────────────────
-# Python (used by some skills under .claude/skills/)
+# Python (used by skills under .claude/skills/)
 # ──────────────────────────────────────────────────────────────
 __pycache__/
 *.py[cod]
@@ -107,7 +107,6 @@ requests.http
 # Claude Code (machine-specific settings only)
 # ──────────────────────────────────────────────────────────────
 .claude/settings.json
-.claude/.cache/
 
 # ──────────────────────────────────────────────────────────────
 # Git worktrees
@@ -121,7 +120,6 @@ requests.http
 .vscode/*
 !.vscode/settings.json
 !.vscode/extensions.json
-!.vscode/launch.json   # remove if launch.json is personal
 *.suo
 *.swp
 *.swo

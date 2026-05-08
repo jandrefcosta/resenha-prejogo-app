@@ -251,6 +251,29 @@ modules, kept for current/future consumers:
 - `CbfCardEntry` (`src/lib/cbfStandingsScraper.ts`)
 - `ClubValidation` (`src/lib/admin/clubsValidation.ts`)
 
+### Structural debt (not blocking, registered for awareness)
+
+These are not bugs and don't break anything, but represent organizational
+debt the architect agent should not flag as new findings.
+
+- 🟡 **`src/components/` has folder+file pairs with the same name**
+  (`ClubSelector/` + `ClubSelector.tsx`, `MatchCard/` + `MatchCard.tsx`,
+  `ThemeProvider/` + `ThemeProvider.tsx`). Likely intermediate refactor
+  state. Decide which version is canonical and consolidate.
+- 🟡 **`MatchCard.tsx` is ~89KB in a single file**. Strong candidate
+  for splitting into smaller subcomponents.
+- 🟡 **`src/lib/` has 31 flat files** — clear subdomains visible
+  (auth, external APIs, CBF docs, Redis, broadcaster, hooks). Could be
+  reorganized into folders by subdomain when the next refactor happens.
+- 🟡 **Hook location inconsistency** — `src/hooks/` exists with one
+  file, but other hooks (`useFichaData`, `useFocusTrap`, `useScrollLock`)
+  live in `src/lib/`. Decide on one location.
+- 🟡 **`src/data/match-docs.json` is ~1.5MB** bundled in the repo.
+  Intentional bundling decision — document why if kept (or externalize
+  if it changes frequently).
+- 🟡 **`src/proxy.ts`** sits as a single loose file at the root of
+  `src/`, outside any subfolder. Verify intent.
+
 > **Maintenance rule:** when a WIP item gets wired (or definitively
 > dropped), update or remove the entry above. The `architect` agent uses
 > this section to decide what counts as expected vs. surprising.

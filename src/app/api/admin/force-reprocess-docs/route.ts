@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCbfRound } from '@/lib/cbfApi';
 import { downloadPdf, processMatchDocuments, resolvePdfUrls } from '@/lib/cbfDocParser';
-import { deletePdfs, savePdf } from '@/lib/cbfPdfStore';
+import { deletePdfs, hasPdf, savePdf } from '@/lib/cbfPdfStore';
 import { deleteCache } from '@/lib/redisCache';
 import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 
@@ -19,6 +19,11 @@ export interface ReprocessResult {
 export async function POST(req: NextRequest): Promise<NextResponse> {
   if (!(await isAdminRequest(req))) return unauthorizedAdminResponse();
 
+  // ?fresh=1 forces re-download from CBF even when PDFs are already in Postgres.
+  // Default: re-parse from stored PDFs (faster, no CBF traffic).
+  const url = new URL(req.url);
+  const forceDownload = url.searchParams.get('fresh') === '1';
+
   const start = Date.now();
   const totals = { rounds: 0, processed: 0, errors: 0, unavailable: 0 };
 
@@ -32,29 +37,39 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
       if (!idJogo) continue;
 
       try {
-        const urls = await resolvePdfUrls(match);
-
-        await deletePdfs(idJogo);
+        // Always clear Redis so processMatchDocuments re-parses from scratch.
         await Promise.all([
           deleteCache(`cbf:match:${idJogo}:docs:status`),
           deleteCache(`cbf:match:${idJogo}:sumula`),
           deleteCache(`cbf:match:${idJogo}:boletim`),
         ]);
 
-        const [sumulaBuf, boletimBuf] = await Promise.all([
-          urls.sumula  ? downloadPdf(urls.sumula)  : Promise.resolve(null),
-          urls.boletim ? downloadPdf(urls.boletim) : Promise.resolve(null),
+        // Only re-download from CBF when forced or PDFs are not stored yet.
+        const [hasSumula, hasBoletim] = await Promise.all([
+          hasPdf(idJogo, 'sumula'),
+          hasPdf(idJogo, 'boletim'),
         ]);
 
-        if (!sumulaBuf && !boletimBuf) {
-          totals.unavailable++;
-          continue;
+        if (forceDownload || (!hasSumula && !hasBoletim)) {
+          const urls = await resolvePdfUrls(match);
+
+          if (forceDownload) await deletePdfs(idJogo);
+
+          const [sumulaBuf, boletimBuf] = await Promise.all([
+            urls.sumula  ? downloadPdf(urls.sumula)  : Promise.resolve(null),
+            urls.boletim ? downloadPdf(urls.boletim) : Promise.resolve(null),
+          ]);
+
+          if (!sumulaBuf && !boletimBuf) {
+            totals.unavailable++;
+            continue;
+          }
+
+          await Promise.all([
+            sumulaBuf  ? savePdf(idJogo, 'sumula',  sumulaBuf,  urls.sumula  ?? undefined) : Promise.resolve(),
+            boletimBuf ? savePdf(idJogo, 'boletim', boletimBuf, urls.boletim ?? undefined) : Promise.resolve(),
+          ]);
         }
-
-        await Promise.all([
-          sumulaBuf  ? savePdf(idJogo, 'sumula',  sumulaBuf,  urls.sumula  ?? undefined) : Promise.resolve(),
-          boletimBuf ? savePdf(idJogo, 'boletim', boletimBuf, urls.boletim ?? undefined) : Promise.resolve(),
-        ]);
 
         const result = await processMatchDocuments(match);
         if (result.available) totals.processed++;
