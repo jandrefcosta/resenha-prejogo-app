@@ -1,30 +1,24 @@
 /**
- * seed-match-docs.ts — Populate Redis with parsed CBF PDF data for all finished matches.
+ * seed-match-docs.ts — Proactively download CBF PDFs into Postgres.
  *
- * For each finished round:
- *   1. Fetches the round from CBF API (via cache)
- *   2. For each match in that round, calls processMatchDocuments
- *      → downloads súmula + boletim PDFs → parses → stores in Redis permanently
- *
- * Skips matches that already have valid cached docs (unless --reset is passed).
- * Matches without published PDFs get a "unavailable" sentinel (2h TTL) so the
- * app won't hammer CBF for documents that don't exist yet.
+ * Downloads súmula + boletim PDFs for each finished Série A round and stores
+ * them in the pdf_files Postgres table before the 2-month CBF expiry window.
+ * Parsing is NOT done here — it happens on-demand in processMatchDocuments().
  *
  * Usage:
  *   npm run seed:match-docs                    # process all finished rounds (1–38)
  *   npm run seed:match-docs -- --rounds=5      # up to round 5
  *   npm run seed:match-docs -- --round=3       # only round 3
- *   npm run seed:match-docs -- --reset         # clear cache first, re-parse everything
+ *   npm run seed:match-docs -- --reset         # re-download even if already stored
  *
- * Requires: .env.local with UPSTASH_REDIS_* vars
+ * Requires: .env.local with DATABASE_URL + CBF API vars
  */
 
-import { redis } from '@/lib/redisCache';
 import { getCbfRound } from '@/lib/cbfApi';
-import { processMatchDocuments } from '@/lib/cbfDocParser';
-import { deleteAll } from './lib/deleteKeys';
-import { hasReset, getArg } from './lib/args';
-import type { CbfRoundData, CbfMatchDetail } from '@/lib/types';
+import { downloadPdf, resolvePdfUrls } from '@/lib/cbfDocParser';
+import { hasPdf, savePdf } from '@/lib/cbfPdfStore';
+import { getArg, hasReset } from './lib/args';
+import type { CbfMatchDetail } from '@/lib/types';
 
 // ─── CLI args ─────────────────────────────────────────────────────────────────
 
@@ -45,41 +39,57 @@ function parseArgs() {
 
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
-type MatchResult = 'seeded' | 'already_seeded' | 'unavailable' | 'error';
+type DownloadResult = 'stored' | 'already_stored' | 'unavailable' | 'error';
 
-const ICONS: Record<MatchResult, string> = {
-  seeded:         '✓',
-  already_seeded: '◎',
+const ICONS: Record<DownloadResult, string> = {
+  stored:         '✓',
+  already_stored: '◎',
   unavailable:    '—',
   error:          '✗',
 };
 
-const LABELS: Record<MatchResult, string> = {
-  seeded:         'parseado e salvo',
-  already_seeded: 'já em cache, ignorado',
+const LABELS: Record<DownloadResult, string> = {
+  stored:         'baixado e salvo',
+  already_stored: 'já no Postgres, ignorado',
   unavailable:    'PDF não publicado ainda',
-  error:          'erro ao processar',
+  error:          'erro ao baixar',
 };
 
 // ─── Core ─────────────────────────────────────────────────────────────────────
 
-async function processMatch(match: CbfMatchDetail, force: boolean): Promise<MatchResult> {
-  const id = match.idJogo;
-  if (!id) return 'error';
+async function downloadMatchPdfs(
+  match: CbfMatchDetail,
+  force: boolean,
+): Promise<DownloadResult> {
+  const idJogo = match.idJogo;
+  if (!idJogo) return 'error';
 
   if (!force) {
-    // Fast check: if sumula or boletim already cached, skip
-    const [sumula, boletim] = await Promise.all([
-      redis.exists(`cbf:match:${id}:sumula`),
-      redis.exists(`cbf:match:${id}:boletim`),
+    const [hasSumula, hasBoletim] = await Promise.all([
+      hasPdf(idJogo, 'sumula'),
+      hasPdf(idJogo, 'boletim'),
     ]);
-    if (sumula || boletim) return 'already_seeded';
+    if (hasSumula && hasBoletim) return 'already_stored';
   }
 
   try {
-    const result = await processMatchDocuments(match);
-    if (!result.available) return 'unavailable';
-    return 'seeded';
+    const urls = await resolvePdfUrls(match);
+
+    if (!urls.sumula && !urls.boletim) return 'unavailable';
+
+    const [sumulaBuf, boletimBuf] = await Promise.all([
+      urls.sumula  ? downloadPdf(urls.sumula)  : Promise.resolve(null),
+      urls.boletim ? downloadPdf(urls.boletim) : Promise.resolve(null),
+    ]);
+
+    if (!sumulaBuf && !boletimBuf) return 'unavailable';
+
+    await Promise.all([
+      sumulaBuf  ? savePdf(idJogo, 'sumula',  sumulaBuf,  urls.sumula  ?? undefined) : Promise.resolve(),
+      boletimBuf ? savePdf(idJogo, 'boletim', boletimBuf, urls.boletim ?? undefined) : Promise.resolve(),
+    ]);
+
+    return 'stored';
   } catch {
     return 'error';
   }
@@ -92,40 +102,17 @@ async function main() {
 
   console.log('');
   console.log('  ╔════════════════════════════════════════════╗');
-  console.log('  ║  CBF Match Docs Seed — Resenha Pré-Jogo   ║');
+  console.log('  ║  CBF PDF Download Seed — Resenha Pré-Jogo  ║');
   console.log('  ╚════════════════════════════════════════════╝');
   console.log(`\n  Rodadas: ${from}–${to}  |  Force: ${force}\n`);
 
-  if (force) {
-    // Collect all match-docs keys to delete via CBF round data
-    const allKeys: string[] = [];
-    for (let r = from; r <= to; r++) {
-      let round: CbfRoundData;
-      try { round = await getCbfRound(r); } catch { continue; }
-      if (round.status !== 'finished') continue;
-      for (const match of round.matches) {
-        if (!match.idJogo) continue;
-        allKeys.push(
-          `cbf:match:${match.idJogo}:docs:status`,
-          `cbf:match:${match.idJogo}:sumula`,
-          `cbf:match:${match.idJogo}:boletim`,
-        );
-      }
-    }
-    if (allKeys.length > 0) {
-      process.stdout.write(`  Deletando ${allKeys.length} chaves de match-docs ... `);
-      await deleteAll(allKeys);
-      console.log('pronto\n');
-    }
-  }
-
-  const totals: Record<MatchResult, number> = {
-    seeded: 0, already_seeded: 0, unavailable: 0, error: 0,
+  const totals: Record<DownloadResult, number> = {
+    stored: 0, already_stored: 0, unavailable: 0, error: 0,
   };
   const errors: string[] = [];
 
   for (let r = from; r <= to; r++) {
-    let round: CbfRoundData;
+    let round: Awaited<ReturnType<typeof getCbfRound>>;
     try {
       round = await getCbfRound(r);
     } catch {
@@ -142,26 +129,25 @@ async function main() {
     console.log(`\n  Rodada ${r.toString().padStart(2, '0')} — ${matches.length} jogo(s)`);
 
     for (const match of matches) {
-      const id = match.idJogo ?? '?';
+      const id    = match.idJogo ?? '?';
       const label = `${match.mandante?.nome ?? '?'} x ${match.visitante?.nome ?? '?'}`;
 
-      const result = await processMatch(match, force);
+      const result = await downloadMatchPdfs(match, force);
       totals[result]++;
       console.log(`    ${ICONS[result]}  ${id}  ${label}  — ${LABELS[result]}`);
 
       if (result === 'error') errors.push(`R${r} ${id} ${label}`);
 
-      // Throttle: 1 match at a time, small pause to avoid hammering CBF/Upstash
       await sleep(800);
     }
   }
 
   // ── Summary ────────────────────────────────────────────────────────────────
   console.log('\n  ─────────────────────────────────────────────');
-  console.log(`  ✓  Parseados:      ${totals.seeded}`);
-  console.log(`  ◎  Já em cache:    ${totals.already_seeded}`);
-  console.log(`  —  Sem PDF:        ${totals.unavailable}`);
-  console.log(`  ✗  Erros:          ${totals.error}`);
+  console.log(`  ✓  Baixados e salvos:  ${totals.stored}`);
+  console.log(`  ◎  Já no Postgres:     ${totals.already_stored}`);
+  console.log(`  —  Sem PDF:            ${totals.unavailable}`);
+  console.log(`  ✗  Erros:              ${totals.error}`);
 
   if (errors.length > 0) {
     console.log('\n  Jogos com erro:');
@@ -172,7 +158,4 @@ async function main() {
   process.exit(totals.error > 0 ? 1 : 0);
 }
 
-main().catch((err) => {
-  console.error(err);
-  process.exit(1);
-});
+main().catch((err) => { console.error(err); process.exit(1); });
