@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { SoccerBallIcon } from "@/components/SoccerBallIcon";
 import { BroadcasterModal } from './BroadcasterModal';
+import { LiveMatchModal } from './LiveMatchModal';
 import type {
   Match,
   H2HData,
@@ -1650,6 +1651,7 @@ export function MatchCard({
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailGateOpen, setEmailGateOpen] = useState(false);
   const [broadcasterModalOpen, setBroadcasterModalOpen] = useState(false);
+  const [liveModalOpen, setLiveModalOpen] = useState(false);
   const pendingActionRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -1946,9 +1948,22 @@ export function MatchCard({
                   </span>
                 )
               ) : (
-                <span className="text-sm font-black text-zinc-500 tracking-widest font-display">
-                  VS
-                </span>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-black text-zinc-500 tracking-widest font-display">
+                    VS
+                  </span>
+                  {live && (
+                    <button
+                      type="button"
+                      onClick={() => setLiveModalOpen(true)}
+                      className="inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-400 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-500/50"
+                      aria-label="Ver placar ao vivo"
+                    >
+                      <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" aria-hidden="true" />
+                      AO VIVO
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -2324,6 +2339,11 @@ export function MatchCard({
         broadcasters={broadcasters}
         isOpen={broadcasterModalOpen}
         onClose={() => setBroadcasterModalOpen(false)}
+      />
+      <LiveMatchModal
+        fixtureId={live ? (match.apiFootballFixtureId ?? Number(match.id)) : null}
+        isOpen={liveModalOpen}
+        onClose={() => setLiveModalOpen(false)}
       />
     </>
   );
