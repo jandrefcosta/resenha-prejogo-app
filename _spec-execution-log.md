@@ -72,6 +72,19 @@
 
 ---
 
+### 7. Lint failures: pre-existing vs. mine
+
+**What happened:** `pnpm lint` exits with code 1 due to ~15 pre-existing errors across files not in this spec (e.g., `EmailCaptureModal.tsx`, `RoundModal.tsx`, `copa-2026/page.tsx`). These existed before this feature branch was started.
+
+**Decision:** Did not touch files outside the spec scope (Rule 6). Fixed all three lint errors introduced by my new code:
+- `useLiveFixture.ts`: Rewrote state management with `useReducer` instead of multiple `setState` calls in a `useEffect` body.
+- `LiveMatchModal.tsx`: Replaced `Date.now()` in render with a state value updated via `setInterval` (only called from the interval callback, never synchronously in the effect body).
+- `LiveMatchModal.tsx`: Added `eslint-disable-next-line` for the intentionally-unused `alt` param (same pattern as `MatchCard.tsx:63`).
+
+**Result:** My new files have 0 errors (1 `<img>` warning, same pattern as rest of codebase). `pnpm build` passes cleanly.
+
+---
+
 ## Interventions
 
-*(none so far)*
+*(none)*
