@@ -1,8 +1,8 @@
 import { unstable_cache } from 'next/cache';
 import clubsData from '@/data/clubs.json';
-import { getCache, setCache, TTL_6H, TTL_24H } from '@/lib/redisCache';
+import { getCache, setCache, TTL_6H, TTL_15S, TTL_24H } from '@/lib/redisCache';
 import { SERIE_A, getCompetitionByLeagueId, type Competition } from '@/data/competitions';
-import type { ClubTheme, Match, MatchTeam, LineupData } from '@/lib/types';
+import type { ClubTheme, Match, MatchTeam, LineupData, LiveFixtureData, LiveEvent, LiveStats } from '@/lib/types';
 
 const clubs = clubsData as ClubTheme[];
 const BASE_URL = 'https://v3.football.api-sports.io';
@@ -357,5 +357,121 @@ export async function fetchLineups(fixtureId: number): Promise<LineupData | null
   };
 
   await setCache(cacheKey, result, TTL_24H);
+  return result;
+}
+
+// ─── Live fixture (/fixtures?id + /fixtures/events + /fixtures/statistics) ────
+
+interface ApiLiveFixture {
+  fixture: { id: number; status: { short: string; elapsed: number | null } };
+  teams: { home: { id: number }; away: { id: number } };
+  goals: { home: number | null; away: number | null };
+}
+
+interface ApiLiveEvent {
+  time: { elapsed: number; extra: number | null };
+  team: { id: number };
+  player: { name: string };
+  assist: { name: string | null };
+  type: string;
+  detail: string;
+}
+
+interface ApiStatEntry {
+  type: string;
+  value: string | number | null;
+}
+
+interface ApiTeamStats {
+  team: { id: number };
+  statistics: ApiStatEntry[];
+}
+
+function findStat(stats: ApiStatEntry[], type: string): number | null {
+  const entry = stats.find((s) => s.type === type);
+  if (entry === undefined || entry.value === null) return null;
+  const v = String(entry.value).replace('%', '');
+  const n = parseFloat(v);
+  return isNaN(n) ? null : n;
+}
+
+function mapLiveEvent(e: ApiLiveEvent, homeId: number): LiveEvent {
+  const side = e.team.id === homeId ? 'home' : 'away';
+  let type: LiveEvent['type'] = 'Goal';
+  if (e.type === 'Card') type = 'Card';
+  else if (e.type === 'subst') type = 'subst';
+  return {
+    minute: e.time.elapsed,
+    minuteExtra: e.time.extra ?? null,
+    team: side,
+    playerName: e.player.name,
+    assistName: e.assist?.name ?? null,
+    type,
+    detail: e.detail,
+  };
+}
+
+/**
+ * Fetches live fixture data: score, status, events, and stats from API-Football.
+ * Cached in Redis for 15 seconds to deduplicate concurrent client polls.
+ * Called exclusively by /api/live/[fixtureId].
+ */
+export async function getLiveFixtureData(fixtureId: number): Promise<LiveFixtureData> {
+  const cacheKey = `live:${fixtureId}`;
+  const cached = await getCache<LiveFixtureData>(cacheKey);
+  if (cached) return cached;
+
+  const key = process.env.API_FOOTBALL_KEY;
+  if (!key) throw new Error('API_FOOTBALL_KEY is not set');
+
+  const headers = { 'x-apisports-key': key };
+
+  const [fixtureRes, eventsRes, statsRes] = await Promise.all([
+    fetch(`${BASE_URL}/fixtures?id=${fixtureId}`, { headers }),
+    fetch(`${BASE_URL}/fixtures/events?fixture=${fixtureId}`, { headers }),
+    fetch(`${BASE_URL}/fixtures/statistics?fixture=${fixtureId}`, { headers }),
+  ]);
+
+  if (!fixtureRes.ok) throw new Error(`API-Football fixture HTTP ${fixtureRes.status}`);
+
+  const fixtureJson: ApiResponse<ApiLiveFixture> = await fixtureRes.json();
+  const raw = fixtureJson.response[0];
+  if (!raw) throw new Error(`API-Football: fixture ${fixtureId} not found`);
+
+  const homeId = raw.teams.home.id;
+  const awayId = raw.teams.away.id;
+
+  const eventsJson: ApiResponse<ApiLiveEvent> = eventsRes.ok ? await eventsRes.json() : { response: [], errors: {} };
+  const statsJson: ApiResponse<ApiTeamStats> = statsRes.ok ? await statsRes.json() : { response: [], errors: {} };
+
+  const events: LiveEvent[] = (eventsJson.response ?? []).map((e) => mapLiveEvent(e, homeId));
+
+  let stats: LiveStats | null = null;
+  if (statsJson.response && statsJson.response.length >= 2) {
+    const homeStats = statsJson.response.find((s) => s.team.id === homeId)?.statistics ?? [];
+    const awayStats = statsJson.response.find((s) => s.team.id === awayId)?.statistics ?? [];
+    stats = {
+      possession: { home: findStat(homeStats, 'Ball Possession'), away: findStat(awayStats, 'Ball Possession') },
+      shotsOnTarget: { home: findStat(homeStats, 'Shots on Goal'), away: findStat(awayStats, 'Shots on Goal') },
+      shots: { home: findStat(homeStats, 'Total Shots'), away: findStat(awayStats, 'Total Shots') },
+      corners: { home: findStat(homeStats, 'Corner Kicks'), away: findStat(awayStats, 'Corner Kicks') },
+      fouls: { home: findStat(homeStats, 'Fouls'), away: findStat(awayStats, 'Fouls') },
+    };
+  }
+
+  const result: LiveFixtureData = {
+    fixtureId,
+    status: raw.fixture.status.short,
+    elapsed: raw.fixture.status.elapsed,
+    homeScore: raw.goals.home ?? 0,
+    awayScore: raw.goals.away ?? 0,
+    homeTeamId: homeId,
+    awayTeamId: awayId,
+    events,
+    stats,
+    fetchedAt: new Date().toISOString(),
+  };
+
+  await setCache(cacheKey, result, TTL_15S);
   return result;
 }
