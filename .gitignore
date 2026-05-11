@@ -1,5 +1,8 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Reconnaissance artifacts (in-progress; move to docs/ when confirmed)
+/_reconnaissance/
+
 # ──────────────────────────────────────────────────────────────
 # Dependencies
 # ──────────────────────────────────────────────────────────────
