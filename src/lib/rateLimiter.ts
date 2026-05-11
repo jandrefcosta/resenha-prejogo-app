@@ -24,3 +24,13 @@ export const passwordResetLimiter = new Ratelimit({
   limiter: Ratelimit.slidingWindow(3, '1 h'),
   prefix: 'rl:password-reset',
 });
+
+/**
+ * Live fixture polling: 20 requests per IP per minute (sliding window).
+ * Normal polling every 15s generates 4 req/min; 20 allows manual refresh headroom.
+ */
+export const liveFixtureLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(20, '1 m'),
+  prefix: 'rl:live-fixture',
+});
