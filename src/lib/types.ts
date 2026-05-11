@@ -177,6 +177,44 @@ export interface BroadcasterInfo {
   url: string;
 }
 
+// ─── Live match types ─────────────────────────────────────────────────────────
+
+export type LiveEventType = 'goal' | 'card' | 'subst' | 'var';
+
+export interface LiveEvent {
+  time: { elapsed: number; extra: number | null };
+  type: LiveEventType;
+  detail: string;
+  player: { id: number | null; name: string | null };
+  assist?: { id: number | null; name: string | null };
+  team: { id: number; name: string };
+  comments: string | null;
+}
+
+export interface LiveStats {
+  team: { id: number; name: string };
+  possession: number | null;
+  shots: number | null;
+  shotsOnTarget: number | null;
+  corners: number | null;
+  fouls: number | null;
+  yellowCards: number | null;
+  redCards: number | null;
+}
+
+export interface LiveFixtureData {
+  fixtureId: number;
+  status: string;
+  statusLabel: string;
+  elapsed: number | null;
+  homeTeam: MatchTeam;
+  awayTeam: MatchTeam;
+  homeGoals: number;
+  awayGoals: number;
+  events: LiveEvent[];
+  stats: [LiveStats, LiveStats] | null;
+}
+
 export interface MatchPreview {
   homeForm: string[];
   awayForm: string[];
