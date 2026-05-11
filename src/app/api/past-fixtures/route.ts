@@ -61,11 +61,14 @@ export async function GET(req: NextRequest) {
 
     const match = result.value.matches.find((m) => {
       if (m.mandante.id !== cbfId && m.visitante.id !== cbfId) return false;
-      // Only include matches whose kickoff has already passed
       const [day, month, year] = m.data.split('/').map(Number);
       const [hours, minutes] = m.hora.split(':').map(Number);
       const kickoff = new Date(Date.UTC(year, month - 1, day, hours + 3, minutes));
-      return kickoff.getTime() <= Date.now();
+      if (kickoff.getTime() > Date.now()) return false;
+      // Exclude live matches — only include once both teams have a score published
+      const hasScore = m.mandante.gols !== '' && m.mandante.gols !== null &&
+                       m.visitante.gols !== '' && m.visitante.gols !== null;
+      return hasScore;
     });
 
     if (match) {

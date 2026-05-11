@@ -383,14 +383,22 @@ export async function getCbfRound(round: number, force = false): Promise<CbfRoun
     throw new Error(`CBF API error: ${res.status} ${res.statusText}`);
   }
 
-  const raw: RawFase | RawFase[] = await res.json();
-
-  // The endpoint returns either a single RawFase object or an array of them
-  const rawFases: RawFase[] = Array.isArray(raw) ? raw : [raw];
-
-  const matches: CbfMatchDetail[] = rawFases.flatMap((fase) =>
-    fase.jogos.flatMap((grupo) => grupo.jogo.map(parseJogo)),
-  );
+  let matches: CbfMatchDetail[];
+  try {
+    const raw: RawFase | RawFase[] = await res.json();
+    // The endpoint returns either a single RawFase object or an array of them
+    const rawFases: RawFase[] = Array.isArray(raw) ? raw : [raw];
+    matches = rawFases.flatMap((fase) =>
+      fase.jogos.flatMap((grupo) => grupo.jogo.map(parseJogo)),
+    );
+  } catch {
+    // CBF returned an unexpected payload (HTML error page, malformed JSON, wrong shape).
+    // Fall back to stale data before propagating — this is most common during live matches
+    // when the API is under load or updating round data in real-time.
+    const stale = acceptStale(await getCache<CbfRoundData>(staleKey(round)));
+    if (stale) return stale;
+    throw new Error('CBF API returned an unparseable response');
+  }
 
   const status = inferRoundStatus(matches);
   const ttlSeconds = computeTtl(matches, status);

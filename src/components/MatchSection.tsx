@@ -237,7 +237,16 @@ export function MatchSection() {
 
   // Round number used to query CBF past fixtures — comes from the server response,
   // not from fixtures. Kept in state so it persists while the user is on the past tab.
+  // Initialises to 0; restored from localStorage on mount so that round-gap periods
+  // (after round N ends but before round N+1 is published in API-Football) don't
+  // reset the value to 0 and break the CBF past-fixtures fetch.
   const [serieARound, setSerieARound] = useState<number>(0);
+
+  // Restore last known round from localStorage on first mount (resilience across round gaps)
+  useEffect(() => {
+    const stored = Number(localStorage.getItem('sc_serie_a_round') ?? '0');
+    if (stored > 0) setSerieARound(stored);
+  }, []);
 
   // Tracks whether past data has been fetched for the current club+tab combination
   const pastFetchedRef = useRef(false);
@@ -278,9 +287,13 @@ export function MatchSection() {
     (rawFixtures.find((m) => m.leagueId === 71)?.round ?? '').match(/(\d+)/)?.[1] ?? 0,
   );
 
-  // Keep serieARound up-to-date whenever fixtures load (or change between rounds)
+  // Keep serieARound up-to-date whenever fixtures load (or change between rounds).
+  // Also persist to localStorage so the value survives round-gap periods on fresh loads.
   useEffect(() => {
-    if (derivedSerieARound > 0) setSerieARound(derivedSerieARound);
+    if (derivedSerieARound > 0) {
+      setSerieARound(derivedSerieARound);
+      localStorage.setItem('sc_serie_a_round', String(derivedSerieARound));
+    }
   }, [derivedSerieARound]);
 
   // Load match-docs for finished Série A matches from static JSON (pre-built offline)
