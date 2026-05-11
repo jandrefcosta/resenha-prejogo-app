@@ -10,6 +10,7 @@ import {
 } from "@heroicons/react/20/solid";
 import { SoccerBallIcon } from "@/components/SoccerBallIcon";
 import { BroadcasterModal } from './BroadcasterModal';
+import { LiveMatchModal } from './LiveMatchModal';
 import type {
   Match,
   H2HData,
@@ -1650,6 +1651,7 @@ export function MatchCard({
   const [emailRegistered, setEmailRegistered] = useState(false);
   const [emailGateOpen, setEmailGateOpen] = useState(false);
   const [broadcasterModalOpen, setBroadcasterModalOpen] = useState(false);
+  const [liveModalOpen, setLiveModalOpen] = useState(false);
   const pendingActionRef = useRef<(() => void) | null>(null);
 
   useEffect(() => {
@@ -1740,6 +1742,8 @@ export function MatchCard({
     match.status !== "postponed" &&
     nowMs >= kickoffMs &&
     nowMs <= kickoffMs + LIVE_WINDOW_MS;
+  const liveFixtureId = match.apiFootballFixtureId ?? Number(match.id);
+  const canShowLiveModal = live && Number.isInteger(liveFixtureId) && liveFixtureId > 0;
   const daysUntilRender = (kickoffMs - nowMs) / 86_400_000;
   const outsideSearchWindow =
     !live &&
@@ -1946,9 +1950,22 @@ export function MatchCard({
                   </span>
                 )
               ) : (
-                <span className="text-sm font-black text-zinc-500 tracking-widest font-display">
-                  VS
-                </span>
+                <div className="flex flex-col items-center gap-1">
+                  <span className="text-sm font-black text-zinc-500 tracking-widest font-display">
+                    VS
+                  </span>
+                  {canShowLiveModal && (
+                    <button
+                      type="button"
+                      onClick={() => setLiveModalOpen(true)}
+                      className="flex items-center gap-1 text-[9px] font-bold text-green-400 font-sans rounded px-1.5 py-0.5 hover:bg-green-400/10 transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-green-400/50"
+                      aria-label="Ver jogo ao vivo"
+                    >
+                      <span className="w-1 h-1 rounded-full bg-green-400 animate-pulse" aria-hidden="true" />
+                      AO VIVO
+                    </button>
+                  )}
+                </div>
               )}
             </div>
 
@@ -2325,6 +2342,15 @@ export function MatchCard({
         isOpen={broadcasterModalOpen}
         onClose={() => setBroadcasterModalOpen(false)}
       />
+      {canShowLiveModal && (
+        <LiveMatchModal
+          fixtureId={liveFixtureId}
+          homeTeamName={match.homeTeam.name}
+          awayTeamName={match.awayTeam.name}
+          isOpen={liveModalOpen}
+          onClose={() => setLiveModalOpen(false)}
+        />
+      )}
     </>
   );
 }
