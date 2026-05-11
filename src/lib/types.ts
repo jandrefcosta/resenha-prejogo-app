@@ -430,6 +430,43 @@ export interface MatchEventsData {
   cards: MatchCardEvent[];
 }
 
+// ─── Live match modal ─────────────────────────────────────────────────────────
+
+export interface LiveEvent {
+  minute: number;
+  minuteExtra: number | null;
+  /** 'home' | 'away' */
+  team: 'home' | 'away';
+  playerName: string;
+  assistName: string | null;
+  /** Broad category used for icon selection */
+  type: 'Goal' | 'Card' | 'subst';
+  /** API-Football detail string, e.g. 'Normal Goal', 'Yellow Card', 'Own Goal' */
+  detail: string;
+}
+
+export interface LiveStats {
+  possession: { home: number | null; away: number | null };
+  shotsOnTarget: { home: number | null; away: number | null };
+  shots: { home: number | null; away: number | null };
+  corners: { home: number | null; away: number | null };
+  fouls: { home: number | null; away: number | null };
+}
+
+export interface LiveFixtureData {
+  fixtureId: number;
+  /** API-Football short status: '1H' | 'HT' | '2H' | 'ET' | 'BT' | 'P' | 'FT' | 'AET' | 'PEN' | … */
+  status: string;
+  elapsed: number | null;
+  homeScore: number;
+  awayScore: number;
+  homeTeamId: number;
+  awayTeamId: number;
+  events: LiveEvent[];
+  stats: LiveStats | null;
+  fetchedAt: string;
+}
+
 /** State used to compute cache TTL */
 export type CbfRoundStatus = 'finished' | 'live' | 'upcoming';
 
