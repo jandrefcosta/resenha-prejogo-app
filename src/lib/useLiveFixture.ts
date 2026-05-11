@@ -1,62 +1,93 @@
 'use client';
 
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useCallback, useReducer, useRef } from 'react';
 import type { LiveFixtureData } from '@/lib/types';
 
 const POLL_INTERVAL_MS = 15_000;
 const FINISHED_STATUSES = ['FT', 'AET', 'PEN', 'CANC', 'PST', 'SUSP'] as const;
 
-type Result = {
+type State = {
   data: LiveFixtureData | null;
   error: Error | null;
   lastUpdated: Date | null;
   isRefreshing: boolean;
-  refresh: () => Promise<void>;
 };
 
+type Action =
+  | { type: 'RESET' }
+  | { type: 'FETCHING' }
+  | { type: 'SUCCESS'; payload: LiveFixtureData }
+  | { type: 'ERROR'; payload: Error }
+  | { type: 'DONE_REFRESHING' };
+
+const initialState: State = {
+  data: null,
+  error: null,
+  lastUpdated: null,
+  isRefreshing: false,
+};
+
+function reducer(state: State, action: Action): State {
+  switch (action.type) {
+    case 'RESET':
+      return initialState;
+    case 'FETCHING':
+      return { ...state, isRefreshing: true };
+    case 'SUCCESS':
+      return {
+        ...state,
+        data: action.payload,
+        lastUpdated: new Date(),
+        error: null,
+        isRefreshing: false,
+      };
+    case 'ERROR':
+      return { ...state, error: action.payload, isRefreshing: false };
+    case 'DONE_REFRESHING':
+      return { ...state, isRefreshing: false };
+    default:
+      return state;
+  }
+}
+
+type Result = State & { refresh: () => Promise<void> };
+
 export function useLiveFixture(fixtureId: number | null): Result {
-  const [data, setData] = useState<LiveFixtureData | null>(null);
-  const [error, setError] = useState<Error | null>(null);
-  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [state, dispatch] = useReducer(reducer, initialState);
   const inFlightRef = useRef(false);
 
   const fetchData = useCallback(async () => {
     if (!fixtureId || inFlightRef.current) return;
     inFlightRef.current = true;
-    setIsRefreshing(true);
+    dispatch({ type: 'FETCHING' });
     try {
       const res = await fetch(`/api/live/${fixtureId}`);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const json = (await res.json()) as LiveFixtureData;
-      setData(json);
-      setLastUpdated(new Date());
-      setError(null);
+      dispatch({ type: 'SUCCESS', payload: json });
     } catch (err) {
-      setError(err as Error);
+      dispatch({ type: 'ERROR', payload: err as Error });
     } finally {
       inFlightRef.current = false;
-      setIsRefreshing(false);
     }
   }, [fixtureId]);
 
   useEffect(() => {
-    setData(null);
-    setError(null);
-    setLastUpdated(null);
+    dispatch({ type: 'RESET' });
     if (!fixtureId) return;
-    fetchData();
+    void fetchData();
   }, [fixtureId, fetchData]);
 
   useEffect(() => {
     if (!fixtureId) return;
     const isFinished =
-      data?.status && (FINISHED_STATUSES as readonly string[]).includes(data.status);
+      state.data?.status &&
+      (FINISHED_STATUSES as readonly string[]).includes(state.data.status);
     if (isFinished) return;
 
-    const id = setInterval(fetchData, POLL_INTERVAL_MS);
+    const id = setInterval(() => void fetchData(), POLL_INTERVAL_MS);
     return () => clearInterval(id);
-  }, [fixtureId, fetchData, data?.status]);
+  }, [fixtureId, fetchData, state.data?.status]);
 
-  return { data, error, lastUpdated, isRefreshing, refresh: fetchData };
+  return { ...state, refresh: fetchData };
 }

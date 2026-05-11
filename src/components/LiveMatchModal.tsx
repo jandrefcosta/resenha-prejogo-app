@@ -46,7 +46,8 @@ function StatRow({
   );
 }
 
-function TeamLogo({ src, alt, size = 32 }: { src?: string; alt: string; size?: number }) {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+function TeamLogo({ src, alt: _teamLogoAlt, size = 32 }: { src?: string; alt: string; size?: number }) {
   const [errored, setErrored] = useState(false);
   if (!src || errored) return null;
   return (
@@ -63,20 +64,21 @@ function TeamLogo({ src, alt, size = 32 }: { src?: string; alt: string; size?: n
   );
 }
 
-function ElapsedLabel({ seconds, lastUpdated }: { seconds: number; lastUpdated: Date | null }) {
-  const [, rerender] = useState(0);
+function ElapsedText({ lastUpdated }: { lastUpdated: Date | null }) {
+  const [diffText, setDiffText] = useState('');
   useEffect(() => {
     if (!lastUpdated) return;
-    const id = setInterval(() => rerender((n) => n + 1), 5_000);
+    const id = setInterval(() => {
+      const s = Math.round((Date.now() - lastUpdated.getTime()) / 1_000);
+      setDiffText(`${s}s atrás`);
+    }, 5_000);
     return () => clearInterval(id);
   }, [lastUpdated]);
 
   if (!lastUpdated) return null;
-  const diff = Math.round((Date.now() - lastUpdated.getTime()) / 1_000);
-  void seconds;
   return (
     <span className="text-xs text-zinc-500 font-sans">
-      Última atualização: {diff}s atrás
+      Última atualização: {diffText || '…'}
     </span>
   );
 }
@@ -242,7 +244,7 @@ export function LiveMatchModal({ fixtureId, isOpen, onClose }: Props) {
 
         {/* Footer */}
         <div className="px-4 py-3 border-t border-zinc-800 flex items-center justify-between shrink-0">
-          <ElapsedLabel seconds={0} lastUpdated={lastUpdated} />
+          <ElapsedText lastUpdated={lastUpdated} />
           {!isFinished && (
             <button
               onClick={() => void refresh()}
