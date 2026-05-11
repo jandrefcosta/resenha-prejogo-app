@@ -1,8 +1,8 @@
 import { unstable_cache } from 'next/cache';
 import clubsData from '@/data/clubs.json';
-import { getCache, setCache, TTL_6H, TTL_24H } from '@/lib/redisCache';
+import { getCache, setCache, TTL_6H, TTL_24H, TTL_15S } from '@/lib/redisCache';
 import { SERIE_A, getCompetitionByLeagueId, type Competition } from '@/data/competitions';
-import type { ClubTheme, Match, MatchTeam, LineupData } from '@/lib/types';
+import type { ClubTheme, Match, MatchTeam, LineupData, LiveFixtureData, LiveEvent, LiveStats, LiveEventType } from '@/lib/types';
 
 const clubs = clubsData as ClubTheme[];
 const BASE_URL = 'https://v3.football.api-sports.io';
@@ -31,11 +31,36 @@ interface ApiFixtureItem {
     referee: string | null;
     date: string;
     venue: { name: string | null; city: string | null };
-    status: { short: string };
+    status: { short: string; elapsed: number | null };
   };
   league: { id: number; name: string; round: string; season: number };
   teams: { home: ApiTeam; away: ApiTeam };
   goals?: { home: number | null; away: number | null };
+}
+
+interface ApiFixtureEvent {
+  time: { elapsed: number; extra: number | null };
+  type: string;
+  detail: string;
+  player: { id: number | null; name: string | null };
+  assist: { id: number | null; name: string | null } | null;
+  team: { id: number; name: string };
+  comments: string | null;
+}
+
+interface ApiStatValue {
+  type: string;
+  value: string | number | null;
+}
+
+interface ApiFixtureStatistics {
+  team: { id: number; name: string };
+  statistics: ApiStatValue[];
+}
+
+interface ApiFixtureItemWithEvents extends ApiFixtureItem {
+  events: ApiFixtureEvent[];
+  statistics: ApiFixtureStatistics[];
 }
 
 interface ApiResponse<T> {
@@ -358,4 +383,108 @@ export async function fetchLineups(fixtureId: number): Promise<LineupData | null
 
   await setCache(cacheKey, result, TTL_24H);
   return result;
+}
+
+// ─── Live fixture ─────────────────────────────────────────────────────────────
+
+const STATUS_LABELS: Record<string, string> = {
+  '1H':   '1º Tempo',
+  'HT':   'Intervalo',
+  '2H':   '2º Tempo',
+  'ET':   'Prorrogação',
+  'BT':   'Intervalo (Prorr.)',
+  'P':    'Pênaltis',
+  'FT':   'Encerrado',
+  'AET':  'Encerrado',
+  'PEN':  'Encerrado',
+  'CANC': 'Cancelado',
+  'PST':  'Adiado',
+  'SUSP': 'Suspenso',
+};
+
+const EVENT_TYPE_MAP: Record<string, LiveEventType> = {
+  'Goal':         'goal',
+  'Card':         'card',
+  'subst':        'subst',
+  'Var':          'var',
+};
+
+function mapToLiveFixtureData(item: ApiFixtureItemWithEvents): LiveFixtureData {
+  const status = item.fixture.status.short;
+
+  const events: LiveEvent[] = (item.events ?? [])
+    .map((e): LiveEvent => ({
+      time:    { elapsed: e.time.elapsed, extra: e.time.extra },
+      type:    EVENT_TYPE_MAP[e.type] ?? 'goal',
+      detail:  e.detail,
+      player:  e.player,
+      assist:  e.assist ?? undefined,
+      team:    e.team,
+      comments: e.comments,
+    }))
+    .sort((a, b) => b.time.elapsed - a.time.elapsed);
+
+  const stats = item.statistics?.length >= 2
+    ? [mapStats(item.statistics[0]), mapStats(item.statistics[1])] as [LiveStats, LiveStats]
+    : null;
+
+  return {
+    fixtureId:   item.fixture.id,
+    status,
+    statusLabel: STATUS_LABELS[status] ?? status,
+    elapsed:     item.fixture.status.elapsed ?? null,
+    homeTeam:    toMatchTeam(item.teams.home),
+    awayTeam:    toMatchTeam(item.teams.away),
+    homeGoals:   item.goals?.home ?? 0,
+    awayGoals:   item.goals?.away ?? 0,
+    events,
+    stats,
+  };
+}
+
+function mapStats(raw: ApiFixtureStatistics): LiveStats {
+  const get = (type: string): number | null => {
+    const entry = raw.statistics.find((s) => s.type === type);
+    if (!entry || entry.value === null) return null;
+    if (typeof entry.value === 'number') return entry.value;
+    const stripped = String(entry.value).replace('%', '');
+    const parsed = parseFloat(stripped);
+    return isNaN(parsed) ? null : parsed;
+  };
+
+  return {
+    team:          raw.team,
+    possession:    get('Ball Possession'),
+    shots:         get('Total Shots'),
+    shotsOnTarget: get('Shots on Goal'),
+    corners:       get('Corner Kicks'),
+    fouls:         get('Fouls'),
+    yellowCards:   get('Yellow Cards'),
+    redCards:      get('Red Cards'),
+  };
+}
+
+export async function getLiveFixtureData(
+  fixtureId: number,
+): Promise<LiveFixtureData | null> {
+  const cacheKey = `live:fixture:${fixtureId}`;
+  const cached = await getCache<LiveFixtureData>(cacheKey);
+  if (cached) return cached;
+
+  const key = process.env.API_FOOTBALL_KEY;
+  if (!key) throw new Error('API_FOOTBALL_KEY is not set');
+
+  const url = `${BASE_URL}/fixtures?id=${fixtureId}`;
+  const res = await fetch(url, {
+    headers: { 'x-apisports-key': key },
+  });
+  if (!res.ok) throw new Error(`API-Football returned ${res.status}`);
+
+  const json = (await res.json()) as ApiResponse<ApiFixtureItemWithEvents>;
+  const item = json.response[0];
+  if (!item) return null;
+
+  const mapped = mapToLiveFixtureData(item);
+  await setCache(cacheKey, mapped, TTL_15S);
+  return mapped;
 }
