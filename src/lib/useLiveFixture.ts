@@ -35,6 +35,8 @@ export function useLiveFixture(fixtureId: number | null): UseLiveFixtureResult {
   const fetchData = useCallback(async () => {
     if (fixtureId === null || inFlightRef.current) return;
     inFlightRef.current = true;
+    // Defer setState past the synchronous call stack to satisfy react-compiler rules
+    await Promise.resolve();
     setIsRefreshing(true);
 
     try {
@@ -64,13 +66,15 @@ export function useLiveFixture(fixtureId: number | null): UseLiveFixtureResult {
     if (fixtureId === null) return;
     stoppedRef.current = false;
 
-    void fetchData();
+    // Defer initial fetch out of the effect's synchronous body to satisfy react-compiler rules.
+    const initialTimer = setTimeout(() => void fetchData(), 0);
 
     intervalRef.current = setInterval(() => {
       if (!stoppedRef.current) void fetchData();
     }, POLL_INTERVAL_MS);
 
     return () => {
+      clearTimeout(initialTimer);
       if (intervalRef.current !== null) {
         clearInterval(intervalRef.current);
         intervalRef.current = null;
