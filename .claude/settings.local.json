@@ -14,7 +14,11 @@
       "Bash(grep -v \"//.*@\")",
       "Bash(xargs head -30)",
       "Bash(xargs head -15)",
-      "Bash(grep -v \"//.*comment\")"
+      "Bash(grep -v \"//.*comment\")",
+      "Bash(pnpm lint *)",
+      "Bash(pnpm install *)",
+      "Bash(node_modules/.bin/eslint src/components/LiveMatchModal.tsx src/lib/useLiveFixture.ts src/app/api/live)",
+      "Bash(pnpm build *)"
     ]
   }
 }
