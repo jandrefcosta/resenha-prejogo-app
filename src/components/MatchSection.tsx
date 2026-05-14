@@ -10,19 +10,20 @@ import { getMatchDocs } from '@/lib/matchDocs';
 import { localiseRound } from '@/lib/localiseRound';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme } from '@/lib/types';
+import { teamLogoUrl } from '@/lib/teamLogo';
 
 // ─── Lookup maps (built once at module level) ─────────────────────────────────
 
 const clubs = clubsData as ClubTheme[];
 
-/** cbfId → API-Football logo URL */
+/** cbfId → local logo path */
 const cbfIdToLogo = new Map<string, string>(
   clubs
     .filter((c) => c.cbfId != null && c.apiFootballId != null)
-    .map((c) => [
-      String(c.cbfId),
-      `https://media.api-sports.io/football/teams/${c.apiFootballId}.png`,
-    ]),
+    .flatMap((c) => {
+      const url = teamLogoUrl(c.apiFootballId);
+      return url ? [[String(c.cbfId), url]] : [];
+    }),
 );
 
 /** cbfId → API-Football team ID string */

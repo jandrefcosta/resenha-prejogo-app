@@ -18,6 +18,15 @@ const securityHeaders = [
 ];
 
 const nextConfig: NextConfig = {
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'media.api-sports.io',
+        pathname: '/football/**',
+      },
+    ],
+  },
   async headers() {
     return [
       {

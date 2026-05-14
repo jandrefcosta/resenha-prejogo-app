@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import Image from "next/image";
 import {
   XMarkIcon,
   ClockIcon,
@@ -73,7 +74,7 @@ function TeamLogo({
   const [errored, setErrored] = useState(false);
   if (!src || errored) return null;
   return (
-    <img
+    <Image
       src={src}
       alt=""
       width={size}

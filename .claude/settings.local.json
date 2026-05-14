@@ -18,7 +18,16 @@
       "Bash(pnpm lint *)",
       "Bash(pnpm install *)",
       "Bash(node_modules/.bin/eslint src/components/LiveMatchModal.tsx src/lib/useLiveFixture.ts src/app/api/live)",
-      "Bash(pnpm build *)"
+      "Bash(pnpm build *)",
+      "Bash(Get-Content C:\\\\Projetos\\\\Pessoal\\\\sports-compile\\\\.env.local)",
+      "Bash(Select-String \"API_FOOTBALL|APISPORTS\")",
+      "Bash(curl *)",
+      "Bash(nslookup media.api-sports.io)",
+      "Bash(nslookup media.api-sports.io 8.8.8.8)",
+      "Bash(npx eslint *)",
+      "Bash(node -e \"const c = require\\('./src/data/clubs.json'\\); console.log\\('clubs com apiFootballId:', c.filter\\(x=>x.apiFootballId\\).length, '/ total:', c.length\\)\")",
+      "Bash(node scripts/download-logos.mjs)",
+      "Bash(node *)"
     ]
   }
 }

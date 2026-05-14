@@ -1,10 +1,29 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { useTheme } from '@/components/ThemeProvider';
+import { teamLogoUrl } from '@/lib/teamLogo';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import type { ClubTheme } from '@/lib/types';
+
+function ClubLogoImg({ id, size = 20 }: { id: number; size?: number }) {
+  const [failed, setFailed] = useState(false);
+  const src = teamLogoUrl(id);
+  if (!src || failed) return null;
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={size}
+      height={size}
+      className="object-contain shrink-0"
+      aria-hidden="true"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 export function ClubSelector() {
   const { club: activeClub, clubs, setClub } = useTheme();
@@ -38,15 +57,7 @@ export function ClubSelector() {
         {activeClub ? (
           <>
             {activeClub.apiFootballId ? (
-              <img
-                src={`https://media.api-sports.io/football/teams/${activeClub.apiFootballId}.png`}
-                alt=""
-                width={20}
-                height={20}
-                className="object-contain shrink-0"
-                aria-hidden="true"
-                onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-              />
+              <ClubLogoImg id={activeClub.apiFootballId} />
             ) : (
               <span
                 className="inline-block h-2.5 w-2.5 rounded-full flex-none border border-white/20"
@@ -145,15 +156,7 @@ function ClubModal({
                 }
               >
                 {c.apiFootballId ? (
-                  <img
-                    src={`https://media.api-sports.io/football/teams/${c.apiFootballId}.png`}
-                    alt=""
-                    width={20}
-                    height={20}
-                    className="object-contain shrink-0"
-                    aria-hidden="true"
-                    onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
-                  />
+                  <ClubLogoImg id={c.apiFootballId} />
                 ) : (
                   <span
                     className="inline-block h-2.5 w-2.5 rounded-full flex-none border border-white/20 shrink-0"

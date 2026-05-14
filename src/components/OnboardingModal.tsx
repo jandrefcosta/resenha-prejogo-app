@@ -1,11 +1,30 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { CalendarIcon, TvIcon, SparklesIcon, ChevronRightIcon, ArrowLeftIcon } from '@heroicons/react/20/solid';
 import { useTheme } from '@/components/ThemeProvider';
+import { teamLogoUrl } from '@/lib/teamLogo';
 import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import type { ClubTheme } from '@/lib/types';
+
+function ClubLogoImg({ id }: { id: number }) {
+  const [failed, setFailed] = useState(false);
+  const src = teamLogoUrl(id);
+  if (!src || failed) return null;
+  return (
+    <Image
+      src={src}
+      alt=""
+      width={20}
+      height={20}
+      className="object-contain shrink-0"
+      aria-hidden="true"
+      onError={() => setFailed(true)}
+    />
+  );
+}
 
 const ONBOARDING_KEY = 'resenha-prejogo:onboarded';
 const CLUB_KEY = 'resenha-prejogo:club';
@@ -144,17 +163,7 @@ function ClubStep({
             className="flex items-center gap-2.5 rounded-xl border border-zinc-800 bg-zinc-800/50 px-3 min-h-[44px] text-sm font-medium font-sans text-zinc-300 text-left w-full transition-all duration-150 cursor-pointer hover:bg-zinc-700/50 hover:text-white hover:border-zinc-600 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-400"
           >
             {c.apiFootballId ? (
-              <img
-                src={`https://media.api-sports.io/football/teams/${c.apiFootballId}.png`}
-                alt=""
-                width={20}
-                height={20}
-                className="object-contain shrink-0"
-                aria-hidden="true"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).style.display = 'none';
-                }}
-              />
+              <ClubLogoImg id={c.apiFootballId} />
             ) : (
               <span
                 className="inline-block h-2.5 w-2.5 rounded-full flex-none border border-white/20 shrink-0"

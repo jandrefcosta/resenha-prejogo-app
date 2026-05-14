@@ -3,6 +3,7 @@ import clubsData from '@/data/clubs.json';
 import { getCache, setCache, TTL_6H, TTL_24H, TTL_15S } from '@/lib/redisCache';
 import { SERIE_A, getCompetitionByLeagueId, type Competition } from '@/data/competitions';
 import type { ClubTheme, Match, MatchTeam, LineupData, LiveFixtureData, LiveEvent, LiveStats, LiveEventType } from '@/lib/types';
+import { teamLogoUrl } from '@/lib/teamLogo';
 
 const clubs = clubsData as ClubTheme[];
 const BASE_URL = 'https://v3.football.api-sports.io';
@@ -81,7 +82,7 @@ function toMatchTeam(t: ApiTeam): MatchTeam {
         .replace(/^(Clube |Esporte Clube |Sport Club |Sociedade Esportiva )/i, '')
         .substring(0, 3)
         .toUpperCase(),
-    logo: `https://media.api-sports.io/football/teams/${t.id}.png`,
+    logo: teamLogoUrl(t.id),
   };
 }
 
