@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { and, eq, or, desc } from 'drizzle-orm';
 import { getFinishedFixturesByClub } from '@/lib/apiFootball';
-import { CONMEBOL_TOURNAMENT_IDS } from '@/lib/conmebolApi';
+import {
+  CONMEBOL_TOURNAMENT_IDS,
+  getConmebolFinishedByTeam,
+  type ConmebolCompetitionSlug,
+} from '@/lib/conmebolApi';
+import { selectConmebolResults } from '@/lib/resultsMerge';
 import { db } from '@/lib/db';
 import { matchSnapshots } from '@/lib/db/schema';
 import { COMPETITIONS } from '@/data/competitions';
@@ -110,37 +115,52 @@ export async function GET(req: NextRequest) {
   const conmebolTeamIdStr = club.conmebolId !== null ? String(club.conmebolId) : null;
 
   // ── Fetch all sources in parallel ────────────────────────────────────────
-  const [conmebolResults, apiFootballOnlyResults, conmebolApifResults] = await Promise.all([
-    // CONMEBOL source — read from match_snapshots (source of truth for finished matches)
-    Promise.allSettled(
-      CONMEBOL_COMPS
-        .filter(() => conmebolTeamIdStr !== null)
-        .map(async (comp) => {
-          const leagueId = CONMEBOL_LEAGUE_IDS[comp.id];
-          const rows = await db.select().from(matchSnapshots)
-            .where(and(
-              eq(matchSnapshots.source, 'conmebol'),
-              eq(matchSnapshots.leagueId, leagueId),
-              or(
-                eq(matchSnapshots.homeTeamId, conmebolTeamIdStr!),
-                eq(matchSnapshots.awayTeamId, conmebolTeamIdStr!),
-              ),
-            ))
-            .orderBy(desc(matchSnapshots.matchDate))
-            .limit(10);
-          return rows.map(row => conmebolToMatch(row.rawPayload as ConmebolMatchDetail, comp.id));
-        }),
-    ),
-    // API-Football for non-CONMEBOL competitions (Copa do Brasil, etc.)
-    Promise.allSettled(
-      API_FOOTBALL_ONLY_COMPS.map((comp) => getFinishedFixturesByClub(comp, teamApiId)),
-    ),
-    // API-Football fixtures for CONMEBOL competitions — always fetch for cross-reference
-    // so we can enrich CONMEBOL matches with the correct API-Football fixture ID for events.
-    Promise.allSettled(
-      CONMEBOL_COMPS.map((comp) => getFinishedFixturesByClub(comp, teamApiId)),
-    ),
-  ]);
+  const [conmebolLive, conmebolDb, apiFootballOnlyResults, conmebolApifResults] =
+    await Promise.all([
+      // 1. CONMEBOL live — Redis-cached, self-healing. Primary display source:
+      //    a cache miss refetches the live API and write-throughs to Postgres,
+      //    so results never lag further behind than the (adaptive) cache TTL.
+      Promise.allSettled(
+        CONMEBOL_COMPS
+          .filter(() => club.conmebolId !== null)
+          .map(async (comp) => {
+            const tournamentId = CONMEBOL_TOURNAMENT_IDS[comp.id as ConmebolCompetitionSlug];
+            const played = await getConmebolFinishedByTeam(tournamentId, club.conmebolId!, 10);
+            return played.map((m) => conmebolToMatch(m, comp.id));
+          }),
+      ),
+      // 2. CONMEBOL snapshot — Postgres match_snapshots. Durable fallback that
+      //    survives a CONMEBOL API outage even after the Redis stale key expires.
+      Promise.allSettled(
+        CONMEBOL_COMPS
+          .filter(() => conmebolTeamIdStr !== null)
+          .map(async (comp) => {
+            const leagueId = CONMEBOL_LEAGUE_IDS[comp.id];
+            const rows = await db.select().from(matchSnapshots)
+              .where(and(
+                eq(matchSnapshots.source, 'conmebol'),
+                eq(matchSnapshots.leagueId, leagueId),
+                or(
+                  eq(matchSnapshots.homeTeamId, conmebolTeamIdStr!),
+                  eq(matchSnapshots.awayTeamId, conmebolTeamIdStr!),
+                ),
+              ))
+              .orderBy(desc(matchSnapshots.matchDate))
+              .limit(10);
+            return rows.map(row => conmebolToMatch(row.rawPayload as ConmebolMatchDetail, comp.id));
+          }),
+      ),
+      // 3. API-Football for non-CONMEBOL competitions (Copa do Brasil, etc.)
+      Promise.allSettled(
+        API_FOOTBALL_ONLY_COMPS.map((comp) => getFinishedFixturesByClub(comp, teamApiId)),
+      ),
+      // 4. API-Football fixtures for CONMEBOL competitions — always fetched for
+      //    cross-reference (enriches CONMEBOL matches with the API-Football
+      //    fixture ID for events) and as the last-resort display fallback.
+      Promise.allSettled(
+        CONMEBOL_COMPS.map((comp) => getFinishedFixturesByClub(comp, teamApiId)),
+      ),
+    ]);
 
   // ── Build API-Football fixture lookups ────────────────────────────────────
   // Primary:  "YYYY-MM-DD:homeApiId:awayApiId" → Match  (both teams known)
@@ -209,24 +229,24 @@ export async function GET(req: NextRequest) {
   }
 
   // ── Merge ──────────────────────────────────────────────────────────────────
-  const matches: Match[] = [];
+  // Flatten a settled list of Match[] batches into a single Match[].
+  const collectFulfilled = (settled: PromiseSettledResult<Match[]>[]): Match[] =>
+    settled.flatMap((r) => (r.status === 'fulfilled' ? r.value : []));
 
-  for (const result of conmebolResults) {
-    if (result.status === 'fulfilled') matches.push(...enrichConmebol(result.value));
-  }
-  for (const result of apiFootballOnlyResults) {
-    if (result.status === 'fulfilled') matches.push(...result.value);
-  }
-
-  // If CONMEBOL returned nothing, use the API-Football fixtures as fallback.
-  const hasConmebolData = matches.some((m) =>
-    CONMEBOL_COMPS.some((c) => c.apiFootballLeagueId === m.leagueId),
+  // CONMEBOL display: live (fresh) merged over the Postgres snapshot, with the
+  // API-Football fixtures as the last-resort fallback. selectConmebolResults
+  // ensures a stale snapshot can neither hide live data nor suppress the
+  // fallback — replacing the old all-or-nothing "db empty?" gate.
+  const conmebolResults = selectConmebolResults(
+    enrichConmebol(collectFulfilled(conmebolLive)),
+    enrichConmebol(collectFulfilled(conmebolDb)),
+    collectFulfilled(conmebolApifResults),
   );
-  if (club.conmebolId !== null && !hasConmebolData) {
-    for (const result of conmebolApifResults) {
-      if (result.status === 'fulfilled') matches.push(...result.value);
-    }
-  }
+
+  const matches: Match[] = [
+    ...conmebolResults,
+    ...collectFulfilled(apiFootballOnlyResults),
+  ];
 
   matches.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
 
