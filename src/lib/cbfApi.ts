@@ -37,7 +37,7 @@ import type {
 const CBF_BASE = 'https://gweb.cbf.com.br/api/site/v1';
 const CHAMPIONSHIP_ID = 1260611;
 
-const TTL = {
+export const TTL = {
   FINISHED:   60 * 60 * 24 * 30, // 30 days — results are immutable
   LIVE:       60 * 5,             // 5 min — goals/cards updating
   POST_MATCH: 60 * 10,            // 10 min — match ended, waiting for CBF to publish scores
@@ -303,12 +303,37 @@ function inferRoundStatus(matches: CbfMatchDetail[]): CbfRoundStatus {
   return 'upcoming';
 }
 
-function computeTtl(matches: CbfMatchDetail[], status: CbfRoundStatus): number {
+/**
+ * How long after kickoff a not-yet-published match is still treated as
+ * "awaiting publication". Bounds the edge case of a postponed/abandoned match
+ * whose kickoff lingers in the past with no score — past this window we stop
+ * polling aggressively and fall back to the future-kickoff tiers.
+ */
+const AWAITING_PUBLICATION_WINDOW_MS = 6 * 60 * 60 * 1000; // 6 h
+
+export function computeTtl(matches: CbfMatchDetail[], status: CbfRoundStatus): number {
   if (status === 'finished') return TTL.FINISHED;
   if (status === 'live') return TTL.LIVE;
 
-  // Upcoming: use time until the NEXT unplayed match
   const now = Date.now();
+
+  // A match whose kickoff has already passed but isn't fully published yet
+  // (missing score, or score present but lineup not posted) needs frequent
+  // polling so the result surfaces promptly. Without this, a round mixing a
+  // just-ended match with others still days away would take the multi-hour
+  // future tier below — freezing the missing score (and hiding the result
+  // from the Resultados tab) for up to 12 h.
+  const awaitingPublication = matches.some((m) => {
+    const hasScore = m.mandante.gols !== null && m.mandante.gols !== '' &&
+                     m.visitante.gols !== null && m.visitante.gols !== '';
+    const hasLineup = m.mandante.atletas.length > 0 && m.visitante.atletas.length > 0;
+    if (hasScore && hasLineup) return false;
+    const kickoff = parseCbfDatetime(m.data, m.hora).getTime();
+    return kickoff <= now && now - kickoff <= AWAITING_PUBLICATION_WINDOW_MS;
+  });
+  if (awaitingPublication) return TTL.POST_MATCH;
+
+  // Upcoming: use time until the NEXT unplayed match
   const unplayed = matches
     .filter((m) => !m.mandante.gols || !m.visitante.gols)
     .map((m) => parseCbfDatetime(m.data, m.hora).getTime())
