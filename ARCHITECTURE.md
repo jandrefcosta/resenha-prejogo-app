@@ -98,7 +98,8 @@ scripts/                      ← CLI/cron: cache seeding + PDF ingestion
 - **Responsibility:** displays upcoming fixtures and past results for the
   user's selected club, filtered by competition.
 - **Boundaries:** reads from `/api/fixtures`, `/api/past-fixtures`,
-  `/api/round`; club selection persisted in `localStorage`.
+  `/api/past-results`, `/api/round`; club selection persisted in
+  `localStorage`.
 - **Owners:** no clear owner
 - **Health:** 🟢
 
@@ -232,10 +233,13 @@ No ADRs written yet. Candidates:
   flow, scoring system, ranking display.
 - 🟡 **Modals built but not plugged into UI** — `SuggestionModal`,
   `StandingsModal`, `GroupStandingsModal` exist in `src/components/`.
-- 🟡 **CBF/Conmebol official-source ingestion** — parsers ready
-  (`parseBoletim`, `parseSumula` in `cbfDocParser.ts`) plus
-  `getConmebolFinishedByTeam` in `conmebolApi.ts`. Pending: scheduler,
-  persistence layer.
+- 🟡 **CBF official-source ingestion** — parsers ready (`parseBoletim`,
+  `parseSumula` in `cbfDocParser.ts`). Pending: scheduler.
+- 🟢 **CONMEBOL results ingestion** — `getConmebolFinishedByTeam` feeds
+  `/api/past-results`, which reads CONMEBOL results live (Redis-cached,
+  self-healing) merged over the `match_snapshots` Postgres snapshot. The
+  snapshot is kept fresh by the `getConmebolTournament` write-through and
+  the hourly `snapshot-matches` cron (Sentry-monitored).
 - 🟡 **Social feed incomplete** — routes and components exist; functions
   `hasUserLiked` and `deletePost` in `socialRedis.ts` ready but not
   wired into the UI.

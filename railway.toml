@@ -29,7 +29,12 @@ restartPolicyMaxRetries = 3
 #   Header   : Authorization: Bearer $CRON_SECRET
 #
 # Job 3 — Snapshot matches (persist finished matches to Postgres)
-#   Schedule : 0 6 * * 1    (every Monday at 06:00 UTC)
+#   Schedule : 0 * * * *    (hourly — durable backstop for the self-healing
+#              read path in /api/past-results; keeps match_snapshots fresh
+#              even with no organic traffic)
 #   URL      : https://<your-domain>/api/cron/snapshot-matches
 #   Method   : GET
 #   Header   : Authorization: Bearer $CRON_SECRET
+#   Monitor  : the handler reports a Sentry cron check-in under monitor slug
+#              "snapshot-matches" — a missed or errored run raises an alert,
+#              so a silently-dead cron is caught instead of going unnoticed.

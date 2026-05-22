@@ -8,6 +8,7 @@
  */
 
 import { type NextRequest, NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
 import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { matchSnapshots } from '@/lib/db/schema';
@@ -96,6 +97,8 @@ function mapConmebolMatch(m: ConmebolMatchDetail, leagueId: number) {
 
 // ─── Handler ──────────────────────────────────────────────────────────────────
 
+const MONITOR_SLUG = 'snapshot-matches';
+
 export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
@@ -105,64 +108,98 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const results: Record<string, number> = {};
+  // Sentry cron check-in (dead-man's-switch): a missed or errored check-in
+  // raises an alert, so a silently-dead cron can no longer go unnoticed —
+  // which is exactly how stale CONMEBOL results went unseen for weeks.
+  const checkInId = Sentry.captureCheckIn(
+    { monitorSlug: MONITOR_SLUG, status: 'in_progress' },
+    {
+      schedule:      { type: 'crontab', value: '0 * * * *' },
+      checkinMargin: 10,
+      maxRuntime:    10,
+      timezone:      'Etc/UTC',
+    },
+  );
 
-  // ── CBF: últimas 4 rodadas (cobre uma semana de jogos) ──
-  // A rodada atual é buscada do Redis via cache; o cron só grava rounds encerrados.
-  const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
-  const since = Date.now() - TWO_WEEKS_MS;
+  try {
+    const results: Record<string, number> = {};
 
-  let cbfInserted = 0;
-  for (let round = 1; round <= 38; round++) {
-    try {
-      const data = await getCbfRound(round, false);
-      const finished = data.matches.filter(m => {
-        if (!isCbfMatchFinished(m)) return false;
-        const matchTs = parseCbfDatetime(m.data, m.hora).getTime();
-        return matchTs >= since; // só as últimas 2 semanas
-      });
-      if (finished.length === 0) continue;
+    // ── CBF: jogos das últimas 2 semanas ──
+    // A rodada atual é buscada do Redis via cache; o cron só grava rounds encerrados.
+    const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000;
+    const since = Date.now() - TWO_WEEKS_MS;
 
-      const rows = finished.map(m => mapCbfMatch(m, round));
-      await db.insert(matchSnapshots)
-        .values(rows)
-        .onConflictDoUpdate({
+    let cbfInserted = 0;
+    for (let round = 1; round <= 38; round++) {
+      try {
+        const data = await getCbfRound(round, false);
+        const finished = data.matches.filter(m => {
+          if (!isCbfMatchFinished(m)) return false;
+          const matchTs = parseCbfDatetime(m.data, m.hora).getTime();
+          return matchTs >= since; // só as últimas 2 semanas
+        });
+        if (finished.length === 0) continue;
+
+        const rows = finished.map(m => mapCbfMatch(m, round));
+        await db.insert(matchSnapshots)
+          .values(rows)
+          .onConflictDoUpdate({
+            target: matchSnapshots.fixtureId,
+            set: {
+              homeScore:     sql`excluded.home_score`,
+              awayScore:     sql`excluded.away_score`,
+              hasHomeLineup: sql`excluded.has_home_lineup`,
+              hasAwayLineup: sql`excluded.has_away_lineup`,
+              rawPayload:    sql`excluded.raw_payload`,
+              updatedAt:     sql`now()`,
+            },
+          });
+        cbfInserted += rows.length;
+      } catch { /* round pode não existir ainda — falha esperada, não reportar */ }
+    }
+    results.cbf = cbfInserted;
+
+    // ── CONMEBOL ──
+    const conmebolTournaments = [
+      { id: CONMEBOL_TOURNAMENT_IDS.libertadores,    leagueId: LIB_LEAGUE_ID },
+      { id: CONMEBOL_TOURNAMENT_IDS['sul-americana'], leagueId: SUL_LEAGUE_ID },
+    ];
+
+    let conmebolInserted = 0;
+    for (const t of conmebolTournaments) {
+      try {
+        const data = await getConmebolTournament(t.id, false);
+        const finished = data.matches.filter(m =>
+          m.matchStatus === 'Played' && m.date * 1000 >= since,
+        );
+        if (finished.length === 0) continue;
+
+        const rows = finished.map(m => mapConmebolMatch(m, t.leagueId));
+        // Upsert (not DoNothing): a result corrected after the fact — score
+        // fix, walkover — must overwrite the stored snapshot. Matches the CBF
+        // branch and the conmebolApi write-through.
+        await db.insert(matchSnapshots).values(rows).onConflictDoUpdate({
           target: matchSnapshots.fixtureId,
           set: {
-            homeScore:     sql`excluded.home_score`,
-            awayScore:     sql`excluded.away_score`,
-            hasHomeLineup: sql`excluded.has_home_lineup`,
-            hasAwayLineup: sql`excluded.has_away_lineup`,
-            rawPayload:    sql`excluded.raw_payload`,
-            updatedAt:     sql`now()`,
+            homeScore:  sql`excluded.home_score`,
+            awayScore:  sql`excluded.away_score`,
+            rawPayload: sql`excluded.raw_payload`,
+            updatedAt:  sql`now()`,
           },
         });
-      cbfInserted += rows.length;
-    } catch { /* round pode não existir ainda */ }
+        conmebolInserted += rows.length;
+      } catch (e) {
+        // Only 2 tournaments — a failure here is unexpected, so surface it.
+        Sentry.captureException(e, { tags: { cron: MONITOR_SLUG, source: 'conmebol' } });
+      }
+    }
+    results.conmebol = conmebolInserted;
+
+    Sentry.captureCheckIn({ checkInId, monitorSlug: MONITOR_SLUG, status: 'ok' });
+    return NextResponse.json({ ok: true, inserted: results });
+  } catch (err) {
+    Sentry.captureCheckIn({ checkInId, monitorSlug: MONITOR_SLUG, status: 'error' });
+    Sentry.captureException(err, { tags: { cron: MONITOR_SLUG } });
+    return NextResponse.json({ ok: false, error: String(err) }, { status: 500 });
   }
-  results.cbf = cbfInserted;
-
-  // ── CONMEBOL ──
-  const conmebolTournaments = [
-    { id: CONMEBOL_TOURNAMENT_IDS.libertadores,    leagueId: LIB_LEAGUE_ID },
-    { id: CONMEBOL_TOURNAMENT_IDS['sul-americana'], leagueId: SUL_LEAGUE_ID },
-  ];
-
-  let conmebolInserted = 0;
-  for (const t of conmebolTournaments) {
-    try {
-      const data = await getConmebolTournament(t.id, false);
-      const finished = data.matches.filter(m =>
-        m.matchStatus === 'Played' && m.date * 1000 >= since,
-      );
-      if (finished.length === 0) continue;
-
-      const rows = finished.map(m => mapConmebolMatch(m, t.leagueId));
-      await db.insert(matchSnapshots).values(rows).onConflictDoNothing();
-      conmebolInserted += rows.length;
-    } catch { /* torneio pode estar indisponível */ }
-  }
-  results.conmebol = conmebolInserted;
-
-  return NextResponse.json({ ok: true, inserted: results });
 }
