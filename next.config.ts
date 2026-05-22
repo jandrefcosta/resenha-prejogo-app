@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
         hostname: 'media.api-sports.io',
         pathname: '/football/**',
       },
+      {
+        // CONMEBOL team crests (Libertadores / Sul-Americana results)
+        protocol: 'https',
+        hostname: 'gol-cdn.conmebol.com',
+        pathname: '/icons/team/**',
+      },
     ],
   },
   async headers() {
