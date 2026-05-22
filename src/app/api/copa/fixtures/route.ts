@@ -136,22 +136,23 @@ function getCopaTTL(): number {
   return hour >= 12 && hour <= 23 ? TTL_30MIN : TTL_1H;
 }
 
-// ─── Route handler ────────────────────────────────────────────────────────────
+// ─── Payload loader ───────────────────────────────────────────────────────────
 
-export const dynamic = 'force-dynamic';
-
-export async function GET() {
+/**
+ * Returns the Copa 2026 fixtures payload — from the Redis cache when warm, or
+ * by fetching API-Football on a miss (repopulating the cache). Throws on a
+ * hard upstream failure.
+ *
+ * Exported so server-side callers (e.g. the bolão score cron) can obtain the
+ * payload without depending on the cache having been pre-warmed by organic
+ * traffic to GET /api/copa/fixtures.
+ */
+export async function getCopaFixtures(): Promise<CopaFixturesPayload> {
   const cached = await getCache<CopaFixturesPayload>(CACHE_KEY);
-  if (cached) {
-    return NextResponse.json(cached, {
-      headers: { 'Cache-Control': `public, s-maxage=${cached.ttlSeconds}, stale-while-revalidate=120` },
-    });
-  }
+  if (cached) return cached;
 
   const key = process.env.API_FOOTBALL_KEY;
-  if (!key) {
-    return NextResponse.json({ error: 'API_FOOTBALL_KEY not set' }, { status: 500 });
-  }
+  if (!key) throw new Error('API_FOOTBALL_KEY not set');
 
   const url = new URL(`${BASE_URL}/fixtures`);
   url.searchParams.set('league', String(LEAGUE_ID));
@@ -161,10 +162,7 @@ export async function GET() {
     headers: { 'x-apisports-key': key },
     cache: 'no-store',
   });
-
-  if (!res.ok) {
-    return NextResponse.json({ error: `API-Football HTTP ${res.status}` }, { status: 502 });
-  }
+  if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
 
   const data: ApiResponse<ApiFixture> = await res.json();
 
@@ -172,7 +170,7 @@ export async function GET() {
     ? data.errors.length > 0
     : Object.keys(data.errors).length > 0;
   if (hasErrors) {
-    return NextResponse.json({ error: `API-Football error: ${JSON.stringify(data.errors)}` }, { status: 502 });
+    throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
   }
 
   // Group by phase tab key, sorted chronologically within each group
@@ -198,8 +196,25 @@ export async function GET() {
   };
 
   await setCache(CACHE_KEY, payload, ttl);
+  return payload;
+}
 
-  return NextResponse.json(payload, {
-    headers: { 'Cache-Control': `public, s-maxage=${ttl}, stale-while-revalidate=120` },
-  });
+// ─── Route handler ────────────────────────────────────────────────────────────
+
+export const dynamic = 'force-dynamic';
+
+export async function GET() {
+  try {
+    const payload = await getCopaFixtures();
+    return NextResponse.json(payload, {
+      headers: {
+        'Cache-Control': `public, s-maxage=${payload.ttlSeconds}, stale-while-revalidate=120`,
+      },
+    });
+  } catch (err) {
+    return NextResponse.json(
+      { error: err instanceof Error ? err.message : String(err) },
+      { status: 502 },
+    );
+  }
 }

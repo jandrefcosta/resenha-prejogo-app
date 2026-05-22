@@ -114,7 +114,7 @@ export async function GET(req: NextRequest) {
   const checkInId = Sentry.captureCheckIn(
     { monitorSlug: MONITOR_SLUG, status: 'in_progress' },
     {
-      schedule:      { type: 'crontab', value: '0 * * * *' },
+      schedule:      { type: 'crontab', value: '0 */6 * * *' },
       checkinMargin: 10,
       maxRuntime:    10,
       timezone:      'Etc/UTC',

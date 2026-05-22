@@ -27,7 +27,12 @@
       "Bash(npx eslint *)",
       "Bash(node -e \"const c = require\\('./src/data/clubs.json'\\); console.log\\('clubs com apiFootballId:', c.filter\\(x=>x.apiFootballId\\).length, '/ total:', c.length\\)\")",
       "Bash(node scripts/download-logos.mjs)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(git stash *)",
+      "PowerShell(Get-CimInstance *)",
+      "PowerShell(Stop-Process *)",
+      "PowerShell(Remove-Item *)",
+      "Bash(echo \"=== TSC EXIT: $? ===\")"
     ]
   }
 }

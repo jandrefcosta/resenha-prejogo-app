@@ -5,10 +5,10 @@ import {
   getPalpite,
   calcPts,
 } from '@/lib/bolaoRedis';
-import { getCache, redis } from '@/lib/redisCache';
+import { redis } from '@/lib/redisCache';
 import { db } from '@/lib/db';
 import { scores as scoresTable, bolaoRankings, globalRankings } from '@/lib/db/schema';
-import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
+import { getCopaFixtures, type CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 
 export const dynamic = 'force-dynamic';
 
@@ -23,9 +23,17 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const copa = await getCache<CopaFixturesPayload>('copa-fixtures:2026');
-  if (!copa) {
-    return NextResponse.json({ error: 'Copa fixtures not cached yet' }, { status: 503 });
+  // getCopaFixtures serves the Redis cache when warm and fetches API-Football
+  // on a miss — so a cold cache (nobody browsed Copa fixtures) no longer
+  // silently skips a scoring run.
+  let copa: CopaFixturesPayload;
+  try {
+    copa = await getCopaFixtures();
+  } catch (err) {
+    return NextResponse.json(
+      { error: `Copa fixtures unavailable: ${err instanceof Error ? err.message : String(err)}` },
+      { status: 503 },
+    );
   }
 
   // Apenas fase de grupos (48 jogos)
