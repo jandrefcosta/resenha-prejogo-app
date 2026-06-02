@@ -1,6 +1,7 @@
 import { unstable_cache } from 'next/cache';
 import clubsData from '@/data/clubs.json';
 import { getCache, setCache, TTL_6H, TTL_24H, TTL_15S } from '@/lib/redisCache';
+import { acceptStale, hasApiFootballErrors, type StaleEntry } from '@/lib/apiFootballCache';
 import { SERIE_A, getCompetitionByLeagueId, type Competition } from '@/data/competitions';
 import type { ClubTheme, Match, MatchTeam, LineupData, LiveFixtureData, LiveEvent, LiveStats, LiveEventType } from '@/lib/types';
 import { teamLogoUrl } from '@/lib/teamLogo';
@@ -9,6 +10,24 @@ const clubs = clubsData as ClubTheme[];
 const BASE_URL = 'https://v3.football.api-sports.io';
 const MATCHES_PER_CLUB = 5;
 const CACHE_TTL_SECONDS = 60 * 60 * 6; // 6 h
+
+// ─── Stale-while-error backup ─────────────────────────────────────────────────
+// API-Football returns quota/plan/rate-limit failures as an `errors` body. With
+// no fallback those blips made finished results vanish or 502. We mirror the
+// cbfApi.ts pattern: every successful fetch also writes a long-lived backup, and
+// on a later failure we serve that last-good data instead of throwing.
+
+const STALE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000; // serve last-good up to 7 days old
+const STALE_BACKUP_TTL = TTL_24H * 30;            // backup key lifetime (30 days)
+
+async function writeStaleBackup<T>(key: string, data: T): Promise<void> {
+  const entry: StaleEntry<T> = { fetchedAt: new Date().toISOString(), data };
+  await setCache(key, entry, STALE_BACKUP_TTL);
+}
+
+async function readStaleBackup<T>(key: string): Promise<T | null> {
+  return acceptStale(await getCache<StaleEntry<T>>(key), STALE_MAX_AGE_MS);
+}
 
 // ─── Lookup maps (built once at module init) ──────────────────────────────────
 
@@ -141,38 +160,46 @@ const fetchLeagueFixturesRaw = unstable_cache(
     const cached = await getCache<ApiFixtureItem[]>(cacheKey);
     if (cached) return cached;
 
-    const key = process.env.API_FOOTBALL_KEY;
-    if (!key) throw new Error('API_FOOTBALL_KEY is not set');
+    const staleKey = `${cacheKey}:stale`;
+    try {
+      const key = process.env.API_FOOTBALL_KEY;
+      if (!key) throw new Error('API_FOOTBALL_KEY is not set');
 
-    const today = new Date();
-    const to = new Date(today);
-    to.setDate(to.getDate() + 90);
-    const fmt = (d: Date) => d.toISOString().slice(0, 10);
+      const today = new Date();
+      const to = new Date(today);
+      to.setDate(to.getDate() + 90);
+      const fmt = (d: Date) => d.toISOString().slice(0, 10);
 
-    const url = new URL(`${BASE_URL}/fixtures`);
-    url.searchParams.set('league', String(leagueId));
-    url.searchParams.set('season', String(season));
-    url.searchParams.set('from', fmt(today));
-    url.searchParams.set('to', fmt(to));
+      const url = new URL(`${BASE_URL}/fixtures`);
+      url.searchParams.set('league', String(leagueId));
+      url.searchParams.set('season', String(season));
+      url.searchParams.set('from', fmt(today));
+      url.searchParams.set('to', fmt(to));
 
-    const res = await fetch(url.toString(), {
-      headers: { 'x-apisports-key': key },
-    });
-    if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
+      const res = await fetch(url.toString(), {
+        headers: { 'x-apisports-key': key },
+      });
+      if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
 
-    const data: ApiResponse<ApiFixtureItem> = await res.json();
+      const data: ApiResponse<ApiFixtureItem> = await res.json();
+      if (hasApiFootballErrors(data.errors)) {
+        throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
+      }
 
-    const hasErrors = Array.isArray(data.errors)
-      ? data.errors.length > 0
-      : Object.keys(data.errors).length > 0;
-    if (hasErrors) throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
+      const fixtures = data.response.filter(
+        (f) => f.fixture.status.short === 'NS' || f.fixture.status.short === 'PST',
+      );
 
-    const fixtures = data.response.filter(
-      (f) => f.fixture.status.short === 'NS' || f.fixture.status.short === 'PST',
-    );
-
-    await setCache(cacheKey, fixtures, TTL_6H);
-    return fixtures;
+      await setCache(cacheKey, fixtures, TTL_6H);
+      await writeStaleBackup(staleKey, fixtures);
+      return fixtures;
+    } catch (err) {
+      // Serve last-good fixtures rather than going blank on a transient
+      // API-Football failure (quota, plan, rate limit, network).
+      const stale = await readStaleBackup<ApiFixtureItem[]>(staleKey);
+      if (stale) return stale;
+      throw err;
+    }
   },
   ['league-upcoming-fixtures'],
   { revalidate: CACHE_TTL_SECONDS },
@@ -238,6 +265,7 @@ export async function getFinishedFixturesByClub(
   teamApiId: number,
 ): Promise<Match[]> {
   const cacheKey = `finished:${competition.id}:${teamApiId}`;
+  const staleKey = `${cacheKey}:stale`;
   const cached = await getCache<ApiFixtureItem[]>(cacheKey);
 
   let raw: ApiFixtureItem[];
@@ -245,44 +273,51 @@ export async function getFinishedFixturesByClub(
   if (cached) {
     raw = cached;
   } else {
-    const key = process.env.API_FOOTBALL_KEY;
-    if (!key) throw new Error('API_FOOTBALL_KEY is not set');
+    try {
+      const key = process.env.API_FOOTBALL_KEY;
+      if (!key) throw new Error('API_FOOTBALL_KEY is not set');
 
-    const url = new URL(`${BASE_URL}/fixtures`);
-    url.searchParams.set('league', String(competition.apiFootballLeagueId));
-    url.searchParams.set('season', String(competition.season));
-    url.searchParams.set('team', String(teamApiId));
-    url.searchParams.set('last', String(FINISHED_PER_COMPETITION));
+      const url = new URL(`${BASE_URL}/fixtures`);
+      url.searchParams.set('league', String(competition.apiFootballLeagueId));
+      url.searchParams.set('season', String(competition.season));
+      url.searchParams.set('team', String(teamApiId));
+      url.searchParams.set('last', String(FINISHED_PER_COMPETITION));
 
-    const res = await fetch(url.toString(), {
-      headers: { 'x-apisports-key': key },
-    });
-    if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
+      const res = await fetch(url.toString(), {
+        headers: { 'x-apisports-key': key },
+      });
+      if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
 
-    const data: ApiResponse<ApiFixtureItem> = await res.json();
+      const data: ApiResponse<ApiFixtureItem> = await res.json();
+      if (hasApiFootballErrors(data.errors)) {
+        throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
+      }
 
-    const hasErrors = Array.isArray(data.errors)
-      ? data.errors.length > 0
-      : Object.keys(data.errors).length > 0;
-    if (hasErrors) throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
+      // Filter to genuinely finished statuses only
+      raw = data.response.filter((f) =>
+        ['FT', 'AET', 'PEN'].includes(f.fixture.status.short),
+      );
 
-    // Filter to genuinely finished statuses only
-    raw = data.response.filter((f) =>
-      ['FT', 'AET', 'PEN'].includes(f.fixture.status.short),
-    );
+      const nowMs = Date.now();
+      const mostRecentKickoff = raw.length
+        ? Math.max(...raw.map((f) => new Date(f.fixture.date).getTime()))
+        : 0;
+      // Short TTL when: (a) a match just finished (<2h ago), or (b) we have fewer
+      // than the expected count, meaning another match might transition to FT soon.
+      const likelyMoreSoon = raw.length < FINISHED_PER_COMPETITION;
+      const ttl = likelyMoreSoon || nowMs - mostRecentKickoff < 2 * 60 * 60 * 1000
+        ? TTL_FINISHED_RECENT
+        : TTL_FINISHED_STABLE;
 
-    const nowMs = Date.now();
-    const mostRecentKickoff = raw.length
-      ? Math.max(...raw.map((f) => new Date(f.fixture.date).getTime()))
-      : 0;
-    // Short TTL when: (a) a match just finished (<2h ago), or (b) we have fewer
-    // than the expected count, meaning another match might transition to FT soon.
-    const likelyMoreSoon = raw.length < FINISHED_PER_COMPETITION;
-    const ttl = likelyMoreSoon || nowMs - mostRecentKickoff < 2 * 60 * 60 * 1000
-      ? TTL_FINISHED_RECENT
-      : TTL_FINISHED_STABLE;
-
-    await setCache(cacheKey, raw, ttl);
+      await setCache(cacheKey, raw, ttl);
+      // Finished results are immutable — keep a long-lived backup so a later
+      // API-Football outage can't make already-played results disappear.
+      await writeStaleBackup(staleKey, raw);
+    } catch (err) {
+      const stale = await readStaleBackup<ApiFixtureItem[]>(staleKey);
+      if (!stale) throw err;
+      raw = stale;
+    }
   }
 
   return raw

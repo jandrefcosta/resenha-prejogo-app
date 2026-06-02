@@ -1,11 +1,14 @@
 import { NextResponse } from 'next/server';
-import { getCache, setCache, TTL_1H, TTL_30MIN } from '@/lib/redisCache';
+import { getCache, setCache, TTL_1H, TTL_30MIN, TTL_24H } from '@/lib/redisCache';
+import { acceptStale, hasApiFootballErrors, type StaleEntry } from '@/lib/apiFootballCache';
 import type { Match, MatchTeam } from '@/lib/types';
 
 const BASE_URL = 'https://v3.football.api-sports.io';
 const LEAGUE_ID = 1;
 const SEASON = 2026;
 const CACHE_KEY = 'copa-fixtures:2026';
+/** Serve last-good Copa fixtures up to 7 days old when a fresh fetch fails. */
+const COPA_STALE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
 // ─── Phase grouping ───────────────────────────────────────────────────────────
 
@@ -151,52 +154,70 @@ export async function getCopaFixtures(): Promise<CopaFixturesPayload> {
   const cached = await getCache<CopaFixturesPayload>(CACHE_KEY);
   if (cached) return cached;
 
-  const key = process.env.API_FOOTBALL_KEY;
-  if (!key) throw new Error('API_FOOTBALL_KEY not set');
+  const staleKey = `${CACHE_KEY}:stale`;
+  try {
+    const key = process.env.API_FOOTBALL_KEY;
+    if (!key) throw new Error('API_FOOTBALL_KEY not set');
 
-  const url = new URL(`${BASE_URL}/fixtures`);
-  url.searchParams.set('league', String(LEAGUE_ID));
-  url.searchParams.set('season', String(SEASON));
+    const url = new URL(`${BASE_URL}/fixtures`);
+    url.searchParams.set('league', String(LEAGUE_ID));
+    url.searchParams.set('season', String(SEASON));
 
-  const res = await fetch(url.toString(), {
-    headers: { 'x-apisports-key': key },
-    cache: 'no-store',
-  });
-  if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
+    const res = await fetch(url.toString(), {
+      headers: { 'x-apisports-key': key },
+      cache: 'no-store',
+    });
+    if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
 
-  const data: ApiResponse<ApiFixture> = await res.json();
+    const data: ApiResponse<ApiFixture> = await res.json();
 
-  const hasErrors = Array.isArray(data.errors)
-    ? data.errors.length > 0
-    : Object.keys(data.errors).length > 0;
-  if (hasErrors) {
-    throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
+    if (hasApiFootballErrors(data.errors)) {
+      throw new Error(`API-Football error: ${JSON.stringify(data.errors)}`);
+    }
+    // An empty fixtures list is never legitimate for the World Cup — treat it
+    // as a soft failure so we don't cache an empty payload over good data.
+    if (data.response.length === 0) {
+      throw new Error('API-Football returned no Copa fixtures');
+    }
+
+    // Group by phase tab key, sorted chronologically within each group
+    const phases: Record<string, Match[]> = {};
+
+    for (const f of data.response) {
+      const match = mapFixture(f);
+      const tab = match.competitionPhase ?? 'Grupos';
+      if (!phases[tab]) phases[tab] = [];
+      phases[tab].push(match);
+    }
+
+    for (const tab in phases) {
+      phases[tab].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    }
+
+    const ttl = getCopaTTL();
+    const payload: CopaFixturesPayload = {
+      phases,
+      brazilTeamId: 6,
+      updatedAt: new Date().toISOString(),
+      ttlSeconds: ttl,
+    };
+
+    await setCache(CACHE_KEY, payload, ttl);
+    const backup: StaleEntry<CopaFixturesPayload> = {
+      fetchedAt: payload.updatedAt,
+      data: payload,
+    };
+    await setCache(staleKey, backup, TTL_24H * 30);
+    return payload;
+  } catch (err) {
+    // Serve last-good fixtures rather than 502 on a transient upstream failure.
+    const stale = acceptStale(
+      await getCache<StaleEntry<CopaFixturesPayload>>(staleKey),
+      COPA_STALE_MAX_AGE_MS,
+    );
+    if (stale) return stale;
+    throw err;
   }
-
-  // Group by phase tab key, sorted chronologically within each group
-  const phases: Record<string, Match[]> = {};
-
-  for (const f of data.response) {
-    const match = mapFixture(f);
-    const tab = match.competitionPhase ?? 'Grupos';
-    if (!phases[tab]) phases[tab] = [];
-    phases[tab].push(match);
-  }
-
-  for (const tab in phases) {
-    phases[tab].sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-  }
-
-  const ttl = getCopaTTL();
-  const payload: CopaFixturesPayload = {
-    phases,
-    brazilTeamId: 6,
-    updatedAt: new Date().toISOString(),
-    ttlSeconds: ttl,
-  };
-
-  await setCache(CACHE_KEY, payload, ttl);
-  return payload;
 }
 
 // ─── Route handler ────────────────────────────────────────────────────────────
