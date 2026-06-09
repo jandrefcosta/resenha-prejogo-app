@@ -1145,7 +1145,6 @@ function CbfMatchModalContent({
       shortName: match.awayTeam.shortName,
     })),
   ].sort((a, b) => parseSubMinute(a.minuto) - parseSubMinute(b.minuto));
-  console.log("API subs:", apiSubs);
   // Prefer API subs for live (real-time), súmula PDF for post-match
   const sumulaSubs: DisplaySub[] = [
     ...(sumulaHome?.substituicoes ?? []).map((s) => ({
@@ -1319,7 +1318,6 @@ function CbfMatchModalContent({
 
       {/* ── 2b. Substituições — ao vivo (API CBF) ou post-match (súmula PDF) ── */}
 
-      {console.log("Display subs:", displaySubs)}
       {(isLive || isPostMatch) && displaySubs.length > 0 && (
         <section>
           <SectionHeader label="Substituições" />

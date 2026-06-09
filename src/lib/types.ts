@@ -119,6 +119,13 @@ export interface Match {
   };
   /** "home" | "away" | "draw" — explicit winner from CONMEBOL source */
   winner?: string;
+  /**
+   * Team id (matches homeTeam.id / awayTeam.id) of the side that advanced from a
+   * finished knockout tie — used by the "Só Brasil" hybrid penalty scoring.
+   * Populated only for finished knockout matches (never group stage). Absent when
+   * the match is a group game, unfinished, or the qualifier is not yet known.
+   */
+  advancedTeamId?: string;
   /** True when match went to extra time (matchLengthMin > 90) */
   hadExtraTime?: boolean;
   /** True when match was played at a neutral venue */

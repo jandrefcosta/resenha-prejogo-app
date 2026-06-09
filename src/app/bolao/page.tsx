@@ -44,6 +44,27 @@ async function getGlobalTop5() {
   });
 }
 
+async function getBrazilTop5() {
+  const raw = await getRanking("bolao:brazil:ranking", 5);
+  const userKeys = raw.map((e) => `user:${e.member}`);
+  const records =
+    userKeys.length > 0
+      ? await redis.mget<
+          ({ username?: string; displayName?: string } | null)[]
+        >(...userKeys)
+      : [];
+  return raw.map((entry, i) => {
+    const record = records[i];
+    return {
+      userId: entry.member,
+      username: record?.username ?? entry.member.slice(0, 8),
+      displayName: record?.displayName ?? record?.username ?? "Anônimo",
+      totalPts: entry.score,
+      position: i + 1,
+    };
+  });
+}
+
 async function joinBolaoAction(fd: FormData) {
   "use server";
   const codigo = (fd.get("codigo") as string)?.trim().toUpperCase();
@@ -63,6 +84,9 @@ export default async function BolaoPage() {
   const top5 = await getGlobalTop5();
   const totalParticipants = await redis.zcard("bolao:global:ranking");
 
+  const brazilTop5 = await getBrazilTop5();
+  const brazilParticipants = await redis.zcard("bolao:brazil:ranking");
+
   let myBoloesMeta: Array<{
     id: string;
     nome: string;
@@ -73,6 +97,8 @@ export default async function BolaoPage() {
   }> = [];
   let myGlobalPosition: number | null = null;
   let myGlobalPts = 0;
+  let myBrazilPosition: number | null = null;
+  let myBrazilPts = 0;
   let myPalpiteCount = 0;
 
   if (user) {
@@ -104,6 +130,12 @@ export default async function BolaoPage() {
       user.sub,
     );
     myGlobalPts = await getUserScore("bolao:global:ranking", user.sub);
+
+    myBrazilPosition = await getUserRankPosition(
+      "bolao:brazil:ranking",
+      user.sub,
+    );
+    myBrazilPts = await getUserScore("bolao:brazil:ranking", user.sub);
 
     const fixtureSet = await redis.smembers<string[]>(
       `palpite:user:${user.sub}:fixtures`,
@@ -152,6 +184,27 @@ export default async function BolaoPage() {
           </div>
         )}
       </section>
+
+      {/* Ranking Só Brasil — pontua só os jogos da Seleção, em todas as fases */}
+      {brazilParticipants > 0 && (
+        <section>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="font-semibold text-zinc-100">🇧🇷 Só Brasil</h2>
+            <span className="text-xs text-zinc-500">
+              {brazilParticipants} participantes
+            </span>
+          </div>
+          <RankingTable entries={brazilTop5} myUserId={user?.sub} />
+          {user && myBrazilPosition && myBrazilPosition > 5 && (
+            <div className="mt-2 flex items-center justify-between px-4 py-3 bg-green-950/40 border border-green-800 rounded-xl text-sm">
+              <span className="text-green-400 font-medium">
+                Sua posição: {myBrazilPosition}º
+              </span>
+              <span className="text-green-400 font-bold">{myBrazilPts} pts</span>
+            </div>
+          )}
+        </section>
+      )}
 
       {/* CTA palpites */}
       {user ? (

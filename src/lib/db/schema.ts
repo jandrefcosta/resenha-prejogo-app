@@ -105,6 +105,16 @@ export const globalRankings = pgTable('global_rankings', {
   index('idx_global_rankings_points').on(t.totalPoints),
 ]);
 
+// "Só Brasil" parallel ranking — Brazil's games across all phases. Postgres
+// mirror of the bolao:brazil:ranking ZSet; Redis is the idempotency authority.
+export const brazilRankings = pgTable('brazil_rankings', {
+  userId:      text('user_id').primaryKey().references(() => users.id, { onDelete: 'cascade' }),
+  totalPoints: integer('total_points').notNull().default(0),
+  updatedAt:   timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+}, t => [
+  index('idx_brazil_rankings_points').on(t.totalPoints),
+]);
+
 // ─── Social ────────────────────────────────────────────────────────────────────
 
 export const posts = pgTable('posts', {
@@ -220,6 +230,8 @@ export type Palpite         = typeof palpites.$inferSelect;
 export type NewPalpite      = typeof palpites.$inferInsert;
 export type Score           = typeof scores.$inferSelect;
 export type NewScore        = typeof scores.$inferInsert;
+export type BrazilRanking   = typeof brazilRankings.$inferSelect;
+export type NewBrazilRanking = typeof brazilRankings.$inferInsert;
 export type Post            = typeof posts.$inferSelect;
 export type NewPost         = typeof posts.$inferInsert;
 export type MatchSnapshot   = typeof matchSnapshots.$inferSelect;

@@ -4,10 +4,12 @@ import {
   getFixtureParticipants,
   getPalpite,
   calcPts,
+  calcPtsBrazil,
+  isBrazilMatch,
 } from '@/lib/bolaoRedis';
 import { redis } from '@/lib/redisCache';
 import { db } from '@/lib/db';
-import { scores as scoresTable, bolaoRankings, globalRankings } from '@/lib/db/schema';
+import { scores as scoresTable, bolaoRankings, globalRankings, brazilRankings } from '@/lib/db/schema';
 import { getCopaFixtures, type CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 
 export const dynamic = 'force-dynamic';
@@ -105,11 +107,98 @@ export async function POST(req: NextRequest) {
     }
   }
 
+  // ─── Passo 2 — Ranking "Só Brasil" (todas as fases) ──────────────────────────
+  // Independente do passo 1: nunca toca bolao:global:ranking nem bolões privados,
+  // então o mata-mata do Brasil não vaza para o ranking global (que segue
+  // grupos-only). Idempotência própria via brscore: — pode rodar N vezes sem
+  // duplicar, e faz backfill dos jogos do Brasil já encerrados no 1º deploy.
+  const allMatches = Object.values(copa.phases).flat();
+  const brazilFinished = allMatches.filter(
+    (m) =>
+      isBrazilMatch(m) &&
+      m.status === 'finished' &&
+      m.score?.home != null &&
+      m.score?.away != null,
+  );
+
+  let brazilProcessed = 0;
+  let brazilSkipped = 0;
+
+  for (const match of brazilFinished) {
+    const isKnockout = match.competitionPhase !== 'Grupos';
+    const isDraw = match.score!.home === match.score!.away;
+    // Guard anti-freeze: um mata-mata empatado é decidido nos pênaltis e depende
+    // de advancedTeamId (derivado de winner), que pode chegar depois do status
+    // virar finished. Pontuar agora congelaria pts=0 (via brscore: nx) para quem
+    // acertou o classificado. Então pula sem gravar até winner aparecer.
+    if (isKnockout && isDraw && !match.advancedTeamId) {
+      brazilSkipped++;
+      continue;
+    }
+
+    const resultado = { home: match.score!.home!, away: match.score!.away! };
+    const participants = await getFixtureParticipants(match.id);
+
+    for (const userId of participants) {
+      try {
+        // Curto-circuito antes do getPalpite: evita reler o palpite de todo
+        // participante já pontuado a cada execução do cron.
+        if (await redis.exists(`brscore:${userId}:${match.id}`)) {
+          brazilSkipped++;
+          continue;
+        }
+
+        const palpite = await getPalpite(userId, match.id);
+        if (!palpite) continue;
+
+        const { pts, outcome } = calcPtsBrazil(palpite, {
+          home: resultado.home,
+          away: resultado.away,
+          advancedTeamId: match.advancedTeamId,
+          homeId: match.homeTeam.id,
+          awayId: match.awayTeam.id,
+        });
+
+        const scored = await redis.set(
+          `brscore:${userId}:${match.id}`,
+          { pts, outcome },
+          { nx: true },
+        );
+        if (scored === null) {
+          // Corrida: pontuado entre o exists e o set.
+          brazilSkipped++;
+          continue;
+        }
+
+        await redis.zincrby('bolao:brazil:ranking', pts, userId);
+
+        const now = new Date();
+        const pgWrites = [
+          db.insert(scoresTable).values({ userId, fixtureId: match.id, points: pts, outcome })
+            .onConflictDoNothing(),
+          db.insert(brazilRankings).values({ userId, totalPoints: pts })
+            .onConflictDoUpdate({
+              target: brazilRankings.userId,
+              set: { totalPoints: sql`${brazilRankings.totalPoints} + ${pts}`, updatedAt: now },
+            }),
+        ];
+        Promise.all(pgWrites).catch(err => console.error('[pg-shadow-write] brazil score cron:', err));
+
+        brazilProcessed++;
+      } catch (err) {
+        errors.push(`brazil ${userId}:${match.id} — ${err instanceof Error ? err.message : String(err)}`);
+      }
+    }
+  }
+
   return NextResponse.json({
     ok: true,
     finishedMatches: finishedMatches.length,
     processed,
     skipped,
+    brazilFinishedMatches: brazilFinished.length,
+    brazilProcessed,
+    brazilSkipped,
     errors,
   });
 }

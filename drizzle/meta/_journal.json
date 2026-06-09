@@ -8,6 +8,13 @@
       "when": 1778244597172,
       "tag": "0000_add_pdf_files",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1780947385204,
+      "tag": "0001_add_brazil_rankings",
+      "breakpoints": true
     }
   ]
 }

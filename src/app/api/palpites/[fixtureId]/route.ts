@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
-import { savePalpite, ensureGlobalParticipant } from '@/lib/bolaoRedis';
+import { savePalpite, ensureGlobalParticipant, ensureBrazilParticipant, isBrazilMatch } from '@/lib/bolaoRedis';
 import { getCache } from '@/lib/redisCache';
 import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 
@@ -41,6 +41,10 @@ export async function PUT(
 
   await savePalpite(user.sub, fixtureId, home, away);
   await ensureGlobalParticipant(user.sub);
+  // Also seed the "Só Brasil" ranking when this fixture involves Brazil.
+  if (match && isBrazilMatch(match)) {
+    await ensureBrazilParticipant(user.sub);
+  }
 
   return NextResponse.json({ ok: true });
 }
