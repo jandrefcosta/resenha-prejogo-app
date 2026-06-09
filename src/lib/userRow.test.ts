@@ -58,6 +58,8 @@ describe('userRecordToRow', () => {
 
     expect(row.createdAt).toBeInstanceOf(Date);
     expect(row.lastSeen).toBeInstanceOf(Date);
-    expect((row.createdAt as Date).toISOString()).toBe('2026-04-01T12:00:00.000Z');
+    expect(row.createdAt.toISOString()).toBe('2026-04-01T12:00:00.000Z');
+    expect(row.lastSeen).toBeInstanceOf(Date);
+    expect(row.lastSeen.toISOString()).toBe('2026-04-02T12:00:00.000Z');
   });
 });
