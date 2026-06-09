@@ -3,7 +3,13 @@ import { customAlphabet } from 'nanoid';
 import { sql } from 'drizzle-orm';
 import { redis } from './redisCache';
 import { db } from './db';
-import { boloes, bolaoMembers, palpites, scores as scoresTable, bolaoRankings, globalRankings } from './db/schema';
+import { boloes, bolaoMembers, palpites, scores as scoresTable, bolaoRankings, globalRankings, brazilRankings } from './db/schema';
+import type { ScoreOutcome } from './bolaoScoring';
+
+// Pure scoring & identity logic lives in bolaoScoring.ts (no I/O imports, so it
+// stays unit-testable). Re-exported here to preserve this module's public API.
+export { calcPts, calcPtsBrazil, isBrazilMatch, BRAZIL_TEAM_ID } from './bolaoScoring';
+export type { ScoreOutcome } from './bolaoScoring';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
@@ -24,7 +30,7 @@ export interface Palpite {
 
 export interface Score {
   pts: number;
-  outcome: 'exact' | 'correct' | 'miss';
+  outcome: ScoreOutcome;
 }
 
 export interface RankingEntry {
@@ -234,25 +240,22 @@ export async function incrementUserPoints(userId: string, pts: number): Promise<
   Promise.all(pgWrites).catch(err => console.error('[pg-shadow-write] incrementUserPoints:', err));
 }
 
-// ─── Pontuação ────────────────────────────────────────────────────────────────
-
-export function calcPts(
-  palpite: { home: number; away: number },
-  resultado: { home: number; away: number },
-): { pts: number; outcome: Score['outcome'] } {
-  if (palpite.home === resultado.home && palpite.away === resultado.away) {
-    return { pts: 10, outcome: 'exact' };
-  }
-  const pOutcome = Math.sign(palpite.home - palpite.away);
-  const rOutcome = Math.sign(resultado.home - resultado.away);
-  if (pOutcome === rOutcome) {
-    return { pts: 5, outcome: 'correct' };
-  }
-  return { pts: 0, outcome: 'miss' };
-}
-
-// ─── Seed de participante no ranking global (primeiro palpite) ────────────────
+// ─── Seed de participante nos rankings (primeiro palpite) ─────────────────────
 
 export async function ensureGlobalParticipant(userId: string): Promise<void> {
   await redis.zadd('bolao:global:ranking', { nx: true }, { score: 0, member: userId });
+}
+
+/**
+ * Seeds a user into the "Só Brasil" ranking with 0 pts. Cosmetic only — zincrby
+ * in the score cron auto-creates the member when points land, so scoring is
+ * correct without this; the seed just shows 0-pt users before any Brazil game
+ * finishes. Called from PUT /api/palpites when the fixture is a Brazil match.
+ */
+export async function ensureBrazilParticipant(userId: string): Promise<void> {
+  await redis.zadd('bolao:brazil:ranking', { nx: true }, { score: 0, member: userId });
+
+  db.insert(brazilRankings).values({ userId, totalPoints: 0 })
+    .onConflictDoNothing()
+    .catch(err => console.error('[pg-shadow-write] ensureBrazilParticipant:', err));
 }

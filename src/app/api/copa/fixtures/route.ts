@@ -101,6 +101,18 @@ function toMatchTeam(t: ApiTeam): MatchTeam {
 function mapFixture(f: ApiFixture): Match {
   const round = f.league.round;
   const isGroup = GROUP_ROUNDS.has(round);
+  const isFinished = ['FT', 'AET', 'PEN'].includes(f.fixture.status.short);
+
+  // advancedTeamId: the side that progressed from a finished KNOCKOUT tie. Gated
+  // to non-group phases so a group winner never sets it (the "Só Brasil" hybrid
+  // penalty rule keys off this). teams.X.winner reflects the shootout winner for
+  // PEN games; it can populate a tick after status flips to finished, so it may
+  // be absent on a just-finished tie — the score cron skips those until it lands.
+  let advancedTeamId: string | undefined;
+  if (!isGroup && isFinished) {
+    if (f.teams.home.winner === true) advancedTeamId = String(f.teams.home.id);
+    else if (f.teams.away.winner === true) advancedTeamId = String(f.teams.away.id);
+  }
 
   return {
     id: String(f.fixture.id),
@@ -118,13 +130,14 @@ function mapFixture(f: ApiFixture): Match {
     status:
       f.fixture.status.short === 'PST'
         ? 'postponed'
-        : ['FT', 'AET', 'PEN'].includes(f.fixture.status.short)
+        : isFinished
           ? 'finished'
           : 'scheduled',
     score:
       f.goals.home !== null || f.goals.away !== null
         ? { home: f.goals.home, away: f.goals.away }
         : undefined,
+    ...(advancedTeamId ? { advancedTeamId } : {}),
   };
 }
 

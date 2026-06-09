@@ -1,11 +1,12 @@
 import { getCurrentUser } from '@/lib/auth';
-import { getUserPalpites } from '@/lib/bolaoRedis';
+import { getUserPalpites, isBrazilMatch } from '@/lib/bolaoRedis';
 import { PencilIcon, ChevronLeftIcon } from '@heroicons/react/20/solid';
 import Link from 'next/link';
 import type { Score } from '@/lib/bolaoRedis';
 import { getCache, redis } from '@/lib/redisCache';
 import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 import { RodadaTabsWrapper } from '@/components/bolao/RodadaTabsWrapper';
+import { PalpiteRow } from '@/components/bolao/PalpiteRow';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,6 +85,31 @@ export default async function PalpitesPage() {
     r3: { filled: byRound[3].filter((i) => i.palpite).length, total: byRound[3].length },
   };
 
+  // Mata-mata do Brasil — jogos da Seleção nas fases de knockout, ordenados por
+  // data. Vazio (seção oculta) até o Brasil se classificar. Scores vêm do
+  // namespace brscore: (não score:), pois o mata-mata só pontua o ranking Brasil.
+  const knockoutMatches = Object.entries(copa?.phases ?? {})
+    .filter(([phase]) => phase !== 'Grupos')
+    .flatMap(([, matches]) => matches);
+  const brazilKnockout = knockoutMatches
+    .filter((m) => isBrazilMatch(m))
+    .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+
+  const brKnockoutIds = brazilKnockout.map((m) => m.id).filter((id) => palpites[id]);
+  const brScoreKeys = brKnockoutIds.map((id) => `brscore:${user.sub}:${id}`);
+  const brRawScores = brScoreKeys.length > 0
+    ? await redis.mget<(Score | null)[]>(...brScoreKeys)
+    : [];
+  const brScoreMap: Record<string, Score | null> = {};
+  brKnockoutIds.forEach((id, i) => { brScoreMap[id] = brRawScores[i] ?? null; });
+
+  const brazilKnockoutItems = brazilKnockout.map((m) => {
+    const palpite = palpites[m.id] ?? null;
+    const score = brScoreMap[m.id] ?? null;
+    const isLocked = m.status !== 'postponed' && now >= new Date(m.date).getTime();
+    return { match: m, palpite, score, isLocked };
+  });
+
   return (
     <main className="max-w-lg mx-auto w-full px-4 py-6 flex-1">
       <Link
@@ -98,6 +124,33 @@ export default async function PalpitesPage() {
         Meus Palpites
       </h1>
       <RodadaTabsWrapper counts={counts} byRound={byRound} />
+
+      {brazilKnockoutItems.length > 0 && (
+        <section className="mt-8">
+          <h2 className="font-semibold text-zinc-100 mb-1 flex items-center gap-2">
+            🇧🇷 Mata-mata do Brasil
+          </h2>
+          <p className="text-xs text-zinc-500 mb-3">
+            Vale para o ranking Só Brasil. Em empate decidido nos pênaltis, acertar
+            quem se classificou vale 5 pts.
+          </p>
+          <div className="space-y-2">
+            {brazilKnockoutItems.map((item) => (
+              <PalpiteRow
+                key={item.match.id}
+                fixtureId={item.match.id}
+                homeTeam={item.match.homeTeam.name}
+                awayTeam={item.match.awayTeam.name}
+                date={item.match.date}
+                palpite={item.palpite ?? undefined}
+                score={item.score ?? undefined}
+                actualScore={item.match.score ?? undefined}
+                isLocked={item.isLocked}
+              />
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
