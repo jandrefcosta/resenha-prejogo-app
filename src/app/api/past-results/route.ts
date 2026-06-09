@@ -7,6 +7,7 @@ import {
   type ConmebolCompetitionSlug,
 } from '@/lib/conmebolApi';
 import { selectConmebolResults } from '@/lib/resultsMerge';
+import { resolveTeam } from '@/lib/teamIdentity';
 import { db } from '@/lib/db';
 import { matchSnapshots } from '@/lib/db/schema';
 import { COMPETITIONS } from '@/data/competitions';
@@ -70,18 +71,22 @@ function conmebolToMatch(m: ConmebolMatchDetail, competitionId: string): Match {
 
   return {
     id:              String(m.id),
-    homeTeam: {
-      id:        String(m.home.id),
-      name:      m.home.name,
-      shortName: m.home.shortName,
-      logo:      teamLogo(m.home.id, m.home.crestUrl),
-    },
-    awayTeam: {
-      id:        String(m.away.id),
-      name:      m.away.name,
-      shortName: m.away.shortName,
-      logo:      teamLogo(m.away.id, m.away.crestUrl),
-    },
+    homeTeam: resolveTeam({
+      source:       'conmebol',
+      sourceId:     m.home.id,
+      id:           String(m.home.id),
+      rawName:      m.home.name,
+      rawShortName: m.home.shortName,
+      rawLogo:      teamLogo(m.home.id, m.home.crestUrl),
+    }),
+    awayTeam: resolveTeam({
+      source:       'conmebol',
+      sourceId:     m.away.id,
+      id:           String(m.away.id),
+      rawName:      m.away.name,
+      rawShortName: m.away.shortName,
+      rawLogo:      teamLogo(m.away.id, m.away.crestUrl),
+    }),
     date:            new Date(m.date * 1000).toISOString(),
     stadium:         m.venue,
     city:            null,

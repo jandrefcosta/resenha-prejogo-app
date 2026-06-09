@@ -4,7 +4,7 @@ import { getCache, setCache, TTL_6H, TTL_24H, TTL_15S } from '@/lib/redisCache';
 import { acceptStale, hasApiFootballErrors, type StaleEntry } from '@/lib/apiFootballCache';
 import { SERIE_A, getCompetitionByLeagueId, type Competition } from '@/data/competitions';
 import type { ClubTheme, Match, MatchTeam, LineupData, LiveFixtureData, LiveEvent, LiveStats, LiveEventType } from '@/lib/types';
-import { teamLogoUrl } from '@/lib/teamLogo';
+import { resolveTeam } from '@/lib/teamIdentity';
 
 const clubs = clubsData as ClubTheme[];
 const BASE_URL = 'https://v3.football.api-sports.io';
@@ -91,18 +91,12 @@ interface ApiResponse<T> {
 // ─── Mapping ──────────────────────────────────────────────────────────────────
 
 function toMatchTeam(t: ApiTeam): MatchTeam {
-  const known = idToClub.get(t.id);
-  return {
+  return resolveTeam({
+    source: 'apiFootball',
+    sourceId: t.id,
     id: String(t.id),
-    name: known?.name ?? t.name,
-    shortName:
-      known?.shortName ??
-      t.name
-        .replace(/^(Clube |Esporte Clube |Sport Club |Sociedade Esportiva )/i, '')
-        .substring(0, 3)
-        .toUpperCase(),
-    logo: teamLogoUrl(t.id),
-  };
+    rawName: t.name,
+  });
 }
 
 /**

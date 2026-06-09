@@ -10,34 +10,17 @@ import { getMatchDocs } from '@/lib/matchDocs';
 import { localiseRound } from '@/lib/localiseRound';
 import clubsData from '@/data/clubs.json';
 import type { ClubTheme } from '@/lib/types';
-import { teamLogoUrl } from '@/lib/teamLogo';
+import { resolveTeam } from '@/lib/teamIdentity';
 
 // ─── Lookup maps (built once at module level) ─────────────────────────────────
 
 const clubs = clubsData as ClubTheme[];
-
-/** cbfId → local logo path */
-const cbfIdToLogo = new Map<string, string>(
-  clubs
-    .filter((c) => c.cbfId != null && c.apiFootballId != null)
-    .flatMap((c) => {
-      const url = teamLogoUrl(c.apiFootballId);
-      return url ? [[String(c.cbfId), url]] : [];
-    }),
-);
 
 /** cbfId → API-Football team ID string */
 const cbfIdToApiFootballId = new Map<string, string>(
   clubs
     .filter((c) => c.cbfId != null && c.apiFootballId != null)
     .map((c) => [String(c.cbfId), String(c.apiFootballId)]),
-);
-
-/** cbfId → shortName */
-const cbfIdToShort = new Map<string, string>(
-  clubs
-    .filter((c) => c.cbfId != null)
-    .map((c) => [String(c.cbfId), c.shortName]),
 );
 
 // ─── CBF → Match converter ────────────────────────────────────────────────────
@@ -59,18 +42,18 @@ function cbfToMatch(entry: PastEntry): Match {
 
   return {
     id: d.idJogo,
-    homeTeam: {
+    homeTeam: resolveTeam({
+      source: 'cbf',
+      sourceId: d.mandante.id,
       id: homeApiId ?? d.mandante.id,
-      name: stripState(d.mandante.nome),
-      shortName: cbfIdToShort.get(d.mandante.id) ?? stripState(d.mandante.nome).substring(0, 3).toUpperCase(),
-      logo: cbfIdToLogo.get(d.mandante.id),
-    },
-    awayTeam: {
+      rawName: stripState(d.mandante.nome),
+    }),
+    awayTeam: resolveTeam({
+      source: 'cbf',
+      sourceId: d.visitante.id,
       id: awayApiId ?? d.visitante.id,
-      name: stripState(d.visitante.nome),
-      shortName: cbfIdToShort.get(d.visitante.id) ?? stripState(d.visitante.nome).substring(0, 3).toUpperCase(),
-      logo: cbfIdToLogo.get(d.visitante.id),
-    },
+      rawName: stripState(d.visitante.nome),
+    }),
     date,
     stadium: d.local ? d.local.split(' - ')[0] : null,
     city: null,
