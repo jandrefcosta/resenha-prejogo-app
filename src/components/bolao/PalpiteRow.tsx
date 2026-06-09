@@ -1,5 +1,6 @@
 'use client';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
+import { submitPalpite } from '@/lib/palpiteClient';
 
 export interface PalpiteData {
   home: number;
@@ -30,6 +31,12 @@ const outcomeColors = {
   miss: 'bg-zinc-900 border-zinc-700',
 };
 
+type SaveStatus =
+  | { kind: 'idle' }
+  | { kind: 'saving' }
+  | { kind: 'saved' }
+  | { kind: 'error'; message: string };
+
 export function PalpiteRow({
   fixtureId,
   homeTeam,
@@ -42,22 +49,36 @@ export function PalpiteRow({
 }: Props) {
   const [homeVal, setHomeVal] = useState(palpite?.home?.toString() ?? '');
   const [awayVal, setAwayVal] = useState(palpite?.away?.toString() ?? '');
-  const [saving, setSaving] = useState(false);
+  const [status, setStatus] = useState<SaveStatus>({ kind: 'idle' });
+
+  const savedTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const mounted = useRef(true);
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+    };
+  }, []);
 
   const save = useCallback(
     async (h: string, a: string) => {
       const home = parseInt(h, 10);
       const away = parseInt(a, 10);
       if (isNaN(home) || isNaN(away) || home < 0 || away < 0) return;
-      setSaving(true);
-      try {
-        await fetch(`/api/palpites/${fixtureId}`, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ home, away }),
-        });
-      } finally {
-        setSaving(false);
+      if (savedTimer.current) clearTimeout(savedTimer.current);
+      setStatus({ kind: 'saving' });
+
+      const result = await submitPalpite(fixtureId, home, away);
+      if (!mounted.current) return;
+
+      if (result.ok) {
+        setStatus({ kind: 'saved' });
+        savedTimer.current = setTimeout(() => {
+          if (mounted.current) setStatus({ kind: 'idle' });
+        }, 2000);
+      } else {
+        setStatus({ kind: 'error', message: result.error });
       }
     },
     [fixtureId],
@@ -86,7 +107,21 @@ export function PalpiteRow({
             {score.outcome === 'exact' ? ' · Acerto exato!' : score.outcome === 'correct' ? ' · Resultado certo' : ' · Errou'}
           </span>
         )}
-        {saving && <span className="text-xs text-zinc-500 shrink-0">Salvando…</span>}
+        {!score && status.kind === 'saving' && (
+          <span className="text-xs text-zinc-500 shrink-0">Salvando…</span>
+        )}
+        {!score && status.kind === 'saved' && (
+          <span className="text-xs font-medium text-green-400 shrink-0">✓ Salvo</span>
+        )}
+        {!score && status.kind === 'error' && (
+          <button
+            type="button"
+            onClick={() => save(homeVal, awayVal)}
+            className="text-xs font-medium text-amber-400 hover:text-amber-300 text-right min-w-0"
+          >
+            ⚠ {status.message} — toque pra salvar
+          </button>
+        )}
       </div>
 
       <div className="flex items-center gap-2">
