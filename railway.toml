@@ -6,7 +6,7 @@ buildCommand = "npm run build"
 nixPkgs = ["nodejs_20"]
 
 [deploy]
-startCommand = "npm run start"
+startCommand = "npm run migrate && npm run start"
 restartPolicyType = "on_failure"
 restartPolicyMaxRetries = 3
 
