@@ -32,7 +32,16 @@
       "PowerShell(Get-CimInstance *)",
       "PowerShell(Stop-Process *)",
       "PowerShell(Remove-Item *)",
-      "Bash(echo \"=== TSC EXIT: $? ===\")"
+      "Bash(echo \"=== TSC EXIT: $? ===\")",
+      "Bash(git fetch *)",
+      "Bash(git rev-list *)",
+      "Bash(git merge *)",
+      "Bash(git push *)",
+      "Bash(?/api)",
+      "Bash(grep -rnE \"past-results|getCbfRound|getFinishedFixturesByClub|fetch\\\\\\(`?/api)",
+      "Bash(useFichaData)",
+      "Bash('fetch\\(.*api/ src/app/page.tsx src/components/MatchSection.tsx 2>/dev/null | head -30 *)",
+      "Bash(gh auth *)"
     ]
   }
 }
