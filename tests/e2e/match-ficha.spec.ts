@@ -11,7 +11,7 @@ import { MOCK_CBF_MATCH_DOCS_UNAVAILABLE } from './helpers/mocks';
 async function openResultadosTab(page: import('@playwright/test').Page) {
   await setupStorage(page);
   await mockAllApisWithFinishedCbf(page);
-  await page.goto('/');
+  await page.goto('/meu-clube');
   await page.getByRole('tab', { name: 'Resultados' }).click();
   // Confirms CBF past-fixtures loaded and the card is visible
   await expect(
@@ -52,7 +52,7 @@ test.describe('card face — renda compact', () => {
       MOCK_CBF_MATCH_DOCS_UNAVAILABLE,
       MOCK_PAST_FIXTURES_FINISHED_NO_STATIC_DOCS,
     );
-    await page.goto('/');
+    await page.goto('/meu-clube');
     await page.getByRole('tab', { name: 'Resultados' }).click();
     const article = page.getByRole('article').filter({ hasText: 'Brasileirão' });
     await expect(article).toBeVisible({ timeout: 5_000 });
@@ -151,7 +151,7 @@ test.describe('ficha modal — público e renda', () => {
   test('shows pending message when match-docs unavailable', async ({ page }) => {
     await setupStorage(page);
     await mockAllApisWithFinishedCbf(page, MOCK_CBF_MATCH_DOCS_UNAVAILABLE);
-    await page.goto('/');
+    await page.goto('/meu-clube');
     await page.getByRole('tab', { name: 'Resultados' }).click();
     const article = page.getByRole('article').filter({ hasText: 'Brasileirão' });
     await expect(article).toBeVisible({ timeout: 5_000 });
