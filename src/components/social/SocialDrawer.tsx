@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { ChatBubbleLeftRightIcon, XMarkIcon, ArrowRightStartOnRectangleIcon } from '@heroicons/react/24/outline';
 import { useAuth } from '@/hooks/useAuth';
+import { useCupTabBarVisible } from '@/components/CupTabBar';
 import { AuthModal } from './AuthModal';
 import { PostCard } from './PostCard';
 import { PostComposer } from './PostComposer';
@@ -17,6 +18,7 @@ export function SocialDrawer() {
   const [authOpen, setAuthOpen] = useState(false);
   const [profileUsername, setProfileUsername] = useState<string | null>(null);
   const { user, loading, logout } = useAuth();
+  const cupTabBarVisible = useCupTabBarVisible();
 
   const handleProfileClick = useCallback((username: string) => {
     setProfileUsername(username);
@@ -27,7 +29,11 @@ export function SocialDrawer() {
       {/* Trigger button */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-[max(1.5rem,env(safe-area-inset-bottom))] right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white shadow-lg transition-all hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer"
+        className={`fixed ${
+          cupTabBarVisible
+            ? 'bottom-[calc(5rem+env(safe-area-inset-bottom))]'
+            : 'bottom-[max(1.5rem,env(safe-area-inset-bottom))]'
+        } right-4 z-30 flex h-12 w-12 items-center justify-center rounded-full bg-white/10 border border-white/20 backdrop-blur-sm text-white shadow-lg transition-all hover:bg-white/20 hover:scale-105 active:scale-95 cursor-pointer`}
         aria-label="Abrir chat da comunidade"
       >
         <ChatBubbleLeftRightIcon className="h-5 w-5" />
