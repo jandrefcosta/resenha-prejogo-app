@@ -6,6 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
+    "migrate": "node scripts/migrate.mjs",
     "lint": "eslint",
     "seed:cbf": "tsx --env-file=.env.local scripts/seed-cbf.ts",
     "seed:match-docs": "tsx --env-file=.env.local scripts/seed-match-docs.ts",

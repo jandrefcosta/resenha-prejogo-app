@@ -123,6 +123,17 @@ export default async function PalpitesPage() {
         <PencilIcon className="h-5 w-5 text-zinc-400 shrink-0" />
         Meus Palpites
       </h1>
+      <div className="mb-4 rounded-xl border border-green-800/60 bg-green-950/20 px-4 py-3 text-sm text-zinc-300">
+        🇧🇷 Jogos do Brasil também valem pro ranking{' '}
+        <span className="font-semibold text-zinc-100">Só Brasil</span> — em todas
+        as fases.{' '}
+        <Link
+          href="/bolao"
+          className="font-medium text-green-400 hover:text-green-300 whitespace-nowrap"
+        >
+          Ver ranking →
+        </Link>
+      </div>
       <RodadaTabsWrapper counts={counts} byRound={byRound} />
 
       {brazilKnockoutItems.length > 0 && (

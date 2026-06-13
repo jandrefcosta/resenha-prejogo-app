@@ -186,25 +186,35 @@ export default async function BolaoPage() {
       </section>
 
       {/* Ranking Só Brasil — pontua só os jogos da Seleção, em todas as fases */}
-      {brazilParticipants > 0 && (
-        <section>
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="font-semibold text-zinc-100">🇧🇷 Só Brasil</h2>
-            <span className="text-xs text-zinc-500">
-              {brazilParticipants} participantes
-            </span>
+      <section>
+        <div className="flex items-center justify-between mb-1">
+          <h2 className="font-semibold text-zinc-100">🇧🇷 Só Brasil</h2>
+          <span className="text-xs text-zinc-500">
+            {brazilParticipants} participantes
+          </span>
+        </div>
+        <p className="text-xs text-zinc-500 mb-3">
+          Ranking paralelo que pontua só os jogos da Seleção, em todas as fases —
+          seus palpites nos jogos do Brasil entram automaticamente.
+        </p>
+        {brazilParticipants > 0 ? (
+          <>
+            <RankingTable entries={brazilTop5} myUserId={user?.sub} />
+            {user && myBrazilPosition && myBrazilPosition > 5 && (
+              <div className="mt-2 flex items-center justify-between px-4 py-3 bg-green-950/40 border border-green-800 rounded-xl text-sm">
+                <span className="text-green-400 font-medium">
+                  Sua posição: {myBrazilPosition}º
+                </span>
+                <span className="text-green-400 font-bold">{myBrazilPts} pts</span>
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="border border-dashed border-green-800/60 bg-green-950/20 rounded-xl p-4 text-center text-sm text-zinc-400">
+            Seja o primeiro — palpite um jogo do Brasil 🇧🇷.
           </div>
-          <RankingTable entries={brazilTop5} myUserId={user?.sub} />
-          {user && myBrazilPosition && myBrazilPosition > 5 && (
-            <div className="mt-2 flex items-center justify-between px-4 py-3 bg-green-950/40 border border-green-800 rounded-xl text-sm">
-              <span className="text-green-400 font-medium">
-                Sua posição: {myBrazilPosition}º
-              </span>
-              <span className="text-green-400 font-bold">{myBrazilPts} pts</span>
-            </div>
-          )}
-        </section>
-      )}
+        )}
+      </section>
 
       {/* CTA palpites */}
       {user ? (
