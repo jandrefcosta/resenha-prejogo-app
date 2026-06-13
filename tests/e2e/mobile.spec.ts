@@ -7,7 +7,7 @@ test.use({ viewport: { width: 375, height: 812 } });
 test.beforeEach(async ({ page }) => {
   await setupStorage(page);
   await mockAllApis(page);
-  await page.goto('/');
+  await page.goto('/meu-clube');
   // Wait for content to stabilise
   await expect(
     page.getByRole('status', { name: 'Carregando jogos' }),
@@ -52,7 +52,7 @@ test('touch-action manipulation applied to buttons', async ({ page }) => {
 test('competition filter pills do not overflow viewport at 375px', async ({ page }) => {
   await setupStorage(page);
   await mockAllApisMulti(page);
-  await page.goto('/');
+  await page.goto('/meu-clube');
   await expect(
     page.getByRole('status', { name: 'Carregando jogos' }),
   ).not.toBeVisible({ timeout: 5_000 });

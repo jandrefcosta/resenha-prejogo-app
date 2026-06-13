@@ -4,7 +4,7 @@ import { setupStorage, mockAllApis } from './helpers/setup';
 test.beforeEach(async ({ page }) => {
   await setupStorage(page);
   await mockAllApis(page);
-  await page.goto('/');
+  await page.goto('/meu-clube');
   // Wait for ThemeProvider to hydrate and show the club button
   await expect(page.getByRole('button', { name: /alterar/i })).toBeVisible();
 });

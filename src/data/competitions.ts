@@ -76,6 +76,16 @@ export const COMPETITIONS: Competition[] = [
   },
 ];
 
+/**
+ * Period in which the Copa 2026 takes over the homepage (redirect + tab bar).
+ * Final is Jul 19 + 2 days of afterglow. Auto-reverts after `end`.
+ * See docs/superpowers/specs/2026-06-12-copa-homepage-takeover-design.md
+ */
+export const WORLD_CUP_2026_WINDOW = {
+  start: new Date('2026-06-11T00:00:00-03:00'),
+  end: new Date('2026-07-21T23:59:59-03:00'),
+} as const;
+
 /** Shortcut for the default competition used throughout the app */
 export const SERIE_A = COMPETITIONS.find((c) => c.id === 'serie-a')!;
 

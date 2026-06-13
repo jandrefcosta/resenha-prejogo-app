@@ -5,6 +5,7 @@ import { ThemeProvider } from '@/components/ThemeProvider';
 import { InitialLoader } from '@/components/InitialLoader';
 import { AuthProvider } from '@/components/social/AuthProvider';
 import { SocialDrawer } from '@/components/social/SocialDrawer';
+import { CupTabBar } from '@/components/CupTabBar';
 import { SerwistProvider } from './serwist-provider';
 import './globals.css';
 
@@ -90,6 +91,7 @@ export default function RootLayout({
           <AuthProvider>
             <InitialLoader />
             {children}
+            <CupTabBar />
             <SocialDrawer />
           </AuthProvider>
         </ThemeProvider>

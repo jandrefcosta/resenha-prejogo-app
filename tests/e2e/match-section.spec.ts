@@ -14,7 +14,7 @@ test.describe('loading states', () => {
       await route.fulfill({ json: MOCK_FIXTURES });
     });
 
-    await page.goto('/');
+    await page.goto('/meu-clube');
 
     await expect(
       page.getByRole('status', { name: 'Carregando jogos' }),
@@ -24,7 +24,7 @@ test.describe('loading states', () => {
   test('skeleton disappears after fixtures load', async ({ page }) => {
     await setupStorage(page);
     await mockAllApis(page);
-    await page.goto('/');
+    await page.goto('/meu-clube');
 
     await expect(
       page.getByRole('status', { name: 'Carregando jogos' }),
@@ -36,7 +36,7 @@ test.describe('content rendering', () => {
   test.beforeEach(async ({ page }) => {
     await setupStorage(page);
     await mockAllApis(page);
-    await page.goto('/');
+    await page.goto('/meu-clube');
     await expect(
       page.getByRole('status', { name: 'Carregando jogos' }),
     ).not.toBeVisible({ timeout: 5_000 });
@@ -83,7 +83,7 @@ test.describe('error state', () => {
       route.fulfill({ status: 500, body: 'Internal Server Error' }),
     );
 
-    await page.goto('/');
+    await page.goto('/meu-clube');
 
     await expect(
       page.getByText('Não foi possível carregar os jogos'),
@@ -95,7 +95,7 @@ test.describe('competition filter pills', () => {
   test.beforeEach(async ({ page }) => {
     await setupStorage(page);
     await mockAllApisMulti(page);
-    await page.goto('/');
+    await page.goto('/meu-clube');
     await expect(
       page.getByRole('status', { name: 'Carregando jogos' }),
     ).not.toBeVisible({ timeout: 5_000 });
@@ -159,7 +159,7 @@ test.describe('Resultados tab', () => {
   test.beforeEach(async ({ page }) => {
     await setupStorage(page);
     await mockAllApis(page);
-    await page.goto('/');
+    await page.goto('/meu-clube');
     await expect(
       page.getByRole('status', { name: 'Carregando jogos' }),
     ).not.toBeVisible({ timeout: 5_000 });
@@ -178,7 +178,7 @@ test.describe('Resultados tab', () => {
       route.fulfill({ json: MOCK_FIXTURES }),
     );
 
-    await page.goto('/');
+    await page.goto('/meu-clube');
     await expect(
       page.getByRole('status', { name: 'Carregando jogos' }),
     ).not.toBeVisible({ timeout: 5_000 });
@@ -204,7 +204,7 @@ test.describe('Resultados tab', () => {
     await page.route('/api/past-fixtures**', (route) => route.fulfill({ json: [] }));
     await page.route('/api/fixtures', (route) => route.fulfill({ json: MOCK_FIXTURES }));
 
-    await page.goto('/');
+    await page.goto('/meu-clube');
     await expect(
       page.getByRole('status', { name: 'Carregando jogos' }),
     ).not.toBeVisible({ timeout: 5_000 });
