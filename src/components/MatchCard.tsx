@@ -27,10 +27,6 @@ import type { CbfMatchDocsResult, CbfSumulaPlayer } from "@/lib/cbfDocTypes";
 import { useFocusTrap } from "@/lib/useFocusTrap";
 import { useScrollLock } from "@/lib/useScrollLock";
 import { LIVE_WINDOW_MS } from "@/lib/matchConstants";
-import {
-  EmailCaptureModal,
-  EMAIL_REGISTERED_KEY,
-} from "@/components/EmailCaptureModal";
 import { BROADCASTER_COLORS } from "@/lib/broadcasterColors";
 import { useFichaData, type FetchStatus } from "@/lib/useFichaData";
 import clubsData from "@/data/clubs.json";
@@ -1598,7 +1594,6 @@ export function MatchCard({
   highlightCbfId,
   preview,
   previewLoading,
-  noEmailGate = false,
   cbfMatchDetail,
   cbfRound,
   prefetchedMatchDocs,
@@ -1610,7 +1605,6 @@ export function MatchCard({
   highlightCbfId?: string;
   preview?: MatchPreview;
   previewLoading: boolean;
-  noEmailGate?: boolean;
   /** Pre-fetched CBF match detail (finished Brasileirão matches) — skips the CBF fetch in Ficha modal */
   cbfMatchDetail?: CbfMatchDetail;
   /** Brasileirão round number — used for the round badge in finished mode */
@@ -1647,34 +1641,8 @@ export function MatchCard({
     cbfMatchDetail,
   });
 
-  const [emailRegistered, setEmailRegistered] = useState(false);
-  const [emailGateOpen, setEmailGateOpen] = useState(false);
   const [broadcasterModalOpen, setBroadcasterModalOpen] = useState(false);
   const [liveModalOpen, setLiveModalOpen] = useState(false);
-  const pendingActionRef = useRef<(() => void) | null>(null);
-
-  useEffect(() => {
-    setEmailRegistered(localStorage.getItem(EMAIL_REGISTERED_KEY) === "1");
-  }, []);
-
-  function withEmailGate(action: () => void) {
-    if (noEmailGate || emailRegistered) {
-      action();
-    } else {
-      pendingActionRef.current = action;
-      setEmailGateOpen(true);
-    }
-  }
-
-  function handleEmailGateClose() {
-    const nowRegistered = localStorage.getItem(EMAIL_REGISTERED_KEY) === "1";
-    if (nowRegistered) {
-      setEmailRegistered(true);
-      pendingActionRef.current?.();
-    }
-    pendingActionRef.current = null;
-    setEmailGateOpen(false);
-  }
 
   function openH2HModal() {
     setActiveModal("h2h");
@@ -2121,7 +2089,7 @@ export function MatchCard({
           {/* Action buttons */}
           <div className="mt-4 pt-4 border-t border-zinc-800 grid grid-cols-4 gap-2">
             <button
-              onClick={() => withEmailGate(openH2HModal)}
+              onClick={openH2HModal}
               aria-label="Ver confronto direto"
               className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
@@ -2129,7 +2097,7 @@ export function MatchCard({
               Confronto
             </button>
             <button
-              onClick={() => withEmailGate(openPlayersModal)}
+              onClick={openPlayersModal}
               aria-label="Ver jogadores"
               className="flex flex-col items-center justify-center gap-1 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
@@ -2137,7 +2105,7 @@ export function MatchCard({
               Jogadores
             </button>
             <button
-              onClick={() => withEmailGate(openFichaModal)}
+              onClick={openFichaModal}
               aria-label="Ver ficha do jogo"
               className="flex flex-col items-center justify-center gap-0.5 rounded-xl border bg-zinc-800/60 border-zinc-700/50 px-1 min-h-[52px] text-[10px] font-medium font-sans text-zinc-400 hover:text-white hover:bg-zinc-800 hover:border-zinc-600 transition-all duration-150 cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-zinc-500"
             >
@@ -2243,8 +2211,6 @@ export function MatchCard({
         </ModalShell>
       )}
 
-      {/* Email gate */}
-      {emailGateOpen && <EmailCaptureModal onClose={handleEmailGateClose} />}
 
       {/* Ficha Modal */}
       {activeModal === "ficha" && (

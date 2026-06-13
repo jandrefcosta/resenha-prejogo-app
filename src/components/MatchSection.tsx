@@ -583,7 +583,6 @@ export function MatchSection() {
                         highlightClubId={club.id}
                         preview={previews?.[match.id]}
                         previewLoading={previewsLoading}
-                        noEmailGate={groupIndex <= 1}
                       />
                     ))}
                   </div>
@@ -634,7 +633,6 @@ export function MatchSection() {
                       prefetchedMatchDocs={pastMatchDocs[entry.match.idJogo]}
                       preview={undefined}
                       previewLoading={false}
-                      noEmailGate
                     />
                   );
                 }
@@ -652,7 +650,6 @@ export function MatchSection() {
                     highlightClubId={highlightId}
                     preview={undefined}
                     previewLoading={false}
-                    noEmailGate
                   />
                 );
               })}
