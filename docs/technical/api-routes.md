@@ -366,21 +366,6 @@ Classificação da Copa do Mundo 2026: fase de grupos + ranking de terceiros lug
 
 ## Usuário & Suporte
 
-### `POST /api/identity`
-
-Registra/atualiza e-mail do usuário.
-
-**Body:** `{ email: string }`
-
-**Ações:**
-1. Gera/reutiliza UUID (cookie `sc_uid`)
-2. Salva `{ email, emailHash, ip, timestamps }` no Redis
-3. Define cookie `sc_uid` (httpOnly, Secure, 1 ano)
-
-**Resposta:** `{ ok: true }` | 400 (e-mail inválido)
-
----
-
 ### `POST /api/suggestions`
 
 Envia feedback/sugestão.

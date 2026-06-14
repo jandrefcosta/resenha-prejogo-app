@@ -17,7 +17,7 @@ Após análise, a abordagem de **página dedicada por campeonato** foi escolhida
 - SEO próprio por campeonato (`/copa-2026` rankeia independentemente)
 - Deploy incremental — Copa vai ao ar sem coordenação com a Série A
 
-**O que é compartilhado:** `ThemeProvider`, `MatchCard`, `redisCache`, sistema de cache, Web Share API, `SuggestionModal`, `EmailCaptureModal`.
+**O que é compartilhado:** `ThemeProvider`, `MatchCard`, `redisCache`, sistema de cache, Web Share API, `SuggestionModal`.
 
 **O que é parametrizado** (mudanças retrocompatíveis nas libs): `getFixturesByClub()`, `getTeamForm()`, `getBroadcastersForFixture()`.
 
@@ -376,7 +376,7 @@ A Copa durante a fase de grupos retorna 8 tabelas (A–H) com 4 times cada. O `G
 - `ThemeProvider` — já funciona com qualquer `ClubTheme`
 - `MatchCard` — reusável com dados da Copa (times, horário, transmissão)
 - `useFocusTrap`, `redisCache` — genéricos por natureza
-- `SuggestionModal`, `EmailCaptureModal` — independentes de campeonato
+- `SuggestionModal` — independente de campeonato
 - Lógica de compartilhamento (Web Share API) — só o texto muda
 - `cbfApi.ts` — continua para Série A; só recebe `championshipId` como parâmetro
 - Sistema de cache Redis — estrutura permanece, chaves ganham prefixo de competition

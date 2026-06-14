@@ -51,7 +51,7 @@ As regras são configuráveis por bolão — o criador pode ajustar os pontos ao
 
 ### O problema
 
-O sistema atual identifica o usuário por um cookie httpOnly (`sc_uid` → UUID no Redis). Não há senha, não há verificação de e-mail, não há sessão tradicional. Para um bolão casual entre amigos, isso é suficiente **no mesmo dispositivo**. O problema é trocar de dispositivo.
+Na época deste planejamento, o sistema identificava o usuário apenas por um cookie httpOnly anônimo (UUID no Redis). Não havia senha, verificação de e-mail nem sessão tradicional. Para um bolão casual entre amigos, isso bastaria **no mesmo dispositivo**. O problema é trocar de dispositivo.
 
 ### Opções avaliadas
 
@@ -82,7 +82,7 @@ O sistema atual identifica o usuário por um cookie httpOnly (`sc_uid` → UUID 
 ### Decisão recomendada
 
 **Cenário C (PIN por e-mail)** para produção.
-**Cenário A (cookie only)** para MVP/teste inicial — pode migrar depois sem quebrar nada pois o `sc_uid` já existe.
+**Cenário A (cookie only)** para MVP/teste inicial — pode migrar depois sem quebrar nada pois o cookie anônimo já existe.
 
 ---
 
@@ -387,7 +387,7 @@ async function handleShare(bolao: Bolao) {
 
 | O que | Como reusa |
 |-------|-----------|
-| `sc_uid` cookie + UUID | `userId` nos palpites e membros |
+| Cookie anônimo + UUID | `userId` nos palpites e membros |
 | `redis` client (Upstash) | Armazenamento de tudo |
 | `rateLimiter` | Limitar criação de bolões por usuário |
 | Web Share API | Compartilhar código de convite |

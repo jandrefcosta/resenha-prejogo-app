@@ -44,7 +44,6 @@
 
 - CBF API como fonte canônica para Série A
 - `ThemeProvider`, `useFocusTrap`, `useScrollLock`, `redisCache`
-- Identidade anônima (`sc_uid` cookie + Redis)
 - Lógica de compartilhamento (Web Share API)
 
 ---

@@ -59,7 +59,6 @@ src/
 │       ├── social/           ← social feed: posts, likes, follows (auth-gated)
 │       ├── auth/             ← login, register, forgot/reset password
 │       ├── admin/            ← admin actions: cache bust, seed, clubs, logs
-│       ├── identity/         ← anonymous sc_uid cookie assignment
 │       └── suggestions/      ← user feedback (rate-limited)
 ├── components/
 │   ├── bolao/                ← BolaoCard, PalpiteRow, RankingTable, etc.

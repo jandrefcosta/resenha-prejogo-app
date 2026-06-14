@@ -55,7 +55,6 @@ Torcedor brasileiro, fã de um dos 20 clubes da Série A. Acessa nos dias que an
 | Rodada atual | Todos os jogos da rodada em um modal |
 | Compartilhamento | Share nativo + WhatsApp fallback |
 | Onboarding | Boas-vindas na primeira visita com seleção de clube |
-| Captura de e-mail | Cadastro para newsletter futura |
 | Sugestões | Canal de feedback e relato de bugs |
 
 ---

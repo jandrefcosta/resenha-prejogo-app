@@ -85,7 +85,6 @@ src/
 │   ├── HeroClubName.tsx    # Header com nome do clube
 │   ├── InitialLoader.tsx   # Skeleton durante hydration
 │   ├── OnboardingModal.tsx # Modal de boas-vindas
-│   ├── EmailCaptureModal.tsx
 │   ├── SuggestionModal.tsx
 │   └── SoccerBallIcon.tsx  # Ícone SVG de bola de futebol
 │

@@ -251,7 +251,7 @@ ThemeProvider (tema SELECAO_BRASILEIRA)
 
 **Sem `ClubSelector`** — tema e destaque são fixos.  
 **Sem `OnboardingModal`** — Copa não tem fluxo de onboarding por clube.  
-**Com `EmailCaptureModal`** e `SuggestionModal` — reusados sem mudança.
+**Com `SuggestionModal`** — reusado sem mudança.
 
 ---
 

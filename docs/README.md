@@ -23,7 +23,6 @@
 | 07 | [Visão da Rodada](features/07-round-overview.md) | Todos os jogos da rodada atual |
 | 08 | [Compartilhamento](features/08-sharing.md) | Share nativo + WhatsApp fallback |
 | 09 | [Onboarding](features/09-onboarding.md) | Boas-vindas e seleção inicial de clube |
-| 10 | [Captura de E-mail](features/10-email-capture.md) | Cadastro para newsletter |
 | 11 | [Sugestões & Feedback](features/11-feedback-suggestions.md) | Envio de relatos e sugestões |
 
 ---

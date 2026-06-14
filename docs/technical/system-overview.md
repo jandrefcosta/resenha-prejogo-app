@@ -158,7 +158,7 @@ src/
 │   ├── bolaoRedis.ts         ← Domínio completo do bolão
 │   ├── socialRedis.ts        ← Domínio completo do feed social
 │   ├── matchDataSource.ts    ← Discriminador CBF vs API-Football por leagueId
-│   ├── userIdentity.ts       ← Identidade anônima (sc_uid)
+│   ├── userIdentity.ts       ← Helpers de usuário (hashEmail, getUserById/ByEmail)
 │   ├── passwordUtils.ts      ← bcrypt hash/verify
 │   ├── rateLimiter.ts        ← Instâncias Upstash Ratelimit
 │   ├── email.ts              ← Envio via Resend
@@ -384,25 +384,14 @@ const gradientEnd = secondaryLum > 0.35 ? mixWithBlack(secondary, 0.7) : seconda
 
 Persiste o clube escolhido em `localStorage` com a chave `resenha-prejogo:club`.
 
-### 4.6 Identidade Dupla de Usuário
-
-O sistema tem **dois sistemas de identidade independentes**:
-
-| Cookie | Tipo | Uso |
-|---|---|---|
-| `sc_uid` | Anônimo (UUID) | Email capture, analytics |
-| `sc_auth` | JWT autenticado | Social, bolão, palpites |
-
-**Regra crítica:** O `sc_uid` não deve ser reusado como `userId` ao registrar — múltiplos usuários no mesmo dispositivo colidiriam. O registro sempre gera um `userId` novo via `randomUUID()`.
-
-### 4.7 Recuperação de Senha
+### 4.6 Recuperação de Senha
 
 - Rate limit: 3 tentativas/hora **por hash do email** (não por IP)
 - Resposta sempre `{ ok: true }` independente do email existir — **evita user enumeration**
 - Token: 32 bytes random hex, TTL 1h no Redis
 - Em falha de envio de email: token órfão é deletado imediatamente
 
-### 4.8 Fan-out Social
+### 4.7 Fan-out Social
 
 ```typescript
 // src/lib/socialRedis.ts — createPost()
@@ -415,7 +404,7 @@ for (const followerId of followerIds.slice(0, 500)) {
 pipeline.zremrangebyrank(`feed:${followerId}`, 0, -(MAX_FEED_SIZE + 1));
 ```
 
-### 4.9 Validações de Cadastro
+### 4.8 Validações de Cadastro
 
 | Campo | Regra |
 |---|---|
@@ -439,7 +428,6 @@ email:{sha256(email)}      → userId
 username:{lower}           → userId
 session:{jti}              → userId          (TTL 30 dias)
 reset:{token}              → { userId }      (TTL 1 hora)
-sc_uid cookie              → userId anônimo  (TTL 1 ano, via /api/identity)
 ```
 
 ### 5.2 Bolão e Palpites
@@ -700,23 +688,20 @@ O `POST /api/bolao/score` autentica via `CRON_SECRET` mas a documentação não 
 **1. Redis é o único banco de dados**
 Não há PostgreSQL, Prisma, ORM. Usuários, sessões, palpites, rankings e posts vivem exclusivamente no Upstash Redis com TTLs de 1 ano. Não há migração de schema — mudanças de estrutura são tratadas por versionamento de chave (ex: `h2h:v2:...`).
 
-**2. Dois sistemas de identidade coexistem**
-`sc_uid` (cookie anônimo para email capture) e `sc_auth` (JWT para features autenticadas) são **independentes**. Nunca reutilize `sc_uid` como `userId` ao registrar — há comentário explícito no código.
-
-**3. Três fontes de dados para jogos**
+**2. Três fontes de dados para jogos**
 - **CBF** (`leagueId 71`): escalação completa, gols, cartões, árbitros, PDFs oficiais
 - **CONMEBOL** (`leagueId 13, 11`): placares com HT/ET/pênaltis/agregado
 - **API-Football** (demais): dados básicos e fallback
 
 O campo `hasCbfData` em `competitions.ts` e a função `getFinishedMatchSource(leagueId)` são os discriminadores centrais de toda a lógica de dados.
 
-**4. Cache adaptativo com stale-while-error**
+**3. Cache adaptativo com stale-while-error**
 CBF e CONMEBOL têm dupla chave Redis (`cbf:round:N` + `cbf:round:N:stale`). TTL muda dinamicamente por status inferido: `live` → 5min, `finished` → permanente. Se a API falhar, o sistema serve stale (máx 24h antes de dar erro).
 
-**5. Gemini descobre transmissores**
+**4. Gemini descobre transmissores**
 Cada jogo futuro chama Gemini 2.5 Flash com Google Search para descobrir canais. Cache de 24h (ou 1h se vazio). Quota esgotada retorna `[]` sem quebrar a página.
 
-**6. `MatchSection.tsx` é o componente mais crítico**
+**5. `MatchSection.tsx` é o componente mais crítico**
 675 linhas, orquestra todo o fluxo de dados da página principal. É onde a maioria dos bugs de UI aparece. Ler antes de qualquer mudança na página principal.
 
 ### Caminho de onboarding recomendado

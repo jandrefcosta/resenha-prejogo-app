@@ -184,14 +184,6 @@ DEL cbf:match:831889:docs:status cbf:match:831889:sumula cbf:match:831889:boleti
 
 ---
 
-## Identidade de Usuário
-
-| Chave | TTL | Tipo | Conteúdo |
-|-------|-----|------|---------|
-| `identity:{uuid}` | 365 dias | JSON | `UserIdentity` — email, emailHash, ip, timestamps |
-
----
-
 ## Sugestões
 
 | Chave | TTL | Tipo | Conteúdo |
