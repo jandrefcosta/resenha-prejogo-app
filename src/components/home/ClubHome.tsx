@@ -5,7 +5,6 @@ import { FooterSuggestion, FloatingSuggestion } from '@/components/SuggestionMod
 import { OnboardingModal } from '@/components/OnboardingModal';
 import { StandingsButton } from '@/components/StandingsModal';
 import { RoundButton } from '@/components/RoundModal';
-import { EmailSubscribeButton, EmailJourneyBanner } from '@/components/EmailCaptureModal';
 import Link from 'next/link';
 
 /** Club hub — served at `/` (outside the cup window) and `/meu-clube` (always). */
@@ -43,7 +42,6 @@ export function ClubHome() {
             <ClubSelector />
             <StandingsButton />
             <RoundButton />
-            <EmailSubscribeButton />
             <Link
               href="/bolao"
               className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 min-h-[44px] text-sm font-medium font-sans text-white transition-all hover:bg-white/20 hover:border-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 backdrop-blur-sm"
@@ -66,7 +64,6 @@ export function ClubHome() {
       </footer>
 
       <FloatingSuggestion />
-      <EmailJourneyBanner />
       <OnboardingModal />
     </div>
   );

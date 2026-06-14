@@ -6,10 +6,6 @@ import {
   FooterSuggestion,
   FloatingSuggestion,
 } from "@/components/SuggestionModal";
-import {
-  EmailSubscribeButton,
-  EmailJourneyBanner,
-} from "@/components/EmailCaptureModal";
 import { CopaThemeApplier } from "@/components/copa/CopaThemeApplier";
 
 export default function CopaPage() {
@@ -76,7 +72,6 @@ export default function CopaPage() {
                 ← Brasileirão
               </a>
               <GroupStandingsButton />
-              <EmailSubscribeButton />
               <a
                 href="/bolao"
                 className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 min-h-[44px] text-sm font-medium font-sans text-white transition-all hover:bg-white/20 hover:border-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 backdrop-blur-sm"
@@ -99,7 +94,6 @@ export default function CopaPage() {
         </footer>
 
         <FloatingSuggestion />
-        <EmailJourneyBanner />
       </div>
     </>
   );
