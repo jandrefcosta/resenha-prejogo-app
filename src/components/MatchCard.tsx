@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useRef, useState, type ReactNode } from "react";
 import Image from "next/image";
 import {
   XMarkIcon,
@@ -2210,7 +2210,6 @@ export function MatchCard({
           )}
         </ModalShell>
       )}
-
 
       {/* Ficha Modal */}
       {activeModal === "ficha" && (
