@@ -568,7 +568,7 @@ export function MatchSection() {
 
           {!scheduleLoading && !scheduleError && scheduleGroups.length > 0 && (
             <div>
-              {scheduleGroups.map((group, groupIndex) => (
+              {scheduleGroups.map((group) => (
                 <div key={group.key}>
                   {group.isCurrent ? (
                     <CurrentRoundHeader label={group.groupLabel} />
