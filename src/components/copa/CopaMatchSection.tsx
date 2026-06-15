@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import { MatchCard } from '@/components/MatchCard';
 import { LIVE_WINDOW_MS } from '@/lib/matchConstants';
 import { CopaMatchRow, DateSeparator } from '@/components/copa/CopaMatchRow';
-import type { Match } from '@/lib/types';
+import type { Match, BroadcasterInfo } from '@/lib/types';
 import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 import type { CopaStandingsPayload } from '@/app/api/copa/standings/route';
 import { PHASE_ORDER } from '@/app/api/copa/fixtures/route';
@@ -189,6 +189,7 @@ export function CopaMatchSection() {
   const [activeRound, setActiveRound] = useState<string>('Rodada 1');
   const [activeGroup, setActiveGroup] = useState<string>('Todos');
   const [teamGroupMap, setTeamGroupMap] = useState<Record<string, string>>({});
+  const [broadcastersById, setBroadcastersById] = useState<Record<string, BroadcasterInfo[]>>({});
 
   const fetchedRef = useRef(false);
 
@@ -204,6 +205,30 @@ export function CopaMatchSection() {
       .then((data) => {
         setPayload(data);
         setLoading(false);
+
+        // Pré-busca de transmissão para os jogos da janela de 7 dias.
+        const now = Date.now();
+        const windowEnd = now + 7 * 24 * 60 * 60 * 1000;
+        const windowIds = Object.values(data.phases)
+          .flat()
+          .filter((m) => {
+            const t = new Date(m.date).getTime();
+            return t >= now - LIVE_WINDOW_MS && t <= windowEnd;
+          })
+          .map((m) => m.id)
+          .slice(0, 32);
+        if (windowIds.length > 0) {
+          fetch(`/api/copa/broadcasters?ids=${windowIds.join(',')}`)
+            .then((r) =>
+              r.ok
+                ? (r.json() as Promise<Record<string, BroadcasterInfo[]>>)
+                : Promise.reject(),
+            )
+            .then((map) => setBroadcastersById(map))
+            .catch(() => {
+              // Falhou — cada card busca sob demanda ao expandir.
+            });
+        }
 
         // Auto-select first available phase
         const available = PHASE_ORDER.filter((p) => (data.phases[p]?.length ?? 0) > 0);
@@ -371,6 +396,7 @@ export function CopaMatchSection() {
                         match={match}
                         isBrazil={isBrazilMatch(match)}
                         defaultExpanded={match.id === nextBrazilMatch?.id}
+                        prefetchedBroadcasters={broadcastersById[match.id]}
                       />
                     ))}
                   </div>
@@ -392,6 +418,11 @@ export function CopaMatchSection() {
               <MatchCard
                 match={match}
                 highlightClubId={BRAZIL_TEAM_ID}
+                preview={
+                  broadcastersById[match.id] !== undefined
+                    ? { broadcasters: broadcastersById[match.id], homeForm: [], awayForm: [] }
+                    : undefined
+                }
                 previewLoading={false}
               />
             </div>
