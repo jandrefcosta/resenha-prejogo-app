@@ -1,9 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ChevronDownIcon } from '@heroicons/react/20/solid';
 import { MatchCard } from '@/components/MatchCard';
-import type { Match } from '@/lib/types';
+import type { Match, BroadcasterInfo } from '@/lib/types';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -83,10 +83,39 @@ interface CopaMatchRowProps {
   match: Match;
   isBrazil: boolean;
   defaultExpanded?: boolean;
+  /** Broadcasters já pré-buscados pela seção (janela de 7d). undefined → busca sob demanda. */
+  prefetchedBroadcasters?: BroadcasterInfo[];
 }
 
-export function CopaMatchRow({ match, isBrazil, defaultExpanded = false }: CopaMatchRowProps) {
+export function CopaMatchRow({
+  match,
+  isBrazil,
+  defaultExpanded = false,
+  prefetchedBroadcasters,
+}: CopaMatchRowProps) {
   const [expanded, setExpanded] = useState(defaultExpanded);
+
+  // Transmissão: usa o prefetch da janela; senão busca sob demanda ao expandir.
+  const [fetched, setFetched] = useState<BroadcasterInfo[] | null>(null);
+  const [loadingBroadcasters, setLoadingBroadcasters] = useState(false);
+  const broadcasterFetchTried = useRef(false);
+
+  useEffect(() => {
+    if (!expanded) return;
+    if (prefetchedBroadcasters !== undefined) return; // já temos via prefetch
+    if (broadcasterFetchTried.current) return;
+    broadcasterFetchTried.current = true;
+    setLoadingBroadcasters(true);
+    fetch(`/api/copa/broadcasters?ids=${match.id}`)
+      .then((r) =>
+        r.ok ? (r.json() as Promise<Record<string, BroadcasterInfo[]>>) : Promise.reject(),
+      )
+      .then((data) => setFetched(data[match.id] ?? []))
+      .catch(() => setFetched([]))
+      .finally(() => setLoadingBroadcasters(false));
+  }, [expanded, prefetchedBroadcasters, match.id]);
+
+  const broadcasters = prefetchedBroadcasters ?? fetched ?? [];
 
   const isFinished = match.status === 'finished';
   const homeScore = match.score?.home;
@@ -182,7 +211,8 @@ export function CopaMatchRow({ match, isBrazil, defaultExpanded = false }: CopaM
           <MatchCard
             match={match}
             highlightClubId={BRAZIL_TEAM_ID}
-            previewLoading={false}
+            preview={{ broadcasters, homeForm: [], awayForm: [] }}
+            previewLoading={loadingBroadcasters}
           />
         </div>
       )}
