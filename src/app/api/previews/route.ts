@@ -4,35 +4,10 @@ import { getTeamForm, parseForm } from '@/lib/teamForm';
 import { getBroadcastersForFixture } from '@/lib/broadcasterSearch';
 import { COMPETITIONS } from '@/data/competitions';
 import type { BroadcasterInfo, Match, MatchPreview } from '@/lib/types';
+import { makeSemaphore } from '@/lib/semaphore';
 
 const DAYS_AHEAD_FOR_BROADCAST_SEARCH = 14;
 const CLUB_COMPETITIONS = COMPETITIONS.filter((c) => c.scope === 'club');
-
-/**
- * Simple semaphore to cap concurrent Gemini calls.
- * Without this, 20 fixtures → 20 simultaneous Gemini requests → 429 throttling.
- * Cached fixtures hit Redis and return immediately, so the semaphore only
- * matters on cold-cache bursts.
- */
-function makeSemaphore(concurrency: number) {
-  let running = 0;
-  const queue: (() => void)[] = [];
-  return function <T>(fn: () => Promise<T>): Promise<T> {
-    return new Promise<T>((resolve, reject) => {
-      const run = () => {
-        running++;
-        fn()
-          .then(resolve, reject)
-          .finally(() => {
-            running--;
-            if (queue.length > 0) queue.shift()!();
-          });
-      };
-      if (running < concurrency) run();
-      else queue.push(run);
-    });
-  };
-}
 
 export async function GET(req: NextRequest) {
   const idsParam = req.nextUrl.searchParams.get('ids');
