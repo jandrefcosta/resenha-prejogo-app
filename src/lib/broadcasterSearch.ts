@@ -5,7 +5,7 @@ import type { BroadcasterInfo } from './types';
 const gemini = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
 
 function buildSystemPrompt(competitionName: string): string {
-  return `You are a sports broadcasting assistant for Brazilian football.
+  return `You are a sports broadcasting assistant for football matches shown in Brazil.
 Your task: find ONLY the confirmed TV/streaming broadcasters for a specific match.
 
 Return a JSON array of objects with this exact shape:
