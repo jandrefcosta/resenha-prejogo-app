@@ -7,9 +7,6 @@ const LEAGUE_ID = 1;
 const SEASON = 2026;
 const CACHE_KEY = 'copa-standings:2026';
 
-/** Group name returned by the API for the virtual third-place ranking */
-const THIRD_PLACE_GROUP = 'Ranking of third-placed teams';
-
 // ─── Raw API types ────────────────────────────────────────────────────────────
 
 interface RawEntry {
@@ -115,12 +112,17 @@ export async function GET() {
     if (!group.length) continue;
     const groupName = group[0].group;
 
-    if (groupName === THIRD_PLACE_GROUP) {
-      thirdPlaceRanking = group.map(mapEntry);
+    // Only blocks named exactly "Group A" … "Group L" are real competition
+    // groups. Everything else — the third-place ranking, which API-Football has
+    // labelled both "Ranking of third-placed teams" and "Group Stage" — is
+    // routed to thirdPlaceRanking. Matching a fixed string here is brittle: a
+    // stray block leaks in as a fake group (e.g. "Group Stage" → "Stage") and
+    // pollutes the team→group map consumers build from this payload.
+    const match = /^Group ([A-L])$/.exec(groupName);
+    if (match) {
+      groups[match[1]] = group.map(mapEntry);
     } else {
-      // "Group A" → "A"
-      const letter = groupName.replace('Group ', '').trim();
-      groups[letter] = group.map(mapEntry);
+      thirdPlaceRanking = group.map(mapEntry);
     }
   }
 

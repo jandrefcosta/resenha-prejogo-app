@@ -247,6 +247,10 @@ export function CopaMatchSection() {
           .then((s) => {
             const map: Record<string, string> = {};
             for (const [letter, entries] of Object.entries(s.groups)) {
+              // Defensive: only real A–L groups feed the team→group map. A stray
+              // block (e.g. a mislabelled third-place ranking) must never
+              // overwrite a team's real group and drop its match from a filter.
+              if (!GROUP_LETTERS.includes(letter)) continue;
               for (const entry of entries) {
                 map[String(entry.team.id)] = letter;
               }
