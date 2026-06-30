@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getCache, setCache, TTL_1H, TTL_30MIN, TTL_24H } from '@/lib/redisCache';
 import { acceptStale, hasApiFootballErrors, type StaleEntry } from '@/lib/apiFootballCache';
 import type { Match, MatchTeam } from '@/lib/types';
+import { GROUP_ROUNDS, PHASE_LABELS, PHASE_ORDER } from '@/lib/copaPhases';
 
 const BASE_URL = 'https://v3.football.api-sports.io';
 const LEAGUE_ID = 1;
@@ -10,36 +11,9 @@ const CACHE_KEY = 'copa-fixtures:2026';
 /** Serve last-good Copa fixtures up to 7 days old when a fresh fetch fails. */
 const COPA_STALE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
 
-// ─── Phase grouping ───────────────────────────────────────────────────────────
-
-/** Rounds that belong to the group stage — collapsed into a single "Grupos" tab */
-export const GROUP_ROUNDS = new Set([
-  'Group Stage - 1',
-  'Group Stage - 2',
-  'Group Stage - 3',
-]);
-
-/** Display labels in pt-BR for each API-Football round value */
-export const PHASE_LABELS: Record<string, string> = {
-  'Group Stage - 1': 'Rodada 1',
-  'Group Stage - 2': 'Rodada 2',
-  'Group Stage - 3': 'Rodada 3',
-  'Round of 16':     'Oitavas de Final',
-  'Quarter-finals':  'Quartas de Final',
-  'Semi-finals':     'Semifinais',
-  '3rd Place Final': 'Disputa de 3º Lugar',
-  'Final':           'Final',
-};
-
-/** Canonical tab order — used by CopaMatchSection */
-export const PHASE_ORDER = [
-  'Grupos',
-  'Round of 16',
-  'Quarter-finals',
-  'Semi-finals',
-  '3rd Place Final',
-  'Final',
-] as const;
+// Re-exported for existing call sites (CopaMatchSection, tests). Defined in
+// @/lib/copaPhases so client components don't import this server route module.
+export { GROUP_ROUNDS, PHASE_LABELS, PHASE_ORDER };
 
 // ─── Raw API types ────────────────────────────────────────────────────────────
 

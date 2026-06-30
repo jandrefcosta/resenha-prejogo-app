@@ -7,7 +7,7 @@ import { CopaMatchRow, DateSeparator } from '@/components/copa/CopaMatchRow';
 import type { Match, BroadcasterInfo } from '@/lib/types';
 import type { CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
 import type { CopaStandingsPayload } from '@/app/api/copa/standings/route';
-import { PHASE_ORDER } from '@/app/api/copa/fixtures/route';
+import { PHASE_ORDER } from '@/lib/copaPhases';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -20,6 +20,7 @@ const ROUND_ORDER = ['Rodada 1', 'Rodada 2', 'Rodada 3'];
 /** Maps phase tab key → display label */
 const TAB_LABELS: Record<string, string> = {
   'Grupos':          '⚽ Grupos',
+  'Round of 32':     '16-avos',
   'Round of 16':     'Oitavas',
   'Quarter-finals':  'Quartas',
   'Semi-finals':     'Semis',

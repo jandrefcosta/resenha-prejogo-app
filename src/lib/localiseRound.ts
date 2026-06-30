@@ -10,6 +10,7 @@
 export function localiseRound(round: string): string {
   return round
     .replace('Group Stage', 'Fase de Grupos')
+    .replace('Round of 32', '16 avos de Final')
     .replace('Round of 16', 'Oitavas de Final')
     .replace('Round of 8', 'Quartas de Final')
     .replace('Quarter-finals', 'Quartas de Final')
