@@ -6,6 +6,7 @@ import { useFocusTrap } from '@/lib/useFocusTrap';
 import { useScrollLock } from '@/lib/useScrollLock';
 import type { CopaStandingsPayload } from '@/app/api/copa/standings/route';
 import type { StandingEntry } from '@/lib/types';
+import { isKnockoutDecided, qualificationState } from '@/lib/copaQualification';
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -17,18 +18,6 @@ const BRAZIL_TEAM_ID = 6;
 
 /** Brazil is in Group C (confirmed via API) */
 const BRAZIL_GROUP = 'C';
-
-// ─── Zone colours ─────────────────────────────────────────────────────────────
-
-/** Top 2 of each group advance directly to Round of 16 */
-function isDirectQualifier(rank: number): boolean {
-  return rank <= 2;
-}
-
-/** 3rd-placed teams may advance (best 8 of 12 in Copa 2026 format) */
-function isThirdPlace(rank: number): boolean {
-  return rank === 3;
-}
 
 // ─── Team logo ────────────────────────────────────────────────────────────────
 
@@ -46,7 +35,15 @@ function TeamFlag({ src, name }: { src: string; name: string }) {
 
 // ─── Single group mini-table ──────────────────────────────────────────────────
 
-function GroupTable({ letter, entries }: { letter: string; entries: StandingEntry[] }) {
+function GroupTable({
+  letter,
+  entries,
+  decided,
+}: {
+  letter: string;
+  entries: StandingEntry[];
+  decided: boolean;
+}) {
   return (
     <div>
       {/* Column headers */}
@@ -67,8 +64,7 @@ function GroupTable({ letter, entries }: { letter: string; entries: StandingEntr
         <tbody>
           {entries.map((entry) => {
             const isBrazil = entry.team.id === BRAZIL_TEAM_ID;
-            const direct = isDirectQualifier(entry.rank);
-            const third = isThirdPlace(entry.rank);
+            const qual = qualificationState(entry, decided);
 
             let rowStyle: React.CSSProperties = {};
             let rankColor = '#71717a'; // zinc-500
@@ -81,14 +77,14 @@ function GroupTable({ letter, entries }: { letter: string; entries: StandingEntr
                 borderLeftColor: '#fbbf24',
               };
               rankColor = '#fbbf24';
-            } else if (direct) {
+            } else if (qual === 'qualified') {
               rowStyle = {
                 backgroundColor: 'rgba(34,197,94,0.07)',
                 borderLeftWidth: 2,
                 borderLeftStyle: 'solid',
                 borderLeftColor: '#22c55e33',
               };
-            } else if (third) {
+            } else if (qual === 'possible') {
               rowStyle = {
                 backgroundColor: 'rgba(56,189,248,0.06)',
                 borderLeftWidth: 2,
@@ -147,17 +143,19 @@ function GroupTable({ letter, entries }: { letter: string; entries: StandingEntr
 
 // ─── Legend ───────────────────────────────────────────────────────────────────
 
-function Legend() {
+function Legend({ decided }: { decided: boolean }) {
   return (
     <div className="flex items-center gap-4 px-4 py-2 text-[10px] text-zinc-500 font-sans border-t border-zinc-800">
       <span className="flex items-center gap-1.5">
         <span className="w-2 h-2 rounded-full bg-green-500 opacity-60" />
-        Classificado (oitavas)
+        Classificado (mata-mata)
       </span>
-      <span className="flex items-center gap-1.5">
-        <span className="w-2 h-2 rounded-full bg-sky-400 opacity-60" />
-        Possível classificado (3º lugar)
-      </span>
+      {!decided && (
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-sky-400 opacity-60" />
+          Possível classificado (3º lugar)
+        </span>
+      )}
     </div>
   );
 }
@@ -199,6 +197,14 @@ export function GroupStandingsModal({
 
   const groups = data?.groups ?? {};
   const activeEntries: StandingEntry[] = groups[activeGroup] ?? [];
+
+  // Knockout is "decided" once the API stamps qualifiers (post group stage).
+  // Checked across every group + the third-place ranking, so a single group's
+  // view still colours correctly even before its own teams carry the mark.
+  const decided = isKnockoutDecided([
+    ...Object.values(groups).flat(),
+    ...(data?.thirdPlaceRanking ?? []),
+  ]);
 
   return (
     <div
@@ -286,7 +292,7 @@ export function GroupStandingsModal({
             <>
               {activeEntries.length > 0 ? (
                 <div className="pt-2 pb-1">
-                  <GroupTable letter={activeGroup} entries={activeEntries} />
+                  <GroupTable letter={activeGroup} entries={activeEntries} decided={decided} />
                 </div>
               ) : (
                 <div className="flex items-center justify-center py-12">
@@ -299,7 +305,7 @@ export function GroupStandingsModal({
           )}
         </div>
 
-        <Legend />
+        <Legend decided={decided} />
       </div>
     </div>
   );
