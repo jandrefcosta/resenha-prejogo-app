@@ -41,7 +41,18 @@
       "Bash(grep -rnE \"past-results|getCbfRound|getFinishedFixturesByClub|fetch\\\\\\(`?/api)",
       "Bash(useFichaData)",
       "Bash('fetch\\(.*api/ src/app/page.tsx src/components/MatchSection.tsx 2>/dev/null | head -30 *)",
-      "Bash(gh auth *)"
+      "Bash(gh auth *)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 40)",
+      "PowerShell(npx eslint src/components/MatchCard.tsx 2>&1)",
+      "Bash(git rm *)",
+      "Bash(echo \"EXIT: $?\")",
+      "Bash(git pull *)",
+      "Bash(git branch *)",
+      "Bash(git switch *)",
+      "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 50)",
+      "Bash(PORT=3137 npm run dev)",
+      "Bash(echo \"started pid $!\")",
+      "PowerShell(git *)"
     ]
   }
 }
