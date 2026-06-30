@@ -27,8 +27,10 @@ bolão (prediction game) across five competitions.
 - Server Components by default; `'use client'` only when needed.
 - All API routes use `src/lib/redisCache.ts` helpers for L2 caching —
   don't bypass them with raw Upstash calls.
-- Data source routing lives in `src/lib/matchDataSource.ts` and
-  `src/data/competitions.ts` — don't hardcode leagueId checks elsewhere.
+- Data source routing is data-driven via the `hasCbfData` flag on each
+  entry in `src/data/competitions.ts` (resolved with `getCompetitionById` /
+  `getCompetitionByLeagueId`, read at the call sites) — there is no central
+  dispatcher module; don't hardcode leagueId checks elsewhere.
 - New competitions must be registered in `src/data/competitions.ts` first.
 - Postgres is the primary store; Redis is secondary/cache only.
 

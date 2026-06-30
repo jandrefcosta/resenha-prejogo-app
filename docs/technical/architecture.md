@@ -97,7 +97,6 @@ src/
 │   ├── broadcasterColors.ts# Mapa broadcaster → cor de badge (compartilhado)
 │   ├── teamForm.ts         # Form dos times
 │   ├── localiseRound.ts    # Tradução de strings de rodada API-Football → português
-│   ├── matchDataSource.ts  # Abstração de fonte de dados por competição
 │   ├── matchConstants.ts   # LIVE_WINDOW_MS e outras constantes
 │   ├── userIdentity.ts     # Registro de usuário
 │   ├── rateLimiter.ts      # Rate limiting Upstash

@@ -73,7 +73,6 @@ src/
 │   ├── adminSession.ts       ← HMAC admin cookie
 │   ├── broadcasterSearch.ts  ← Gemini AI broadcaster discovery
 │   ├── cbfDocParser.ts       ← CBF PDF súmula parser (unpdf)
-│   ├── matchDataSource.ts    ← decides CBF vs API-Football per leagueId
 │   └── …
 ├── data/
 │   ├── competitions.ts       ← Competition registry (source of truth for IDs)
@@ -106,7 +105,7 @@ scripts/                      ← CLI/cron: cache seeding + PDF ingestion
 - **Responsibility:** rich match detail — lineups, goals, cards,
   substitutions, súmula PDF data.
 - **Boundaries:** API-Football primary; CBF API for Série A rich data;
-  `matchDataSource.ts` decides routing.
+  the `hasCbfData` flag in `competitions.ts` decides routing per call site.
 - **Owners:** no clear owner
 - **Health:** 🟡 Boletim PDFs are image-based and cannot be parsed
   programmatically — only súmula PDFs yield structured data. This is the

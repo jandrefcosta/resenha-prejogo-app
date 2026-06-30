@@ -157,7 +157,6 @@ src/
 │   ├── broadcasterSearch.ts  ← Gemini 2.5 Flash + Google Search
 │   ├── bolaoRedis.ts         ← Domínio completo do bolão
 │   ├── socialRedis.ts        ← Domínio completo do feed social
-│   ├── matchDataSource.ts    ← Discriminador CBF vs API-Football por leagueId
 │   ├── userIdentity.ts       ← Helpers de usuário (hashEmail, getUserById/ByEmail)
 │   ├── passwordUtils.ts      ← bcrypt hash/verify
 │   ├── rateLimiter.ts        ← Instâncias Upstash Ratelimit
@@ -176,7 +175,7 @@ src/
 | Padrão | Arquivo | Descrição |
 |---|---|---|
 | **Registry** | `competitions.ts` | Fonte de verdade de todas as competições; discrimina toda a stack |
-| **Strategy** | `matchDataSource.ts` | Seleciona CBF ou API-Football via `leagueId` |
+| **Strategy** | `competitions.ts` (`hasCbfData`) | Flag por competição seleciona CBF ou API-Football, lida nos call sites (sem módulo dispatcher) |
 | **Repository** | `bolaoRedis.ts`, `socialRedis.ts` | Encapsulam acesso ao Redis por domínio |
 | **Facade** | `redisCache.ts` | Esconde complexidade do Upstash SDK, falhas silenciosas |
 | **Stale-while-error** | `cbfApi.ts`, `conmebolApi.ts` | Dupla chave primária + stale no Redis |
@@ -336,10 +335,13 @@ Definidas em `src/data/competitions.ts` — registro central e única fonte de v
 ### 4.2 Fonte de Dados por Competição
 
 ```typescript
-// src/lib/matchDataSource.ts
-function getFinishedMatchSource(leagueId: number): 'cbf' | 'api-football' {
-  return leagueId === 71 ? 'cbf' : 'api-football';
-}
+// Roteamento data-driven via competitions.ts — não há módulo dispatcher.
+// Cada call site resolve a competição e lê o flag hasCbfData:
+import { getCompetitionByLeagueId } from '@/data/competitions';
+
+const competition = getCompetitionByLeagueId(leagueId);
+const source: 'cbf' | 'api-football' =
+  competition?.hasCbfData ? 'cbf' : 'api-football';
 ```
 
 - **CBF** (`leagueId === 71`): escalação completa, gols, cartões, árbitros, documentos PDF
@@ -609,7 +611,7 @@ Posts deletados somem da `club:posts:*` e `user:posts:*`, mas **não** do `feed:
 Se a API retornar formato diferente de `"Rodada N"`, `serieARound` será 0 e o histórico CBF não carregará.
 
 **`leagueId === 71` hardcoded em múltiplos arquivos**
-Aparece em `MatchSection.tsx`, `matchDataSource.ts`, `apiFootball.ts`, standings route. Deveria usar `SERIE_A.apiFootballLeagueId`.
+Aparece em `MatchSection.tsx`, `apiFootball.ts`, standings route. Deveria usar `SERIE_A.apiFootballLeagueId`.
 
 ### Baixa Prioridade
 
@@ -626,7 +628,7 @@ Aparece em `MatchSection.tsx`, `matchDataSource.ts`, `apiFootball.ts`, standings
 ### Arquitetura
 
 **Extrair `cbfToMatch` para `src/lib/`**
-Função de conversão de domínio vive em componente de UI. Mover para `lib/cbfApi.ts` ou `lib/matchDataSource.ts`.
+Função de conversão de domínio vive em componente de UI. Mover para `lib/cbfApi.ts`.
 
 **Separar `UserRecord` em dois tipos**
 ```typescript
