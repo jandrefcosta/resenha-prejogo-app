@@ -1,6 +1,7 @@
 import { SELECAO_BRASILEIRA } from "@/data/national-teams";
 import { CopaMatchSection } from "@/components/copa/CopaMatchSection";
 import { GroupStandingsButton } from "@/components/copa/GroupStandingsModal";
+import { BracketButton } from "@/components/copa/BracketModal";
 import { BrazilCountdown } from "@/components/copa/BrazilCountdown";
 import {
   FooterSuggestion,
@@ -72,6 +73,7 @@ export default function CopaPage() {
                 ← Brasileirão
               </a>
               <GroupStandingsButton />
+              <BracketButton />
               <a
                 href="/bolao"
                 className="flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-4 min-h-[44px] text-sm font-medium font-sans text-white transition-all hover:bg-white/20 hover:border-white/30 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white/50 backdrop-blur-sm"

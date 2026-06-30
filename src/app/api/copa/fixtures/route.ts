@@ -39,6 +39,7 @@ interface ApiFixture {
   };
   teams: { home: ApiTeam; away: ApiTeam };
   goals: { home: number | null; away: number | null };
+  score: { penalty: { home: number | null; away: number | null } };
 }
 
 interface ApiResponse<T> {
@@ -72,10 +73,14 @@ function toMatchTeam(t: ApiTeam): MatchTeam {
   };
 }
 
-function mapFixture(f: ApiFixture): Match {
+export function mapFixture(f: ApiFixture): Match {
   const round = f.league.round;
   const isGroup = GROUP_ROUNDS.has(round);
   const isFinished = ['FT', 'AET', 'PEN'].includes(f.fixture.status.short);
+
+  // Penalty shootout score — only when API-Football reports one (knockout ties).
+  const pen = f.score.penalty;
+  const hasPen = pen.home !== null && pen.away !== null;
 
   // advancedTeamId: the side that progressed from a finished KNOCKOUT tie. Gated
   // to non-group phases so a group winner never sets it (the "Só Brasil" hybrid
@@ -111,6 +116,7 @@ function mapFixture(f: ApiFixture): Match {
       f.goals.home !== null || f.goals.away !== null
         ? { home: f.goals.home, away: f.goals.away }
         : undefined,
+    ...(hasPen ? { scoreDetail: { pen: { home: pen.home!, away: pen.away! } } } : {}),
     ...(advancedTeamId ? { advancedTeamId } : {}),
   };
 }
