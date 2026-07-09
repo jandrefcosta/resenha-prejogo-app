@@ -6,10 +6,15 @@ import { redis } from './redisCache';
 export const AUTH_COOKIE = 'sc_auth';
 const TTL_30D = 60 * 60 * 24 * 30;
 
-if (!process.env.JWT_SECRET) {
-  throw new Error('JWT_SECRET env var is required');
+// Lazy — Next.js evaluates this module at build time (page-data collection),
+// when only build-time env vars are present. Throwing here would break the
+// build even though JWT_SECRET is correctly set for runtime.
+function getSecret(): Uint8Array {
+  if (!process.env.JWT_SECRET) {
+    throw new Error('JWT_SECRET env var is required');
+  }
+  return new TextEncoder().encode(process.env.JWT_SECRET);
 }
-const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
 export interface JwtPayload {
   sub: string;  // userId
@@ -21,12 +26,12 @@ export async function signToken(userId: string, jti: string): Promise<string> {
     .setProtectedHeader({ alg: 'HS256' })
     .setIssuedAt()
     .setExpirationTime('30d')
-    .sign(secret);
+    .sign(getSecret());
 }
 
 async function verifyToken(token: string): Promise<JwtPayload | null> {
   try {
-    const { payload } = await jwtVerify(token, secret);
+    const { payload } = await jwtVerify(token, getSecret());
     if (!payload.sub || !payload.jti) return null;
 
     // Check server-side revocation
