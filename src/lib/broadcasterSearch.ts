@@ -20,6 +20,16 @@ Rules:
 - Competition: ${competitionName}`;
 }
 
+/** Only http(s) URLs are safe to render in an <a href> — reject javascript:/data:/etc. */
+function sanitizeUrl(url: string): string {
+  try {
+    const parsed = new URL(url);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:' ? url : '';
+  } catch {
+    return '';
+  }
+}
+
 function parseBroadcasters(text: string): BroadcasterInfo[] {
   const match = text.match(/\[[\s\S]*\]/);
   if (!match) return [];
@@ -35,7 +45,7 @@ function parseBroadcasters(text: string): BroadcasterInfo[] {
         if (typeof obj.name !== 'string') return null;
         return {
           name: obj.name,
-          url: typeof obj.url === 'string' ? obj.url : '',
+          url: typeof obj.url === 'string' ? sanitizeUrl(obj.url) : '',
         };
       }
       return null;

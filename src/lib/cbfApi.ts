@@ -57,7 +57,7 @@ const STALE_MAX_AGE_MS = 60 * 60 * 24 * 1000; // 24 h
 const CBF_HEADERS = {
   Accept: '*/*',
   'Accept-Language': 'pt-BR,pt;q=0.9',
-  Authorization: 'Bearer Cbf@2022!',
+  Authorization: `Bearer ${process.env.CBF_API_TOKEN ?? 'Cbf@2022!'}`,
   'Cache-Control': 'no-cache',
   'Content-Type': 'application/json',
   Origin: 'https://www.cbf.com.br',
@@ -395,7 +395,7 @@ export async function getCbfRound(round: number, force = false): Promise<CbfRoun
 
   let res: Response;
   try {
-    res = await fetch(url, { headers: CBF_HEADERS, cache: 'no-store' });
+    res = await fetch(url, { headers: CBF_HEADERS, cache: 'no-store', signal: AbortSignal.timeout(8000) });
   } catch (networkErr) {
     const stale = acceptStale(await getCache<CbfRoundData>(staleKey(round)));
     if (stale) return stale;

@@ -124,7 +124,7 @@ function parseYearFromDate(data: string): number | null {
 
 async function headTest(url: string): Promise<boolean> {
   try {
-    const res = await fetch(url, { method: 'HEAD', headers: PDF_HEADERS, cache: 'no-store' });
+    const res = await fetch(url, { method: 'HEAD', headers: PDF_HEADERS, cache: 'no-store', signal: AbortSignal.timeout(8000) });
     return res.ok;
   } catch {
     return false;
@@ -135,7 +135,7 @@ async function headTest(url: string): Promise<boolean> {
 
 export async function downloadPdf(url: string): Promise<ArrayBuffer | null> {
   try {
-    const res = await fetch(url, { headers: PDF_HEADERS, cache: 'no-store' });
+    const res = await fetch(url, { headers: PDF_HEADERS, cache: 'no-store', signal: AbortSignal.timeout(20000) });
     if (!res.ok) return null;
     return await res.arrayBuffer();
   } catch {

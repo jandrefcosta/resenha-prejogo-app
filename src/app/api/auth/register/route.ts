@@ -1,9 +1,10 @@
-import { createHash, randomUUID } from 'crypto';
+import { randomUUID } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { redis } from '@/lib/redisCache';
 import { hashEmail, getUserByEmail, UserRecord } from '@/lib/userIdentity';
 import { hashPassword } from '@/lib/passwordUtils';
 import { signToken, saveSession, AUTH_COOKIE } from '@/lib/auth';
+import { registerLimiter, getClientIp } from '@/lib/rateLimiter';
 
 const USERNAME_RE = /^[a-z0-9_]{3,20}$/;
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
@@ -23,6 +24,10 @@ export async function POST(req: NextRequest) {
   if (!password || password.length < 8)
     return NextResponse.json({ error: 'Senha deve ter pelo menos 8 caracteres' }, { status: 400 });
 
+  const { success } = await registerLimiter.limit(getClientIp(req));
+  if (!success)
+    return NextResponse.json({ error: 'Muitas tentativas. Tente novamente mais tarde.' }, { status: 429 });
+
   // Uniqueness checks
   const [existingByEmail, existingByUsername] = await Promise.all([
     getUserByEmail(email),
@@ -35,9 +40,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Username já em uso' }, { status: 409 });
 
   const emailHash = hashEmail(email);
-  const ip = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
-    ?? req.headers.get('x-real-ip')
-    ?? 'unknown';
+  const ip = getClientIp(req);
   const now = new Date().toISOString();
 
   // Always generate a fresh userId for registered accounts.

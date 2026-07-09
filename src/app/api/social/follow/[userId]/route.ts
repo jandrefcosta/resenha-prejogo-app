@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getCurrentUser } from '@/lib/auth';
 import { followUser, unfollowUser, isFollowing } from '@/lib/socialRedis';
+import { getUserById } from '@/lib/userIdentity';
 
 // POST /api/social/follow/:userId  → follow
 export async function POST(
@@ -13,6 +14,9 @@ export async function POST(
   const { userId: targetId } = await params;
   if (targetId === payload.sub)
     return NextResponse.json({ error: 'Você não pode seguir a si mesmo' }, { status: 400 });
+
+  const target = await getUserById(targetId);
+  if (!target) return NextResponse.json({ error: 'Usuário não encontrado' }, { status: 404 });
 
   await followUser(payload.sub, targetId);
   return NextResponse.json({ following: true });

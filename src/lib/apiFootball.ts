@@ -172,6 +172,7 @@ const fetchLeagueFixturesRaw = unstable_cache(
 
       const res = await fetch(url.toString(), {
         headers: { 'x-apisports-key': key },
+        signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
 
@@ -279,6 +280,7 @@ export async function getFinishedFixturesByClub(
 
       const res = await fetch(url.toString(), {
         headers: { 'x-apisports-key': key },
+        signal: AbortSignal.timeout(8000),
       });
       if (!res.ok) throw new Error(`API-Football HTTP ${res.status}`);
 
@@ -369,6 +371,7 @@ export async function fetchLineups(fixtureId: number): Promise<LineupData | null
 
   const res = await fetch(url.toString(), {
     headers: { 'x-apisports-key': key },
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`API-Football lineups HTTP ${res.status}`);
 
@@ -507,6 +510,7 @@ export async function getLiveFixtureData(
   const url = `${BASE_URL}/fixtures?id=${fixtureId}`;
   const res = await fetch(url, {
     headers: { 'x-apisports-key': key },
+    signal: AbortSignal.timeout(8000),
   });
   if (!res.ok) throw new Error(`API-Football returned ${res.status}`);
 

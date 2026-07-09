@@ -10,10 +10,17 @@ export const suggestionsLimiter = new Ratelimit({
   prefix: 'rl:suggestions',
 });
 
-/** Extracts the real client IP from Vercel/Next.js request headers. */
+/**
+ * Extracts the real client IP from the request.
+ * Railway sits as the single reverse proxy in front of the app and appends
+ * the real client IP as the LAST hop in X-Forwarded-For — the leftmost
+ * entries are client-supplied and spoofable, so they must not be trusted.
+ */
 export function getClientIp(request: Request): string {
   const forwarded = (request.headers as Headers).get('x-forwarded-for');
-  return forwarded ? forwarded.split(',')[0].trim() : 'unknown';
+  if (!forwarded) return 'unknown';
+  const hops = forwarded.split(',').map((h) => h.trim()).filter(Boolean);
+  return hops.length > 0 ? hops[hops.length - 1] : 'unknown';
 }
 
 /**
@@ -33,4 +40,25 @@ export const liveFixtureLimiter = new Ratelimit({
   redis,
   limiter: Ratelimit.slidingWindow(20, '1 m'),
   prefix: 'rl:live-fixture',
+});
+
+/** Login: 10 attempts per IP+email per 15 minutes — throttles credential stuffing. */
+export const loginLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(10, '15 m'),
+  prefix: 'rl:login',
+});
+
+/** Registration: 5 accounts per IP per hour. */
+export const registerLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '1 h'),
+  prefix: 'rl:register',
+});
+
+/** Admin login: 5 attempts per IP per 15 minutes — single shared secret, no lockout otherwise. */
+export const adminLoginLimiter = new Ratelimit({
+  redis,
+  limiter: Ratelimit.slidingWindow(5, '15 m'),
+  prefix: 'rl:admin-login',
 });

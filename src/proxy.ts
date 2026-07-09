@@ -7,6 +7,10 @@ const ADMIN_PUBLIC_PATHS = new Set(['/admin/login', '/api/admin/login']);
 export async function proxy(req: NextRequest) {
   const { pathname } = req.nextUrl;
 
+  // run-docs-cron self-authenticates via CRON_SECRET (separate from admin's
+  // DEBUG_SECRET) — same pattern as bolao/score, excluded from the admin gate below.
+  if (pathname === '/api/admin/run-docs-cron') return NextResponse.next();
+
   // Admin paths (skip user gate entirely)
   if (pathname.startsWith('/admin') || pathname.startsWith('/api/admin')) {
     if (ADMIN_PUBLIC_PATHS.has(pathname)) return NextResponse.next();

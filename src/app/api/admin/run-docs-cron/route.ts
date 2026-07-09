@@ -2,13 +2,12 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCbfRound } from '@/lib/cbfApi';
 import { processMatchDocuments } from '@/lib/cbfDocParser';
 import { redis } from '@/lib/redisCache';
+import { isValidCronRequest } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
 function authorized(req: NextRequest): boolean {
-  const secret = process.env.CRON_SECRET;
-  if (!secret) return false;
-  return req.headers.get('authorization') === `Bearer ${secret}`;
+  return isValidCronRequest(req, process.env.CRON_SECRET);
 }
 
 async function runCron(): Promise<{ seeded: number; skipped: number; unavailable: number; errors: number }> {

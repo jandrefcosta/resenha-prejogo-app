@@ -4,8 +4,10 @@ import { redis } from '@/lib/redisCache';
 import { getCurrentUser } from '@/lib/auth';
 import { getUserById } from '@/lib/userIdentity';
 import { createPost, getClubFeed, getPersonalFeed } from '@/lib/socialRedis';
+import clubsData from '@/data/clubs.json';
 
 const MAX_CONTENT = 280;
+const VALID_CLUB_IDS = new Set(clubsData.map((c) => c.id));
 
 const rateLimiter = new Ratelimit({
   redis,
@@ -49,7 +51,8 @@ export async function POST(req: NextRequest) {
   if (!content?.trim()) return NextResponse.json({ error: 'Conteúdo obrigatório' }, { status: 400 });
   if (content.length > MAX_CONTENT)
     return NextResponse.json({ error: `Máximo ${MAX_CONTENT} caracteres` }, { status: 400 });
-  if (!clubId) return NextResponse.json({ error: 'clubId obrigatório' }, { status: 400 });
+  if (!clubId || !VALID_CLUB_IDS.has(clubId))
+    return NextResponse.json({ error: 'clubId inválido' }, { status: 400 });
 
   const user = await getUserById(payload.sub);
   if (!user?.username) return NextResponse.json({ error: 'Perfil incompleto' }, { status: 400 });

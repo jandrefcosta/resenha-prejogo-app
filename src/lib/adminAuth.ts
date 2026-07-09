@@ -8,7 +8,15 @@ function getBearerToken(req: NextRequest): string | null {
   return auth.slice('Bearer '.length).trim();
 }
 
-function safeEquals(received: string, expected: string): boolean {
+/** Timing-safe check of an `Authorization: Bearer <secret>` header against an env var. */
+export function isValidCronRequest(req: NextRequest, envVar: string | undefined): boolean {
+  if (!envVar) return false;
+  const bearer = getBearerToken(req);
+  if (!bearer) return false;
+  return safeEquals(bearer, envVar);
+}
+
+export function safeEquals(received: string, expected: string): boolean {
   const receivedBuffer = Buffer.from(received);
   const expectedBuffer = Buffer.from(expected);
 

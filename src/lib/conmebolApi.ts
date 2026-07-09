@@ -267,6 +267,7 @@ export async function getConmebolTournament(
   let res: Response;
   try {
     res = await fetch(url, {
+      signal: AbortSignal.timeout(8000),
       headers: {
         ...CONMEBOL_HEADERS,
         referer: `${CONMEBOL_BASE}/${slug}/es/tournament/${tournamentId}`,

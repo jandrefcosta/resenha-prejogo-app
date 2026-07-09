@@ -10,7 +10,7 @@ const CHAMPIONSHIP_ID = 1260611;
 const CBF_HEADERS = {
   Accept: '*/*',
   'Accept-Language': 'pt-BR,pt;q=0.9',
-  Authorization: 'Bearer Cbf@2022!',
+  Authorization: `Bearer ${process.env.CBF_API_TOKEN ?? 'Cbf@2022!'}`,
   'Cache-Control': 'no-cache',
   'Content-Type': 'application/json',
   Origin: 'https://www.cbf.com.br',
@@ -34,7 +34,7 @@ export async function GET(req: NextRequest) {
   }
 
   const url = `${CBF_BASE}/jogos/campeonato/${CHAMPIONSHIP_ID}/rodada/${round}/fase`;
-  const res = await fetch(url, { headers: CBF_HEADERS, cache: 'no-store' });
+  const res = await fetch(url, { headers: CBF_HEADERS, cache: 'no-store', signal: AbortSignal.timeout(8000) });
 
   if (!res.ok) {
     return NextResponse.json({ error: `CBF returned ${res.status}` }, { status: 502 });

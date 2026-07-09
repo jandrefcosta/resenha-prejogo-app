@@ -1,6 +1,7 @@
 import { timingSafeEqual } from 'crypto';
 import { NextRequest, NextResponse } from 'next/server';
 import { ADMIN_COOKIE, signAdminToken } from '@/lib/adminSession';
+import { adminLoginLimiter, getClientIp } from '@/lib/rateLimiter';
 
 export const runtime = 'nodejs';
 
@@ -17,6 +18,11 @@ export async function POST(req: NextRequest): Promise<NextResponse> {
   const expected = process.env.DEBUG_SECRET;
   if (!expected) {
     return NextResponse.json({ error: 'DEBUG_SECRET not configured' }, { status: 500 });
+  }
+
+  const { success } = await adminLoginLimiter.limit(getClientIp(req));
+  if (!success) {
+    return NextResponse.json({ error: 'Muitas tentativas. Tente novamente mais tarde.' }, { status: 429 });
   }
 
   let body: { secret?: string };

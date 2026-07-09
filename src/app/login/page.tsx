@@ -7,7 +7,11 @@ import Link from 'next/link';
 function LoginPageInner() {
   const router = useRouter();
   const params = useSearchParams();
-  const returnTo = params.get('returnTo') ?? '/';
+  const rawReturnTo = params.get('returnTo') ?? '/';
+  // Only allow same-origin relative paths — reject protocol-relative ("//evil.com")
+  // and backslash variants ("/\evil.com", browsers normalize \ to / ) to prevent
+  // an open redirect after login.
+  const returnTo = /^\/(?![\/\\])/.test(rawReturnTo) ? rawReturnTo : '/';
   const { login, register } = useAuth();
 
   const [tab, setTab] = useState<'login' | 'register'>('login');

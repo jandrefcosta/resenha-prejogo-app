@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserByEmail } from '@/lib/userIdentity';
 import { verifyPassword } from '@/lib/passwordUtils';
 import { signToken, saveSession, AUTH_COOKIE } from '@/lib/auth';
+import { loginLimiter, getClientIp } from '@/lib/rateLimiter';
 
 const TTL_30D = 60 * 60 * 24 * 30;
 
@@ -23,6 +24,11 @@ export async function POST(req: NextRequest) {
   const { email, password } = body as Record<string, string>;
   if (!email || !password)
     return NextResponse.json({ error: 'Email e senha obrigatórios' }, { status: 400 });
+
+  const ip = getClientIp(req);
+  const { success } = await loginLimiter.limit(`${ip}:${email.toLowerCase()}`);
+  if (!success)
+    return NextResponse.json({ error: 'Muitas tentativas. Tente novamente mais tarde.' }, { status: 429 });
 
   const found = await getUserByEmail(email);
   if (!found || !found.record.passwordHash)

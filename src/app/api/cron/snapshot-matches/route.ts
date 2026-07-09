@@ -13,6 +13,7 @@ import { sql } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { matchSnapshots } from '@/lib/db/schema';
 import { getCbfRound } from '@/lib/cbfApi';
+import { isValidCronRequest } from '@/lib/adminAuth';
 import { getConmebolTournament, CONMEBOL_TOURNAMENT_IDS } from '@/lib/conmebolApi';
 import type { CbfMatchDetail, ConmebolMatchDetail } from '@/lib/types';
 
@@ -103,8 +104,7 @@ export async function GET(req: NextRequest) {
   if (!process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'CRON_SECRET not configured' }, { status: 500 });
   }
-  const auth = req.headers.get('authorization');
-  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+  if (!isValidCronRequest(req, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

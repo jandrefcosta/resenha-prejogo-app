@@ -126,9 +126,17 @@ async function fetchPostsByIds(ids: string[]): Promise<Post[]> {
   const pipeline = redis.pipeline();
   for (const id of ids) pipeline.get(`post:${id}`);
   const results = await pipeline.exec();
-  return (results ?? [])
+  const posts = (results ?? [])
     .map((r) => r as Post | null)
     .filter((p): p is Post => p !== null);
+  if (posts.length === 0) return posts;
+
+  // likeCount is derived live from the likes set (SCARD is O(1)) rather than
+  // trusted from the stored post hash, which can drift under concurrent likes.
+  const countPipeline = redis.pipeline();
+  for (const p of posts) countPipeline.scard(`post:likes:${p.id}`);
+  const counts = (await countPipeline.exec()) as (number | null)[];
+  return posts.map((p, i) => ({ ...p, likeCount: counts[i] ?? 0 }));
 }
 
 // ─── Likes ────────────────────────────────────────────────────────────────────
@@ -141,16 +149,10 @@ export async function likePost(
   if (!added) return { likeCount: await getLikeCount(postId), alreadyLiked: true };
 
   await redis.sadd(`user:liked:${userId}`, postId);
+  db.insert(postLikes).values({ postId, userId })
+    .onConflictDoNothing()
+    .catch(err => console.error('[pg-shadow-write] likePost:', err));
 
-  const post = await redis.get<Post>(`post:${postId}`);
-  if (post) {
-    const likeCount = (post.likeCount ?? 0) + 1;
-    await redis.set(`post:${postId}`, { ...post, likeCount }, { ex: TTL_1Y });
-    db.insert(postLikes).values({ postId, userId })
-      .onConflictDoNothing()
-      .catch(err => console.error('[pg-shadow-write] likePost:', err));
-    return { likeCount, alreadyLiked: false };
-  }
   return { likeCount: await getLikeCount(postId), alreadyLiked: false };
 }
 
@@ -163,16 +165,11 @@ export async function unlikePost(
     redis.srem(`user:liked:${userId}`, postId),
   ]);
 
-  const post = await redis.get<Post>(`post:${postId}`);
-  if (post) {
-    const likeCount = Math.max(0, (post.likeCount ?? 0) - 1);
-    await redis.set(`post:${postId}`, { ...post, likeCount }, { ex: TTL_1Y });
-    db.delete(postLikes)
-      .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)))
-      .catch(err => console.error('[pg-shadow-write] unlikePost:', err));
-    return { likeCount };
-  }
-  return { likeCount: 0 };
+  db.delete(postLikes)
+    .where(and(eq(postLikes.postId, postId), eq(postLikes.userId, userId)))
+    .catch(err => console.error('[pg-shadow-write] unlikePost:', err));
+
+  return { likeCount: await getLikeCount(postId) };
 }
 
 export async function hasUserLiked(postId: string, userId: string): Promise<boolean> {

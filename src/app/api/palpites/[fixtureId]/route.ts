@@ -22,8 +22,11 @@ export async function PUT(
   }
   const allMatches = Object.values(copa.phases).flat();
   const match = allMatches.find((m) => m.id === fixtureId);
+  if (!match) {
+    return NextResponse.json({ error: 'Fixture inválido' }, { status: 400 });
+  }
   // postponed matches have no confirmed kickoff date; allow edits until rescheduled and status reverts
-  if (match && match.status !== 'postponed') {
+  if (match.status !== 'postponed') {
     const kickoff = new Date(match.date);
     if (Date.now() >= kickoff.getTime()) {
       return NextResponse.json({ error: 'Palpite travado — jogo já começou' }, { status: 403 });
@@ -42,7 +45,7 @@ export async function PUT(
   await savePalpite(user.sub, fixtureId, home, away);
   await ensureGlobalParticipant(user.sub);
   // Also seed the "Só Brasil" ranking when this fixture involves Brazil.
-  if (match && isBrazilMatch(match)) {
+  if (isBrazilMatch(match)) {
     await ensureBrazilParticipant(user.sub);
   }
 

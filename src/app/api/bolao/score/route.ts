@@ -11,6 +11,7 @@ import { redis } from '@/lib/redisCache';
 import { db } from '@/lib/db';
 import { scores as scoresTable, bolaoRankings, globalRankings, brazilRankings } from '@/lib/db/schema';
 import { getCopaFixtures, type CopaFixturesPayload } from '@/app/api/copa/fixtures/route';
+import { isValidCronRequest } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,9 +20,7 @@ export async function POST(req: NextRequest) {
   if (!process.env.CRON_SECRET) {
     return NextResponse.json({ error: 'Server misconfigured' }, { status: 500 });
   }
-  const auth = req.headers.get('authorization');
-  const expected = `Bearer ${process.env.CRON_SECRET}`;
-  if (!auth || auth !== expected) {
+  if (!isValidCronRequest(req, process.env.CRON_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 

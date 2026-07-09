@@ -167,6 +167,7 @@ export async function getCbfSerieACards(
     const res = await fetch(url, {
       headers: SCRAPER_HEADERS,
       cache: 'no-store',
+      signal: AbortSignal.timeout(8000),
     });
 
     if (!res.ok) return new Map();
