@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { invalidateCbfRound } from '@/lib/cbfApi';
+import { isAdminRequest, unauthorizedAdminResponse } from '@/lib/adminAuth';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +20,8 @@ const CBF_HEADERS = {
 
 /** GET /api/cbf/raw?round=N — retorna a resposta crua da CBF sem cache nem parse */
 export async function GET(req: NextRequest) {
+  if (!(await isAdminRequest(req))) return unauthorizedAdminResponse();
+
   const round = Number(req.nextUrl.searchParams.get('round'));
   if (!round || round < 1 || round > 38) {
     return NextResponse.json({ error: 'round param required (1–38)' }, { status: 400 });

@@ -52,7 +52,11 @@
       "PowerShell(npx tsc --noEmit 2>&1 | Select-Object -First 50)",
       "Bash(PORT=3137 npm run dev)",
       "Bash(echo \"started pid $!\")",
-      "PowerShell(git *)"
+      "PowerShell(git *)",
+      "Bash(python -c 'import json,glob; *)",
+      "Bash(pnpm audit *)",
+      "Bash(railway --version)",
+      "Bash(railway whoami *)"
     ]
   }
 }

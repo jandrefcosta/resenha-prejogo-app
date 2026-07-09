@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getCache, setCache, TTL_30MIN, TTL_3H, TTL_24H } from '@/lib/redisCache';
 import { getCompetitionById, SERIE_A } from '@/data/competitions';
 import { getCbfSerieACards } from '@/lib/cbfStandingsScraper';
+import { isAdminRequest } from '@/lib/adminAuth';
 import {
   acceptStale,
   hasApiFootballErrors,
@@ -86,7 +87,7 @@ function getSmartTTL(): number {
 
 export async function GET(req: NextRequest) {
   const sp = req.nextUrl.searchParams;
-  const force = sp.get('force') === '1';
+  const force = sp.get('force') === '1' && (await isAdminRequest(req));
 
   const competitionParam = sp.get('competition') ?? 'serie-a';
   const competition = getCompetitionById(competitionParam) ?? SERIE_A;

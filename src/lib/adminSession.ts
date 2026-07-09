@@ -3,9 +3,10 @@ import { SignJWT, jwtVerify } from 'jose';
 export const ADMIN_COOKIE = 'sc_admin';
 const ADMIN_TTL = '12h';
 
-const secret = new TextEncoder().encode(
-  process.env.DEBUG_SECRET ?? 'dev-admin-secret-change-in-production',
-);
+if (!process.env.DEBUG_SECRET) {
+  throw new Error('DEBUG_SECRET env var is required');
+}
+const secret = new TextEncoder().encode(process.env.DEBUG_SECRET);
 
 export async function signAdminToken(): Promise<string> {
   return new SignJWT({ role: 'admin' })

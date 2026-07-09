@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { redis, TTL_1Y } from '@/lib/redisCache';
 import { getUserById } from '@/lib/userIdentity';
 import { hashPassword } from '@/lib/passwordUtils';
+import { revokeAllUserSessions } from '@/lib/auth';
 
 export async function POST(req: NextRequest) {
   const body = await req.json().catch(() => null);
@@ -33,6 +34,7 @@ export async function POST(req: NextRequest) {
   await redis.del(`reset:${token}`);
   const passwordHash = await hashPassword(password);
   await redis.set(`user:${userId}`, { ...record, passwordHash }, { ex: TTL_1Y });
+  await revokeAllUserSessions(userId);
 
   return NextResponse.json({ ok: true });
 }
